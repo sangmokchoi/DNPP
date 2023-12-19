@@ -9,9 +9,22 @@ import 'package:dnpp/repository/repository_firebase.dart' as viewModel;
 
 class LoginStatusUpdate with ChangeNotifier {
 
+  late User currentUser;
+
   String providerId = '';
   bool isLoggedIn = false;
-  late User currentUser;
+
+  Future<void> trueIsLoggedIn() async {
+    isLoggedIn = true;
+    print('isLoggedIn: $isLoggedIn');
+    notifyListeners();
+  }
+
+  Future<void> falseIsLoggedIn() async {
+    isLoggedIn = false;
+    print('isLoggedIn: $isLoggedIn');
+    notifyListeners();
+  }
 
   Future<void> updateProviderId(String newProviderId) async {
 
@@ -25,23 +38,6 @@ class LoginStatusUpdate with ChangeNotifier {
     currentUser = newUser;
     print('updatecurrentUser 완료');
     print('currentUser: $currentUser');
-    notifyListeners();
-  }
-
-  Future logout() async {
-    //await _socialLogin.logout();
-    isLoggedIn = false;
-    //user = null;
-
-    await viewModel.FirebaseRepository().signOut();
-
-    // switch (providerId) {
-    //   case 'google.com':
-    //     print('구글 로그아웃');
-    //     break;
-    // }
-
-    print('로그아웃 완료');
     notifyListeners();
   }
 

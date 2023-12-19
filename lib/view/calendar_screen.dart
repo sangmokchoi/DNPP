@@ -1,15 +1,20 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:dnpp/view/signup_screen.dart';
 import 'package:dnpp/widgets/appointment/add_appointment.dart';
 import 'package:dnpp/widgets/calendar/calendar_CustomSFCalendar.dart';
 import 'package:dnpp/widgets/appointment/edit_appointment.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:persistent_bottom_nav_bar/persistent_tab_view.dart';
 
 import 'package:provider/provider.dart';
 import 'package:syncfusion_flutter_calendar/calendar.dart';
 
 import 'package:dnpp/constants.dart';
 
-import '../viewModel/appointmentUpdate.dart';
+import '../models/customAppointment.dart';
+import '../viewModel/personalAppointmentUpdate.dart';
+import '../viewModel/loginStatusUpdate.dart';
 
 class CalendarScreen extends StatefulWidget {
   static String id = '/StatisticsScreenID';
@@ -21,7 +26,11 @@ class CalendarScreen extends StatefulWidget {
 class _CalendarScreenState extends State<CalendarScreen> {
   TextEditingController _textFormFieldController = TextEditingController();
 
+  FirebaseFirestore db = FirebaseFirestore.instance;
+
   bool isChecked = false;
+
+  late Future<void> myFuture;
 
   void toggleDone() {
     isChecked = !isChecked;
@@ -30,20 +39,63 @@ class _CalendarScreenState extends State<CalendarScreen> {
 
   //final CalendarController _controller = CalendarController();
 
+  // Future<void> fetchAppointmentData() async {
+  //   print('fetchAppointmentData 시작');
+  //   // 해당 함수는 유저가 로그인한 상태일 때 실행되어야 함
+  //
+  //   db.collection("Appointments").where(
+  //       "userUid",
+  //       isEqualTo: Provider.of<LoginStatusUpdate>(context, listen: false).currentUser.uid).get().then(
+  //         (querySnapshot) {
+  //       print("Successfully completed");
+  //       for (var docSnapshot in querySnapshot.docs) {
+  //         //final data = docSnapshot.data();
+  //         final data = docSnapshot.data() as Map<String, dynamic>;
+  //
+  //         List<Appointment>? _appointment = (data['appointments'] as List<dynamic>?)
+  //             ?.map<Appointment>((dynamic item) {
+  //           return Appointment(
+  //             startTime: (item['startTime'] as Timestamp).toDate(),
+  //             endTime: (item['endTime'] as Timestamp).toDate(),
+  //             subject: item['subject'] as String,
+  //             isAllDay: item['isAllDay'] as bool,
+  //             notes: item['notes'] as String,
+  //             recurrenceRule: item['recurrenceRule'] as String,
+  //           );
+  //         }).toList();
+  //
+  //
+  //         // //Provider.of<AppointmentUpdate>(context, listen: false).meetings.add(_appointment?.first);
+  //         if (_appointment != null && _appointment.isNotEmpty) {
+  //           print('_appointment: $_appointment');
+  //           Provider.of<AppointmentUpdate>(context, listen: false).addMeeting(_appointment.first);
+  //         }
+  //       }
+  //
+  //
+  //     },
+  //     onError: (e) => print("Error completing: $e"),
+  //   );
+  //
+  //   setState(() {
+  //
+  //   });
+  // }
+
   Future<void> updateProvider(dynamic appointmentDetails) async {
-    Provider.of<AppointmentUpdate>(context, listen: false)
+    Provider.of<PersonalAppointmentUpdate>(context, listen: false)
         .updateSubject(appointmentDetails.subject);
-    Provider.of<AppointmentUpdate>(context, listen: false)
+    Provider.of<PersonalAppointmentUpdate>(context, listen: false)
         .updateFromDate(appointmentDetails.startTime);
-    Provider.of<AppointmentUpdate>(context, listen: false)
+    Provider.of<PersonalAppointmentUpdate>(context, listen: false)
         .updateToDate(appointmentDetails.endTime);
-    Provider.of<AppointmentUpdate>(context, listen: false)
+    Provider.of<PersonalAppointmentUpdate>(context, listen: false)
         .changeIsAllDay(appointmentDetails.isAllDay);
-    Provider.of<AppointmentUpdate>(context, listen: false)
+    Provider.of<PersonalAppointmentUpdate>(context, listen: false)
         .updateNotes(appointmentDetails.notes);
   }
 
-  void openModalBottomSheet(BuildContext context, dynamic appointmentDetails){
+  void openModalBottomSheet(BuildContext context, dynamic appointmentDetails) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -52,10 +104,10 @@ class _CalendarScreenState extends State<CalendarScreen> {
           Padding(
             padding: EdgeInsets.only(
                 bottom: MediaQuery.of(context).viewInsets.bottom),
-            child: Consumer<AppointmentUpdate>(
+            child: Consumer<PersonalAppointmentUpdate>(
               builder: (context, taskData, child) {
                 return EditAppointment(
-                  friendCode: '',
+                  context: context,
                   userCourt: '',
                   oldMeeting: appointmentDetails,
                 );
@@ -68,10 +120,11 @@ class _CalendarScreenState extends State<CalendarScreen> {
   }
 
   void calendarTapped(CalendarTapDetails calendarTapDetails) async {
-    if (Provider.of<AppointmentUpdate>(context, listen: false).calendarController.view ==
+    if (Provider.of<PersonalAppointmentUpdate>(context, listen: false)
+            .calendarController
+            .view ==
         CalendarView.month) {
       if (calendarTapDetails.targetElement == CalendarElement.resourceHeader) {
-
         print('111');
       } else if (calendarTapDetails.targetElement ==
           CalendarElement.appointment) {
@@ -85,22 +138,19 @@ class _CalendarScreenState extends State<CalendarScreen> {
 
         //Appointment? existingAppointment = meetings.firstWhere((element) => element.id == oldMeeting.id);
 
-        if (appointmentDetails.recurrenceRule != '' || appointmentDetails.recurrenceRule != null) {
-          print('appointmentDetails.recurrenceRule != '', 반복 일정 O'); // 반복 일정 O
+        if (appointmentDetails.recurrenceRule != '' ||
+            appointmentDetails.recurrenceRule != null) {
+          print('appointmentDetails.recurrenceRule != ' ', 반복 일정 O'); // 반복 일정 O
 
           await updateProvider(appointmentDetails);
           openModalBottomSheet(context, appointmentDetails);
-
         } else {
-          print('appointmentDetails.recurrenceRule == '', 반복 일정 X'); // 반복 일정 X
+          print('appointmentDetails.recurrenceRule == ' ', 반복 일정 X'); // 반복 일정 X
           await updateProvider(appointmentDetails);
           openModalBottomSheet(context, appointmentDetails);
-
         }
-
       } else if (calendarTapDetails.targetElement ==
-          CalendarElement.calendarCell){
-
+          CalendarElement.calendarCell) {
         print('333-1');
         final year = calendarTapDetails.date?.year;
         final month = calendarTapDetails.date?.month;
@@ -123,15 +173,16 @@ class _CalendarScreenState extends State<CalendarScreen> {
           DateTime.now().add(Duration(minutes: 20)).hour,
           (DateTime.now().add(Duration(minutes: 20)).minute / 5).round() * 5,
         );
-        Provider.of<AppointmentUpdate>(context, listen: false)
+        Provider.of<PersonalAppointmentUpdate>(context, listen: false)
             .updateFromDate(fromDate);
-        Provider.of<AppointmentUpdate>(context, listen: false)
+        Provider.of<PersonalAppointmentUpdate>(context, listen: false)
             .updateToDate(toDate);
       } else {
         print('333-2');
       }
-
-    } else if (Provider.of<AppointmentUpdate>(context, listen: false).calendarController.view ==
+    } else if (Provider.of<PersonalAppointmentUpdate>(context, listen: false)
+            .calendarController
+            .view ==
         CalendarView.week) {
       print('444');
       if (calendarTapDetails.targetElement == CalendarElement.viewHeader) {
@@ -147,7 +198,6 @@ class _CalendarScreenState extends State<CalendarScreen> {
 
         await updateProvider(appointmentDetails);
         openModalBottomSheet(context, appointmentDetails);
-
       } else if (calendarTapDetails.targetElement ==
           CalendarElement.calendarCell) {
         print('666 - 2');
@@ -173,14 +223,16 @@ class _CalendarScreenState extends State<CalendarScreen> {
           fromDate.add(Duration(minutes: 20)).hour,
           (fromDate.add(Duration(minutes: 20)).minute / 5).round() * 5,
         );
-        Provider.of<AppointmentUpdate>(context, listen: false)
+        Provider.of<PersonalAppointmentUpdate>(context, listen: false)
             .updateFromDate(fromDate);
-        Provider.of<AppointmentUpdate>(context, listen: false)
+        Provider.of<PersonalAppointmentUpdate>(context, listen: false)
             .updateToDate(toDate);
       } else {
         print('666 - 3');
       }
-    } else if (Provider.of<AppointmentUpdate>(context, listen: false).calendarController.view ==
+    } else if (Provider.of<PersonalAppointmentUpdate>(context, listen: false)
+            .calendarController
+            .view ==
         CalendarView.day) {
       print('777');
 
@@ -205,30 +257,30 @@ class _CalendarScreenState extends State<CalendarScreen> {
         DateTime.now().add(Duration(minutes: 20)).hour,
         (DateTime.now().add(Duration(minutes: 20)).minute / 5).round() * 5,
       );
-      Provider.of<AppointmentUpdate>(context, listen: false)
+      Provider.of<PersonalAppointmentUpdate>(context, listen: false)
           .updateFromDate(fromDate);
-      Provider.of<AppointmentUpdate>(context, listen: false)
+      Provider.of<PersonalAppointmentUpdate>(context, listen: false)
           .updateToDate(toDate);
 
       String _segmentedButtonTitle =
-          Provider.of<AppointmentUpdate>(context, listen: false)
+          Provider.of<PersonalAppointmentUpdate>(context, listen: false)
               .segmentedButtonTitle;
-      Provider.of<AppointmentUpdate>(context, listen: false)
+      Provider.of<PersonalAppointmentUpdate>(context, listen: false)
           .updateCalendarView(_segmentedButtonTitle);
 
       if (calendarTapDetails.targetElement == CalendarElement.viewHeader) {
         print('777-1');
         print(fromDate);
         print(toDate);
-        Provider.of<AppointmentUpdate>(context, listen: false)
+        Provider.of<PersonalAppointmentUpdate>(context, listen: false)
             .calendarController
             .view = CalendarView.day;
         setState(() {
-          Provider.of<AppointmentUpdate>(context, listen: false)
+          Provider.of<PersonalAppointmentUpdate>(context, listen: false)
               .updateSegmentedButtonTitle('일');
-          Provider.of<AppointmentUpdate>(context, listen: false)
+          Provider.of<PersonalAppointmentUpdate>(context, listen: false)
               .updateCalendarView(
-                  Provider.of<AppointmentUpdate>(context, listen: false)
+                  Provider.of<PersonalAppointmentUpdate>(context, listen: false)
                       .segmentedButtonTitle);
         }); // 이유는 모르겠으나 여기서 week 캘린더의 viewHeader를 클릭해야 day 캘린더로 넘어감
       } else if (calendarTapDetails.targetElement ==
@@ -238,7 +290,6 @@ class _CalendarScreenState extends State<CalendarScreen> {
 
         await updateProvider(appointmentDetails);
         openModalBottomSheet(context, appointmentDetails);
-
       } else if (calendarTapDetails.targetElement ==
           CalendarElement.calendarCell) {
         print('888 - 1');
@@ -264,15 +315,14 @@ class _CalendarScreenState extends State<CalendarScreen> {
           fromDate.add(Duration(minutes: 20)).hour,
           (fromDate.add(Duration(minutes: 20)).minute / 5).round() * 5,
         );
-        Provider.of<AppointmentUpdate>(context, listen: false)
+        Provider.of<PersonalAppointmentUpdate>(context, listen: false)
             .updateFromDate(fromDate);
-        Provider.of<AppointmentUpdate>(context, listen: false)
+        Provider.of<PersonalAppointmentUpdate>(context, listen: false)
             .updateToDate(toDate);
       } else {
         print('888 - 2');
       }
-
-    } else if (Provider.of<AppointmentUpdate>(context, listen: false)
+    } else if (Provider.of<PersonalAppointmentUpdate>(context, listen: false)
             .calendarController
             .view ==
         CalendarView.schedule) {
@@ -284,11 +334,16 @@ class _CalendarScreenState extends State<CalendarScreen> {
 
         await updateProvider(appointmentDetails);
         openModalBottomSheet(context, appointmentDetails);
-
       }
     } else {
       print('1000');
     }
+  }
+
+  @override
+  void initState() {
+    //myFuture = fetchAppointmentData();
+    super.initState();
   }
 
   @override
@@ -312,7 +367,9 @@ class _CalendarScreenState extends State<CalendarScreen> {
           child: FloatingActionButton(
             child: Icon(Icons.edit_calendar),
             onPressed: () {
-              showModalBottomSheet(
+              if (Provider.of<LoginStatusUpdate>(context, listen: false)
+                  .isLoggedIn) {
+                showModalBottomSheet(
                   isScrollControlled: true,
                   context: context,
                   builder: (BuildContext context) {
@@ -320,20 +377,51 @@ class _CalendarScreenState extends State<CalendarScreen> {
                       Padding(
                         padding: EdgeInsets.only(
                             bottom: MediaQuery.of(context).viewInsets.bottom),
-                        child: Consumer<AppointmentUpdate>(
+                        child: Consumer<PersonalAppointmentUpdate>(
                             builder: (context, taskData, child) {
                           return AddAppointment(
-                            friendCode: '',
                             userCourt: '',
+                            context: context,
                           );
                         }),
                       ),
                     ]);
-                  });
+                  },
+                );
+              } else {
+                showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return AlertDialog(
+                      insetPadding: EdgeInsets.only(left: 10.0, right: 10.0),
+                      shape: kRoundedRectangleBorder,
+                      title: Text('알림'),
+                      content: Text('로그인이 필요한 화면입니다\n회원가입 화면으로 이동합니다'),
+                      actions: [
+                        TextButton(
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                            // 로그인 페이지로 이
+                            PersistentNavBarNavigator.pushNewScreen(
+                              context,
+                              screen: SignupScreen(),
+                              withNavBar: false,
+                              // OPTIONAL VALUE. True by default.
+                              pageTransitionAnimation:
+                                  PageTransitionAnimation.fade,
+                            );
+                          },
+                          child: Text('확인'),
+                        ),
+                      ],
+                    );
+                  },
+                );
+              }
             },
           ),
         ),
-          floatingActionButtonLocation: FloatingActionButtonLocation.miniEndFloat,
+        floatingActionButtonLocation: FloatingActionButtonLocation.miniEndFloat,
         body: Column(
           children: [
             Padding(
@@ -373,47 +461,85 @@ class SingleChoice extends StatefulWidget {
 }
 
 class _SingleChoiceState extends State<SingleChoice> {
-
   final List<String> _list = ['전체', '월', '주', '일'];
 
   @override
   Widget build(BuildContext context) {
-    return SegmentedButton<String>(
-      segments: <ButtonSegment<String>>[
-        ButtonSegment<String>(
-            value: _list[0], label: Text(_list[0]), icon: Icon(Icons.schedule)),
-        ButtonSegment<String>(
-            value: _list[1],
-            label: Text(_list[1]),
-            icon: Icon(Icons.calendar_view_month)),
-        ButtonSegment<String>(
-            value: _list[2],
-            label: Text(_list[2]),
-            icon: Icon(Icons.calendar_view_week)),
-        ButtonSegment<String>(
-            value: _list[3],
-            label: Text(_list[3]),
-            icon: Icon(Icons.calendar_view_day))
-      ],
-      selected: <String>{
-        Provider.of<AppointmentUpdate>(context, listen: false)
-            .segmentedButtonTitle
-      }, //<String>{_selected},
-      onSelectionChanged: (newSelection) {
-        setState(() {
-          print(newSelection);
-          // _selected = newSelection.first;
-          // print(_selected);
-          Provider.of<AppointmentUpdate>(context, listen: false)
-              .updateSegmentedButtonTitle(newSelection.first);
-          Provider.of<AppointmentUpdate>(context, listen: false)
-              .updateCalendarView(
-                  Provider.of<AppointmentUpdate>(context, listen: false)
-                      .segmentedButtonTitle);
-        });
-      },
-      style: ButtonStyle(
-        backgroundColor: MaterialStateProperty.all(Colors.grey),
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(30),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.5),
+            //spreadRadius: 5,
+            blurRadius: 5,
+            offset: Offset(0, 3), // changes position of shadow
+          ),
+        ],
+      ),
+      child: SegmentedButton<String>(
+        segments: <ButtonSegment<String>>[
+          ButtonSegment<String>(
+              value: _list[0],
+              label: Text(_list[0]),
+              icon: Icon(Icons.schedule)),
+          ButtonSegment<String>(
+              value: _list[1],
+              label: Text(_list[1]),
+              icon: Icon(Icons.calendar_view_month)),
+          ButtonSegment<String>(
+              value: _list[2],
+              label: Text(_list[2]),
+              icon: Icon(Icons.calendar_view_week)),
+          ButtonSegment<String>(
+              value: _list[3],
+              label: Text(_list[3]),
+              icon: Icon(Icons.calendar_view_day))
+        ],
+        selected: <String>{
+          Provider.of<PersonalAppointmentUpdate>(context, listen: false)
+              .segmentedButtonTitle
+        }, //<String>{_selected},
+        onSelectionChanged: (newSelection) {
+          setState(() {
+            print(newSelection);
+            // _selected = newSelection.first;
+            // print(_selected);
+            Provider.of<PersonalAppointmentUpdate>(context, listen: false)
+                .updateSegmentedButtonTitle(newSelection.first);
+            Provider.of<PersonalAppointmentUpdate>(context, listen: false)
+                .updateCalendarView(Provider.of<PersonalAppointmentUpdate>(
+                        context,
+                        listen: false)
+                    .segmentedButtonTitle);
+          });
+        },
+        style: ButtonStyle(
+          textStyle: MaterialStateProperty.all<TextStyle>(
+            TextStyle(
+              fontSize: 16, // Adjust the font size as needed
+              // Other text style properties...
+            ),
+          ),
+          //backgroundColor: MaterialStateProperty.all(Colors.blue),
+          backgroundColor: MaterialStateProperty.resolveWith<Color>(
+              (Set<MaterialState> states) {
+            if (states.contains(MaterialState.selected)) {
+              // If the button is selected (clicked), set text color to black
+              return Colors.lightBlue;
+            }
+            // Default text color for unselected state
+            return Colors.blue;
+          }),
+          foregroundColor: MaterialStateProperty.all(Colors.white),
+          elevation: MaterialStateProperty.all(8),
+          side: MaterialStateProperty.resolveWith<BorderSide>(
+            (Set<MaterialState> states) {
+              // Set the border color based on the states (e.g., pressed)
+              return BorderSide(color: Colors.white, width: 0.5);
+            },
+          ),
+        ),
       ),
     );
   }

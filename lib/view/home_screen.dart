@@ -8,7 +8,7 @@ import 'package:persistent_bottom_nav_bar/persistent_tab_view.dart';
 import 'package:provider/provider.dart';
 
 import '../models/search.dart';
-import '../viewModel/appointmentUpdate.dart';
+import '../viewModel/personalAppointmentUpdate.dart';
 import 'map_screen.dart';
 import 'calendar_screen.dart';
 
@@ -33,7 +33,8 @@ class _HomeScreenState extends State<HomeScreen> {
       MainScreen(),
       //ProfileScreen(),
       CalendarScreen(),
-      SignupScreen(),
+      //SignupScreen(),
+      CalendarScreen(),
       SignupScreen(),
       SettingScreen(),
       //MapScreen()
@@ -49,20 +50,20 @@ class _HomeScreenState extends State<HomeScreen> {
         inactiveColorPrimary: CupertinoColors.systemGrey,
       ),
       PersistentBottomNavBarItem(
-        icon: Icon(CupertinoIcons.settings),
-        title: ("홈 스크린"),
-        activeColorPrimary: CupertinoColors.activeBlue,
-        inactiveColorPrimary: CupertinoColors.systemGrey,
-      ),
-      PersistentBottomNavBarItem(
         icon: Icon(CupertinoIcons.chart_bar_circle),
         title: ("캘린더"),
         activeColorPrimary: CupertinoColors.activeBlue,
         inactiveColorPrimary: CupertinoColors.systemGrey,
       ),
       PersistentBottomNavBarItem(
+        icon: Icon(CupertinoIcons.settings),
+        title: ("설정"),
+        activeColorPrimary: CupertinoColors.activeBlue,
+        inactiveColorPrimary: CupertinoColors.systemGrey,
+      ),
+      PersistentBottomNavBarItem(
         icon: Icon(CupertinoIcons.chat_bubble_2),
-        title: ("채팅"),
+        title: ("매칭"),
         activeColorPrimary: CupertinoColors.activeBlue,
         inactiveColorPrimary: CupertinoColors.systemGrey,
       ),
@@ -108,23 +109,37 @@ class _HomeScreenState extends State<HomeScreen> {
         controller: _controller,
         onItemSelected: (int) {
           setState(() {
-            print('int: $int');
+
             switch (int) {
               case 0:
+              // WidgetsBinding.instance?.addPostFrameCallback((_) {
+              //   try {
+              //     Provider.of<AppointmentUpdate>(context, listen: false)
+              //         .daywiseDurationsCalculate(false);
+              //     Provider.of<AppointmentUpdate>(context, listen: false)
+              //         .countHours(true);
+              //     Provider.of<AppointmentUpdate>(context, listen: false).updateRecentDays(0);
+              //     setState(() {});
+              //   } catch (e) {
+              //     print(e);
+              //   }
+              //
+              // });
                 return print('$int');
               case 1:
-                WidgetsBinding.instance?.addPostFrameCallback((_) {
-                  try {
-                    Provider.of<AppointmentUpdate>(context, listen: false)
-                        .daywiseDurationsCalculate(true);
-                    Provider.of<AppointmentUpdate>(context, listen: false)
-                        .countHours(true);
-                    Provider.of<AppointmentUpdate>(context, listen: false).updateRecentDays(0);
-                    setState(() {});
-                  } catch (e) {
-                    print(e);
-                  }
-                });
+                // WidgetsBinding.instance?.addPostFrameCallback((_) {
+                //   try {
+                //     Provider.of<AppointmentUpdate>(context, listen: false)
+                //         .daywiseDurationsCalculate(true);
+                //     Provider.of<AppointmentUpdate>(context, listen: false)
+                //         .countHours(true);
+                //     Provider.of<AppointmentUpdate>(context, listen: false).updateRecentDays(0);
+                //     setState(() {});
+                //   } catch (e) {
+                //     print(e);
+                //   }
+                //
+                // });
                 return print('$int');
               case 2:
                 return print('$int');

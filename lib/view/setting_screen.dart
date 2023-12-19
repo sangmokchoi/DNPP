@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dnpp/models/userProfile.dart';
+import 'package:dnpp/view/main_screen.dart';
 import 'package:dnpp/view/profile_screen.dart';
 import 'package:dnpp/viewModel/loginStatusUpdate.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -16,6 +17,7 @@ import 'package:dnpp/repository/repository_firebase.dart' as viewModel;
 import '../constants.dart';
 import '../models/pingpongList.dart';
 import '../viewModel/profileUpdate.dart';
+import 'home_screen.dart';
 
 class SettingScreen extends StatefulWidget {
   static String id = '/SettingScreenID';
@@ -26,18 +28,6 @@ class SettingScreen extends StatefulWidget {
 
 class _SettingScreenState extends State<SettingScreen> {
   FirebaseFirestore db = FirebaseFirestore.instance;
-
-  List<dynamic>? _pingpongList = [
-    PingpongList(
-        title: "title",
-        link: "link",
-        description: "description",
-        telephone: "telephone",
-        address: "address",
-        roadAddress: "roadAddress",
-        mapx: 0.0,
-        mapy: 0.0)
-  ];
 
   List<String> settingMenuList = [
     '프로필 수정',
@@ -61,9 +51,6 @@ class _SettingScreenState extends State<SettingScreen> {
   @override
   Widget build(BuildContext context) {
 
-    final _currentUser = Provider.of<LoginStatusUpdate>(context, listen: false).currentUser;
-    final userProfile = Provider.of<ProfileUpdate>(context, listen: false).userProfile;
-
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -71,7 +58,7 @@ class _SettingScreenState extends State<SettingScreen> {
         children: [
           Padding(
             padding:
-                const EdgeInsets.symmetric(vertical: 15.0, horizontal: 8.0),
+                const EdgeInsets.only(top: 25.0, bottom: 0.0),
             child: Column(
               children: [
                 Container(
@@ -81,20 +68,32 @@ class _SettingScreenState extends State<SettingScreen> {
                       borderRadius: BorderRadius.all(Radius.circular(40.0)),
                       image: DecorationImage(
                         fit: BoxFit.cover,
-                        image: NetworkImage(
-                          userProfile.photoUrl,
-                        ),
+                        image: Provider.of<LoginStatusUpdate>(context, listen: false).isLoggedIn
+                            ? NetworkImage(
+                                Provider.of<ProfileUpdate>(context,
+                                        listen: false)
+                                    .userProfile
+                                    .photoUrl,
+                              )
+                            : AssetImage('images/empty_profile_160.png')
+                                as ImageProvider<Object>,
                       ) //가져온 이미지를 화면에 띄워주는 코드
-                  ),
+                      ),
                 ),
                 SizedBox(
                   height: 15.0,
                 ),
                 Text(
-                  userProfile.nickName,
+                  Provider.of<LoginStatusUpdate>(context, listen: false).isLoggedIn
+                      ? Provider.of<ProfileUpdate>(context, listen: false)
+                          .userProfile
+                          .nickName
+                      : '반갑습니다!',
                   style: kProfileTextStyle,
                 ),
-                Text('${_currentUser.email}'),
+                Text(Provider.of<LoginStatusUpdate>(context, listen: false).isLoggedIn
+                    ? '${Provider.of<LoginStatusUpdate>(context, listen: false).currentUser.email}'
+                    : '로그인이 필요합니다'),
               ],
             ),
           ),
@@ -137,8 +136,10 @@ class _SettingScreenState extends State<SettingScreen> {
                           PersistentNavBarNavigator.pushNewScreen(
                             context,
                             screen: ProfileScreen(),
-                            withNavBar: false, // OPTIONAL VALUE. True by default.
-                            pageTransitionAnimation: PageTransitionAnimation.cupertino,
+                            withNavBar: false,
+                            // OPTIONAL VALUE. True by default.
+                            pageTransitionAnimation:
+                                PageTransitionAnimation.cupertino,
                           );
 
                           // await Navigator.pushAndRemoveUntil(
@@ -162,15 +163,31 @@ class _SettingScreenState extends State<SettingScreen> {
                             },
                           );
                           await Future.delayed(Duration(seconds: 1));
-
                           await viewModel.FirebaseRepository().signOut();
                           await Future.delayed(Duration.zero);
 
                           Navigator.pop(context);
 
+                          setState(() {
+
+                          });
+
                           // await Provider.of<LoginStatusUpdate>(context,
                           //         listen: false)
                           //     .logout();
+                          break;
+                        case 6:
+                          print('회원 탈퇴');
+                          await viewModel.FirebaseRepository().deleteUserAccount();
+                          //Navigator.pushNamed(context, '/');
+                          PersistentNavBarNavigator.pushNewScreenWithRouteSettings(
+                            context,
+                            screen: HomeScreen(),
+                            withNavBar: false,
+                            // OPTIONAL VALUE. True by default.
+                            pageTransitionAnimation:
+                            PageTransitionAnimation.fade, settings: RouteSettings(),
+                          );
                           break;
                       }
                     },

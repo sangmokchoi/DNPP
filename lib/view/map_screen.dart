@@ -133,11 +133,12 @@ class _MapScreenState extends State<MapScreen> {
   }
 
   void showAlert() {
-    if (Platform.isAndroid) {
       showDialog(
         context: context,
         builder: (context) {
           return AlertDialog(
+            insetPadding: EdgeInsets.only(left: 10.0, right: 10.0),
+            shape: kRoundedRectangleBorder,
             title: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -172,32 +173,7 @@ class _MapScreenState extends State<MapScreen> {
           );
         },
       );
-    } else if (Platform.isIOS) {
-      showCupertinoDialog(
-        context: context,
-        builder: (context) {
-          return CupertinoAlertDialog(
-            title: Text(
-              "검색 결과가 없습니다",
-              style: TextStyle(fontWeight: FontWeight.normal),
-            ),
-            content: Text("단어를 바꿔서 검색해주세요"),
-            actions: [
-              CupertinoDialogAction(
-                isDefaultAction: true,
-                child: Text(
-                  "확인",
-                  style: TextStyle(fontWeight: FontWeight.normal),
-                ),
-                onPressed: () async {
-                  Navigator.pop(context);
-                },
-              )
-            ],
-          );
-        },
-      );
-    }
+
   }
 
   Future<void> updatePPLocation(Map<String, dynamic> searchResult) async {
@@ -336,11 +312,13 @@ class _MapScreenState extends State<MapScreen> {
                                   IconButton(
                                     onPressed: () {
                                       print('IconButton 클릭');
-                                      if (Platform.isAndroid) {
+
                                         showDialog(
                                           context: context,
                                           builder: (context) {
                                             return AlertDialog(
+                                              insetPadding: EdgeInsets.only(left: 10.0, right: 10.0),
+                                              shape: kRoundedRectangleBorder,
                                               title: Text("선택할 탁구장을 삭제할까요?"),
                                               content: Text(
                                                   "삭제를 원한다면 확인 버튼을 클릭해주세요"),
@@ -379,49 +357,7 @@ class _MapScreenState extends State<MapScreen> {
                                             );
                                           },
                                         );
-                                      } else if (Platform.isIOS) {
-                                        showCupertinoDialog(
-                                          context: context,
-                                          builder: (context) {
-                                            return CupertinoAlertDialog(
-                                              title: Text("선택할 탁구장을 삭제할까요?"),
-                                              content: Text(
-                                                  "삭제를 원한다면 확인 버튼을 클릭해주세요"),
-                                              actions: [
-                                                CupertinoDialogAction(
-                                                  isDefaultAction: false,
-                                                  child: Text(
-                                                    "취소",
-                                                    style: TextStyle(
-                                                        fontWeight: FontWeight
-                                                            .normal),
-                                                  ),
-                                                  onPressed: () async {
-                                                    Navigator.pop(context);
-                                                  },
-                                                ),
-                                                CupertinoDialogAction(
-                                                  isDefaultAction: true,
-                                                  child: Text(
-                                                    "확인",
-                                                    style: TextStyle(
-                                                        fontWeight: FontWeight
-                                                            .normal),
-                                                  ),
-                                                  onPressed: () async {
-                                                    Navigator.pop(context);
-                                                    setState(() {
 
-                                                      Provider.of<ProfileUpdate>(context, listen: false)
-                                                          .removePingpongList(index);
-                                                    });
-                                                  },
-                                                ),
-                                              ],
-                                            );
-                                          },
-                                        );
-                                      }
                                     },
                                     icon: Icon(
                                       CupertinoIcons.clear_circled,
