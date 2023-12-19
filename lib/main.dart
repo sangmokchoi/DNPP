@@ -7,11 +7,13 @@ import 'package:dnpp/view/profile_screen.dart';
 import 'package:dnpp/view/map_screen.dart';
 import 'package:dnpp/view/setting_screen.dart';
 import 'package:dnpp/view/signup_screen.dart';
-import 'package:dnpp/viewModel/appointmentUpdate.dart';
+import 'package:dnpp/viewModel/courtAppointmentUpdate.dart';
+import 'package:dnpp/viewModel/personalAppointmentUpdate.dart';
 import 'package:dnpp/viewModel/loginStatusUpdate.dart';
 import 'package:dnpp/viewModel/mapWidgetUpdate.dart';
 import 'package:dnpp/viewModel/profileUpdate.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:animated_splash_screen/animated_splash_screen.dart';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -42,22 +44,23 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-
   runApp(HomePage());
 }
 
 class HomePage extends StatelessWidget {
-
   // This widget is the root of your application.
   @override
   Widget build(final BuildContext context) {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(
-            create: (context) => MapWidgetUpdate(),
+          create: (context) => MapWidgetUpdate(),
         ),
         ChangeNotifierProvider(
-          create: (context) => AppointmentUpdate(),
+          create: (context) => PersonalAppointmentUpdate(),
+        ),
+        ChangeNotifierProvider(
+          create: (context) => CourtAppointmentUpdate(),
         ),
         ChangeNotifierProvider(
           create: (context) => ProfileUpdate(),
@@ -67,26 +70,39 @@ class HomePage extends StatelessWidget {
         ),
       ],
       child: GestureDetector(
-        onTap: (){
+        onTap: () {
           FocusManager.instance.primaryFocus?.unfocus();
         },
         child: MaterialApp(
-          title: "Persistent Bottom Navigation Bar example project",
+          home: AnimatedSplashScreen(
+            backgroundColor: Theme.of(context).primaryColor,
+            splash: Container(
+              decoration: BoxDecoration(
+                image: DecorationImage(
+                  image: AssetImage('images/핑퐁플러스 로고.png'),
+                  //fit: BoxFit.cover,
+                ),
+              ),
+            ),
+            nextScreen: HomeScreen(),
+            splashTransition: SplashTransition.fadeTransition,
+          ),
           theme: ThemeData(
+            primaryColor: Colors.blueAccent,
             primarySwatch: Colors.blue,
             secondaryHeaderColor: Colors.grey,
           ),
-          initialRoute: HomeScreen.id,
-          routes: {
-            // When navigating to the "/" route, build the FirstScreen widget.
-            HomeScreen.id: (final context) => HomeScreen(), // '/'
-            SignupScreen.id: (final context) => SignupScreen(), // '/SignupScreenID'
-            ProfileScreen.id: (final context) => ProfileScreen(),// '/ProfileScreenID'
-            MainScreen.id: (final context) => MainScreen(), //MainScreenID
-            MapScreen.id: (final context) => MapScreen(), //MapScreenID
-            CalendarScreen.id: (final context) => CalendarScreen(),
-            SettingScreen.id: (final context) => SettingScreen(),//StatisticsScreenID
-          },
+          //initialRoute: HomeScreen.id,
+          // routes: {
+          //   // When navigating to the "/" route, build the FirstScreen widget.
+          //   HomeScreen.id: (context) => HomeScreen(), // '/'
+          //   SignupScreen.id: (context) => SignupScreen(), // '/SignupScreenID'
+          //   ProfileScreen.id: (context) => ProfileScreen(),// '/ProfileScreenID'
+          //   MainScreen.id: (context) => MainScreen(), //MainScreenID
+          //   MapScreen.id: (context) => MapScreen(), //MapScreenID
+          //   CalendarScreen.id: (context) => CalendarScreen(),
+          //   SettingScreen.id: (context) => SettingScreen(),//StatisticsScreenID
+          // },
           localizationsDelegates: [
             GlobalMaterialLocalizations.delegate,
             GlobalWidgetsLocalizations.delegate,
@@ -101,4 +117,3 @@ class HomePage extends StatelessWidget {
     );
   }
 }
-

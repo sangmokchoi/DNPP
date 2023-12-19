@@ -80,7 +80,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     UserProfile? currentUserProfile =
         Provider.of<ProfileUpdate>(context, listen: false).userProfile;
 
-    if (currentUserProfile != null) {
+    if (currentUserProfile.uid != 'uid') {
       newProfile = currentUserProfile;
       print('userProfile이 초기화된 경우');
 
@@ -197,75 +197,56 @@ class _ProfileScreenState extends State<ProfileScreen> {
               size: 40,
             ),
             onPressed: () async {
-              if (Platform.isAndroid) {
+
                 showDialog(
                   context: context,
                   builder: (context) {
                     return AlertDialog(
-                      title: Text("프로필 수정"),
-                      content: Text("프로필 사진 변경을 위한 방법을 선택해주세요"),
+                      insetPadding: EdgeInsets.only(left: 10.0, right: 10.0),
+                      shape: kRoundedRectangleBorder,
+                      title: Text("프로필 수정", textAlign: TextAlign.center),
+                      content: Text("프로필 사진 변경을 위한 방법을\n선택해주세요", textAlign: TextAlign.center,),
                       actions: [
-                        TextButton(
-                          style: TextButton.styleFrom(
-                            textStyle: Theme.of(context).textTheme.labelLarge,
-                          ),
-                          child: const Text("카메라 촬영"),
-                          onPressed: () async {
-                            getImage(ImageSource.camera);
-                            Navigator.pop(context);
-                          },
-                        ),
-                        TextButton(
-                          style: TextButton.styleFrom(
-                            textStyle: Theme.of(context).textTheme.labelLarge,
-                          ),
-                          child: const Text("사진첩 선택"),
-                          onPressed: () async {
-                            getImage(ImageSource.gallery);
-                            Navigator.pop(context);
-                          },
+                        ButtonBar(
+                          alignment: MainAxisAlignment.spaceBetween,
+                          mainAxisSize: MainAxisSize.max,
+                          children: [
+                            Container(
+                              width: kAlertDialogTextButtonWidth,
+                              child: TextButton(
+                                style: kConfirmButtonStyle,
+                                child: Text(
+                                    "카메라 촬영",
+                                  textAlign: TextAlign.center,
+                                  style: kTextButtonTextStyle,
+                                ),
+                                onPressed: () async {
+                                  getImage(ImageSource.camera);
+                                  Navigator.pop(context);
+                                },
+                              ),
+                            ),
+                            Container(
+                              width: kAlertDialogTextButtonWidth,
+                              child: TextButton(
+                                style: kConfirmButtonStyle,
+                                child: Text(
+                                    "사진첩 선택",
+                                  textAlign: TextAlign.center,
+                                  style: kTextButtonTextStyle,
+                                ),
+                                onPressed: () async {
+                                  getImage(ImageSource.gallery);
+                                  Navigator.pop(context);
+                                },
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     );
                   },
                 );
-              } else if (Platform.isIOS) {
-                showCupertinoDialog(
-                  context: context,
-                  builder: (context) {
-                    return CupertinoAlertDialog(
-                      title: Text("프로필 수정"),
-                      content: Text("프로필 사진 변경을 위한 방법을 선택해주세요"),
-                      actions: [
-                        CupertinoDialogAction(
-                          isDefaultAction: true,
-                          child: Text(
-                            "카메라 촬영",
-                            style: TextStyle(fontWeight: FontWeight.normal),
-                          ),
-                          onPressed: () async {
-                            getImage(ImageSource.camera);
-
-                            Navigator.pop(context);
-                          },
-                        ),
-                        CupertinoDialogAction(
-                          isDefaultAction: true,
-                          child: Text(
-                            "사진첩 선택",
-                            style: TextStyle(fontWeight: FontWeight.normal),
-                          ),
-                          onPressed: () async {
-                            getImage(ImageSource.gallery);
-
-                            Navigator.pop(context);
-                          },
-                        )
-                      ],
-                    );
-                  },
-                );
-              }
             },
           ),
         ),
@@ -345,29 +326,81 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     // )
                     Container(
                       width: 50.0,
-                      child: isEditing ? null : TextButton( // 편집 버튼 누르기 전까지는 유저 interaction 비활성화
-                        onPressed: () {
-                          //Navigator.pop(context);
-                          setState(() {
-                            isEditing = true;
-                          });
-                        },
-                        child: Text(
-                          '편집',
-                          style: kElevationButtonStyle,
-                          textAlign: TextAlign.end,
-                        ),
-                      ),
+                      child: isEditing
+                          ? null
+                          : TextButton(
+                              // 편집 버튼 누르기 전까지는 유저 interaction 비활성화
+                              onPressed: () {
+                                //Navigator.pop(context);
+
+                                showDialog(
+                                  context: context,
+                                  builder: (context) {
+                                    return AlertDialog(
+                                      insetPadding: EdgeInsets.only(left: 10.0, right: 10.0),
+                                      shape: kRoundedRectangleBorder,
+                                      title: Text('프로필 편집', textAlign: TextAlign.center),
+                                      content: Text('프로필을 편집하시겠습니까?', textAlign: TextAlign.center),
+                                      actions: [
+                                        ButtonBar(
+                                          alignment: MainAxisAlignment.spaceBetween,
+                                          mainAxisSize: MainAxisSize.max,
+                                          children: [
+                                            Container(
+                                              width: kAlertDialogTextButtonWidth, //MediaQuery.of(context).size.width * 0.3,
+                                              child: TextButton(
+                                                style: kCancelButtonStyle,//ButtonStyle(backgroundColor: MaterialStateProperty.all(Colors.grey),),
+                                                onPressed: () {
+                                                  Navigator.pop(context);
+                                                },
+                                                child: Text('취소',
+                                                  textAlign: TextAlign.center,
+                                                  style: kTextButtonTextStyle,
+                                                ),
+                                              ),
+                                            ),
+                                            Container(
+                                              width: kAlertDialogTextButtonWidth, //MediaQuery.of(context).size.width * 0.3,
+                                              child: TextButton(
+                                                style: kConfirmButtonStyle,//ButtonStyle(backgroundColor: MaterialStateProperty.all(Colors.blue),),
+                                                onPressed: () {
+                                                  Navigator.pop(context);
+
+                                                  setState(() {
+                                                    isEditing = true;
+                                                  });
+                                                },
+                                                child: Text('확인',
+                                                  textAlign: TextAlign.center,
+                                                  style: kTextButtonTextStyle,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    );
+                                  },
+                                );
+                              },
+                              child: Text(
+                                '편집',
+                                style: kElevationButtonStyle,
+                                textAlign: TextAlign.end,
+                              ),
+                            ),
                     ),
                   ],
                 ),
               ), // 프로필 설정 Text
               AbsorbPointer(
-                absorbing: isEditing ? false : true, //isEditing == true이면, AbsorbPointer는 false여야 수정 가능
-                  child: buildProfilePhoto(),
+                absorbing: isEditing ? false : true,
+                //isEditing == true이면, AbsorbPointer는 false여야 수정 가능
+                child: buildProfilePhoto(),
               ), // 유저 프로필 사진
               AbsorbPointer(
-                absorbing: isEditing ? false : true, //isEditing == true이면, AbsorbPointer는 false여야 수정 가능
+                absorbing: isEditing ? false : true,
+                //isEditing == true이면, AbsorbPointer는 false여야 수정 가능
                 child: Column(
                   children: [
                     Padding(
@@ -390,8 +423,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                     // 닉네임
                     Padding(
-                      padding:
-                          EdgeInsets.symmetric(horizontal: 25.0, vertical: 10.0),
+                      padding: EdgeInsets.symmetric(
+                          horizontal: 25.0, vertical: 10.0),
                       child: Column(
                         children: [
                           Align(
@@ -403,7 +436,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             children: [
                               ToggleButtons(
                                   borderRadius: BorderRadius.circular(4.0),
-                                  isSelected: Provider.of<ProfileUpdate>(context,
+                                  isSelected: Provider.of<ProfileUpdate>(
+                                          context,
                                           listen: false)
                                       .genderIsSelected,
                                   constraints: BoxConstraints(
@@ -468,7 +502,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             child: Slider(
                               value: _currentAgeRangeSliderValue,
                               min: 0.0,
-                              max: UserProfile.ageRangeList.length.toDouble() - 1,
+                              max: UserProfile.ageRangeList.length.toDouble() -
+                                  1,
                               divisions:
                                   UserProfile.ageRangeList.length.toInt() - 1,
                               label:
@@ -477,8 +512,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 print(value);
                                 setState(() {
                                   _currentAgeRangeSliderValue = value;
-                                  newProfile.ageRange = UserProfile.ageRangeList[
-                                      _currentAgeRangeSliderValue.toInt()];
+                                  newProfile.ageRange =
+                                      UserProfile.ageRangeList[
+                                          _currentAgeRangeSliderValue.toInt()];
                                 });
                               },
                             ),
@@ -497,7 +533,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             children: [
                               Text('경력', style: kProfileTextStyle),
                               Text(
-                                  '${UserProfile.playedYearsList[_currentPlayedYearsSliderValue.toInt()]}',
+                                  UserProfile.playedYearsList[_currentPlayedYearsSliderValue.toInt()],
                                   style: kProfileTextStyle),
                             ],
                           ),
@@ -511,18 +547,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             child: Slider(
                               value: _currentPlayedYearsSliderValue,
                               min: 0.0,
-                              max: UserProfile.playedYearsList.length.toDouble() -
+                              max: UserProfile.playedYearsList.length
+                                      .toDouble() -
                                   1,
                               divisions:
-                                  UserProfile.playedYearsList.length.toInt() - 1,
+                                  UserProfile.playedYearsList.length.toInt() -
+                                      1,
                               label:
-                                  '${UserProfile.playedYearsList[_currentPlayedYearsSliderValue.toInt()]}',
+                                  UserProfile.playedYearsList[_currentPlayedYearsSliderValue.toInt()],
                               onChanged: (double value) {
                                 setState(() {
                                   _currentPlayedYearsSliderValue = value;
-                                  newProfile.playedYears =
-                                      UserProfile.playedYearsList[
-                                          _currentPlayedYearsSliderValue.toInt()];
+                                  newProfile.playedYears = UserProfile
+                                          .playedYearsList[
+                                      _currentPlayedYearsSliderValue.toInt()];
                                 });
                               },
                             ),
@@ -573,7 +611,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                         margin: EdgeInsets.only(right: 5.0),
                                         padding: EdgeInsets.all(8.0),
                                         decoration: BoxDecoration(
-                                          border: Border.all(color: Colors.blue),
+                                          border:
+                                              Border.all(color: Colors.blue),
                                           borderRadius:
                                               BorderRadius.circular(20.0),
                                         ),
@@ -595,97 +634,63 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                         onPressed: () {
                                           print('IconButton 클릭');
 
-                                          if (Platform.isAndroid) {
                                             showDialog(
                                               context: context,
                                               builder: (context) {
                                                 return AlertDialog(
-                                                  title: Text("선택할 지역을 삭제할까요?"),
+                                                  insetPadding: EdgeInsets.only(left: 10.0, right: 10.0),
+                                                  shape: kRoundedRectangleBorder,
+                                                  title: Text("선택할 지역을 삭제할까요?", textAlign: TextAlign.center,),
                                                   content: Text(
-                                                      "삭제를 원한다면 확인 버튼을 클릭해주세요"),
+                                                      "삭제를 원한다면\n확인 버튼을 클릭해주세요",
+                                                  textAlign: TextAlign.center,),
                                                   actions: [
-                                                    TextButton(
-                                                      style: TextButton.styleFrom(
-                                                        textStyle:
-                                                            Theme.of(context)
-                                                                .textTheme
-                                                                .labelLarge,
-                                                      ),
-                                                      child: const Text("취소"),
-                                                      onPressed: () async {
-                                                        Navigator.pop(context);
-                                                      },
-                                                    ),
-                                                    TextButton(
-                                                      style: TextButton.styleFrom(
-                                                        textStyle:
-                                                            Theme.of(context)
-                                                                .textTheme
-                                                                .labelLarge,
-                                                      ),
-                                                      child: const Text("확인"),
-                                                      onPressed: () async {
-                                                        Navigator.pop(context);
-                                                        setState(() {
-                                                          String deleteLocation =
-                                                              pickedLocationList[
-                                                                  index];
-                                                          pickedLocationList
-                                                              .remove(
-                                                                  deleteLocation);
-                                                        });
-                                                      },
+                                                    ButtonBar(
+                                                      alignment: MainAxisAlignment.spaceBetween,
+                                                      mainAxisSize: MainAxisSize.max,
+                                                      children: [
+                                                        Container(
+                                                          width: kAlertDialogTextButtonWidth,
+                                                          child: TextButton(
+                                                            style: kCancelButtonStyle,
+                                                            child: Text("취소",
+                                                              textAlign: TextAlign.center,
+                                                              style: kTextButtonTextStyle,
+                                                            ),
+                                                            onPressed: () async {
+                                                              Navigator.pop(context);
+                                                            },
+                                                          ),
+                                                        ),
+                                                        Container(
+                                                          width: kAlertDialogTextButtonWidth,
+                                                          child: TextButton(
+                                                            style: kConfirmButtonStyle,
+                                                            child: Text("확인",
+                                                              textAlign: TextAlign.center,
+                                                              style: kTextButtonTextStyle,
+                                                            ),
+                                                            onPressed: () async {
+                                                              Navigator.pop(context);
+                                                              setState(() {
+                                                                String
+                                                                    deleteLocation =
+                                                                    pickedLocationList[
+                                                                        index];
+                                                                pickedLocationList
+                                                                    .remove(
+                                                                        deleteLocation);
+                                                              });
+                                                            },
+                                                          ),
+                                                        ),
+                                                      ],
                                                     ),
                                                   ],
                                                 );
                                               },
                                             );
-                                          } else if (Platform.isIOS) {
-                                            showCupertinoDialog(
-                                              context: context,
-                                              builder: (context) {
-                                                return CupertinoAlertDialog(
-                                                  title: Text("선택할 지역을 삭제할까요?"),
-                                                  content: Text(
-                                                      "삭제를 원한다면 확인 버튼을 클릭해주세요"),
-                                                  actions: [
-                                                    CupertinoDialogAction(
-                                                      isDefaultAction: false,
-                                                      child: Text(
-                                                        "취소",
-                                                        style: TextStyle(
-                                                            fontWeight: FontWeight
-                                                                .normal),
-                                                      ),
-                                                      onPressed: () async {
-                                                        Navigator.pop(context);
-                                                      },
-                                                    ),
-                                                    CupertinoDialogAction(
-                                                      isDefaultAction: true,
-                                                      child: Text(
-                                                        "확인",
-                                                        style: TextStyle(
-                                                            fontWeight: FontWeight
-                                                                .normal),
-                                                      ),
-                                                      onPressed: () async {
-                                                        Navigator.pop(context);
-                                                        setState(() {
-                                                          String deleteLocation =
-                                                              pickedLocationList[
-                                                                  index];
-                                                          pickedLocationList
-                                                              .remove(
-                                                                  deleteLocation);
-                                                        });
-                                                      },
-                                                    ),
-                                                  ],
-                                                );
-                                              },
-                                            );
-                                          }
+
                                         },
                                         icon: Icon(
                                           CupertinoIcons.clear_circled,
@@ -708,8 +713,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                     // 등록된 활동 지역
                     Padding(
-                      padding:
-                          EdgeInsets.symmetric(horizontal: 25.0, vertical: 10.0),
+                      padding: EdgeInsets.symmetric(
+                          horizontal: 25.0, vertical: 10.0),
                       child: TextFormField(
                         controller: _locationTextFormFieldController,
                         decoration: InputDecoration(
@@ -750,11 +755,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   height:
                                       filteredRegions.length > 2 ? 150.0 : null,
                                   child: Scrollbar(
-                                    controller: _addressVerticalScrollController,
+                                    controller:
+                                        _addressVerticalScrollController,
                                     thumbVisibility: true,
                                     child: ListView.builder(
                                       scrollDirection: Axis.vertical,
-                                      controller: _addressVerticalScrollController,
+                                      controller:
+                                          _addressVerticalScrollController,
                                       shrinkWrap: true,
                                       itemCount: filteredRegions.length,
                                       itemBuilder: (context, index) {
@@ -773,7 +780,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                                       setState(() {
                                                         Future.delayed(
                                                           Duration(
-                                                              milliseconds: 200),
+                                                              milliseconds:
+                                                                  200),
                                                           () {
                                                             _FirstHorizontalScrollController
                                                                 .animateTo(
@@ -818,145 +826,99 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                                           } else {
                                                             print(
                                                                 '활동 지역 등록은 총 3개까지만 가능합니다.');
-                                                            if (Platform
-                                                                .isAndroid) {
+
                                                               showDialog(
-                                                                context: context,
+                                                                context:
+                                                                    context,
                                                                 builder:
                                                                     (context) {
                                                                   return AlertDialog(
+                                                                    insetPadding: EdgeInsets.only(left: 10.0, right: 10.0),
+                                                                    shape: kRoundedRectangleBorder,
                                                                     title: Text(
-                                                                        "알림"),
+                                                                        "알림", textAlign: TextAlign.center,),
                                                                     content: Text(
-                                                                        "활동 지역 등록은 총 3개까지만 가능합니다"),
+                                                                        "활동 지역 등록은\n총 3개까지만 가능합니다", textAlign: TextAlign.center,),
                                                                     actions: [
-                                                                      TextButton(
-                                                                        style: TextButton
-                                                                            .styleFrom(
-                                                                          textStyle: Theme.of(context)
-                                                                              .textTheme
-                                                                              .labelLarge,
+                                                                      ButtonBar(
+                                                                        alignment: MainAxisAlignment.center,
+                                                                        // mainAxisSize: MainAxisSize.max,
+                                                                        children: [
+                                                                          Container(
+                                                                            width: kAlertDialogTextButtonWidth,
+                                                                            child: TextButton(
+                                                                            style: kConfirmButtonStyle,
+                                                                            child: Text(
+                                                                                "확인",
+                                                                              textAlign: TextAlign.center,
+                                                                              style: kTextButtonTextStyle,
+                                                                            ),
+                                                                            onPressed:
+                                                                                () async {
+                                                                              Navigator.pop(
+                                                                                  context);
+                                                                            },
                                                                         ),
-                                                                        child: const Text(
-                                                                            "확인"),
-                                                                        onPressed:
-                                                                            () async {
-                                                                          Navigator.pop(
-                                                                              context);
-                                                                        },
+                                                                          ),
+                                                                      ],
                                                                       ),
                                                                     ],
                                                                   );
                                                                 },
                                                               );
-                                                            } else if (Platform
-                                                                .isIOS) {
-                                                              showCupertinoDialog(
-                                                                context: context,
-                                                                builder:
-                                                                    (context) {
-                                                                  return CupertinoAlertDialog(
-                                                                    title: Text(
-                                                                        "알림"),
-                                                                    content: Text(
-                                                                        "활동 지역 등록은 총 3개까지만 가능합니다"),
-                                                                    actions: [
-                                                                      CupertinoDialogAction(
-                                                                        isDefaultAction:
-                                                                            true,
-                                                                        child:
-                                                                            Text(
-                                                                          "확인",
-                                                                          style: TextStyle(
-                                                                              fontWeight:
-                                                                                  FontWeight.normal),
-                                                                        ),
-                                                                        onPressed:
-                                                                            () async {
-                                                                          Navigator.pop(
-                                                                              context);
-                                                                        },
-                                                                      ),
-                                                                    ],
-                                                                  );
-                                                                },
-                                                              );
-                                                            }
+
                                                           }
                                                         } else {
-                                                          print('이미 선택된 위치입니다.');
+                                                          print(
+                                                              '이미 선택된 위치입니다.');
 
-                                                          if (Platform
-                                                              .isAndroid) {
                                                             showDialog(
                                                               context: context,
-                                                              builder: (context) {
+                                                              builder:
+                                                                  (context) {
                                                                 return AlertDialog(
+                                                                  insetPadding: EdgeInsets.only(left: 10.0, right: 10.0),
+                                                                  shape: kRoundedRectangleBorder,
                                                                   title: Text(
-                                                                      "이미 선택된 지역입니다"),
+                                                                      "이미 선택된 지역입니다", textAlign: TextAlign.center,),
                                                                   content: Text(
-                                                                      "다른 지역을 선택해주세요"),
+                                                                      "다른 지역을 선택해주세요", textAlign: TextAlign.center,),
                                                                   actions: [
-                                                                    TextButton(
-                                                                      style: TextButton
-                                                                          .styleFrom(
-                                                                        textStyle: Theme.of(
-                                                                                context)
-                                                                            .textTheme
-                                                                            .labelLarge,
+                                                                    ButtonBar(
+                                                                      alignment: MainAxisAlignment.center,
+                                                                      children: [
+                                                                        Container(
+                                                                          width: kAlertDialogTextButtonWidth,
+                                                                          child: TextButton(
+                                                                          style: kConfirmButtonStyle,
+                                                                          child: Text(
+                                                                              "확인",
+                                                                            textAlign: TextAlign.center,
+                                                                            style: kTextButtonTextStyle,
+                                                                          ),
+                                                                          onPressed:
+                                                                              () async {
+                                                                            Navigator.pop(
+                                                                                context);
+                                                                          },
                                                                       ),
-                                                                      child:
-                                                                          const Text(
-                                                                              "확인"),
-                                                                      onPressed:
-                                                                          () async {
-                                                                        Navigator.pop(
-                                                                            context);
-                                                                      },
+                                                                        ),
+                                                                    ],
                                                                     ),
                                                                   ],
                                                                 );
                                                               },
                                                             );
-                                                          } else if (Platform
-                                                              .isIOS) {
-                                                            showCupertinoDialog(
-                                                              context: context,
-                                                              builder: (context) {
-                                                                return CupertinoAlertDialog(
-                                                                  title: Text(
-                                                                      "이미 선택된 지역입니다"),
-                                                                  content: Text(
-                                                                      "다른 지역을 선택해주세요"),
-                                                                  actions: [
-                                                                    CupertinoDialogAction(
-                                                                      isDefaultAction:
-                                                                          true,
-                                                                      child: Text(
-                                                                        "확인",
-                                                                        style: TextStyle(
-                                                                            fontWeight:
-                                                                                FontWeight.normal),
-                                                                      ),
-                                                                      onPressed:
-                                                                          () async {
-                                                                        Navigator.pop(
-                                                                            context);
-                                                                      },
-                                                                    ),
-                                                                  ],
-                                                                );
-                                                              },
-                                                            );
-                                                          }
+
                                                         }
                                                       });
                                                     },
                                                   ),
                                                 ),
                                                 Padding(
-                                                  padding: const EdgeInsets.only(
-                                                      right: 8.0),
+                                                  padding:
+                                                      const EdgeInsets.only(
+                                                          right: 8.0),
                                                   child: Icon(Icons
                                                       .arrow_forward_ios_rounded),
                                                 ),
@@ -1011,12 +973,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                     // 활동 탁구장 (최대 5개) 추가
                     Padding(
-                      padding: Provider.of<ProfileUpdate>(context, listen: false)
-                              .pingpongList
-                              .isEmpty
-                          ? EdgeInsets.zero
-                          : EdgeInsets.only(
-                              left: 15.0, right: 15.0, top: 5.0, bottom: 5.0),
+                      padding:
+                          Provider.of<ProfileUpdate>(context, listen: false)
+                                  .pingpongList
+                                  .isEmpty
+                              ? EdgeInsets.zero
+                              : EdgeInsets.only(
+                                  left: 15.0,
+                                  right: 15.0,
+                                  top: 5.0,
+                                  bottom: 5.0),
                       child: Provider.of<ProfileUpdate>(context, listen: false)
                               .pingpongList
                               .isEmpty
@@ -1040,14 +1006,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                         margin: EdgeInsets.only(right: 5.0),
                                         padding: EdgeInsets.all(8.0),
                                         decoration: BoxDecoration(
-                                          border: Border.all(color: Colors.blue),
+                                          border:
+                                              Border.all(color: Colors.blue),
                                           borderRadius:
                                               BorderRadius.circular(20.0),
                                         ),
                                         child: Row(
                                           children: [
                                             Text(
-                                              Provider.of<ProfileUpdate>(context,
+                                              Provider.of<ProfileUpdate>(
+                                                      context,
                                                       listen: false)
                                                   .pingpongList[index]
                                                   .title,
@@ -1063,95 +1031,62 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       IconButton(
                                         onPressed: () {
                                           print('IconButton 클릭');
-                                          if (Platform.isAndroid) {
+
                                             showDialog(
                                               context: context,
                                               builder: (context) {
                                                 return AlertDialog(
-                                                  title: Text("선택할 탁구장을 삭제할까요?"),
+                                                  insetPadding: EdgeInsets.only(left: 10.0, right: 10.0),
+                                                  shape: kRoundedRectangleBorder,
+                                                  title:
+                                                      Text("선택할 탁구장을 삭제할까요?", textAlign: TextAlign.center,),
                                                   content: Text(
-                                                      "삭제를 원한다면 확인 버튼을 클릭해주세요"),
+                                                      "삭제를 원한다면\n확인 버튼을 클릭해주세요", textAlign: TextAlign.center,),
                                                   actions: [
-                                                    TextButton(
-                                                      style: TextButton.styleFrom(
-                                                        textStyle:
-                                                            Theme.of(context)
-                                                                .textTheme
-                                                                .labelLarge,
-                                                      ),
-                                                      child: const Text("취소"),
-                                                      onPressed: () async {
-                                                        Navigator.pop(context);
-                                                      },
-                                                    ),
-                                                    TextButton(
-                                                      style: TextButton.styleFrom(
-                                                        textStyle:
-                                                            Theme.of(context)
-                                                                .textTheme
-                                                                .labelLarge,
-                                                      ),
-                                                      child: const Text("확인"),
-                                                      onPressed: () async {
-                                                        Navigator.pop(context);
-                                                        setState(() {
-                                                          Provider.of<ProfileUpdate>(
-                                                                  context,
-                                                                  listen: false)
-                                                              .removePingpongList(
-                                                                  index);
-                                                        });
-                                                      },
+                                                    ButtonBar(
+                                                      alignment: MainAxisAlignment.spaceBetween,
+                                                      mainAxisSize: MainAxisSize.max,
+                                                      children: [
+                                                        Container(
+                                                          width: kAlertDialogTextButtonWidth,
+                                                          child: TextButton(
+                                                            style: kCancelButtonStyle,
+                                                            child: Text("취소",
+                                                              textAlign: TextAlign.center,
+                                                              style: kTextButtonTextStyle,
+                                                            ),
+                                                            onPressed: () async {
+                                                              Navigator.pop(context);
+                                                            },
+                                                          ),
+                                                        ),
+                                                        Container(
+                                                          width: kAlertDialogTextButtonWidth,
+                                                          child: TextButton(
+                                                            style: kConfirmButtonStyle,
+                                                            child: Text("확인",
+                                                              textAlign: TextAlign.center,
+                                                              style: kTextButtonTextStyle,
+                                                            ),
+                                                            onPressed: () async {
+                                                              Navigator.pop(context);
+                                                              setState(() {
+                                                                Provider.of<ProfileUpdate>(
+                                                                        context,
+                                                                        listen: false)
+                                                                    .removePingpongList(
+                                                                        index);
+                                                              });
+                                                            },
+                                                          ),
+                                                        ),
+                                                      ],
                                                     ),
                                                   ],
                                                 );
                                               },
                                             );
-                                          } else if (Platform.isIOS) {
-                                            showCupertinoDialog(
-                                              context: context,
-                                              builder: (context) {
-                                                return CupertinoAlertDialog(
-                                                  title: Text("선택할 탁구장을 삭제할까요?"),
-                                                  content: Text(
-                                                      "삭제를 원한다면 확인 버튼을 클릭해주세요"),
-                                                  actions: [
-                                                    CupertinoDialogAction(
-                                                      isDefaultAction: false,
-                                                      child: Text(
-                                                        "취소",
-                                                        style: TextStyle(
-                                                            fontWeight: FontWeight
-                                                                .normal),
-                                                      ),
-                                                      onPressed: () async {
-                                                        Navigator.pop(context);
-                                                      },
-                                                    ),
-                                                    CupertinoDialogAction(
-                                                      isDefaultAction: true,
-                                                      child: Text(
-                                                        "확인",
-                                                        style: TextStyle(
-                                                            fontWeight: FontWeight
-                                                                .normal),
-                                                      ),
-                                                      onPressed: () async {
-                                                        Navigator.pop(context);
-                                                        setState(() {
-                                                          Provider.of<ProfileUpdate>(
-                                                                  context,
-                                                                  listen: false)
-                                                              .removePingpongList(
-                                                                  index);
-                                                        });
-                                                      },
-                                                    ),
-                                                  ],
-                                                );
-                                              },
-                                            );
-                                          }
+
                                         },
                                         icon: Icon(
                                           CupertinoIcons.clear_circled,
@@ -1174,8 +1109,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                     // 탁구장 등록 리스트
                     Padding(
-                      padding:
-                          EdgeInsets.symmetric(horizontal: 25.0, vertical: 10.0),
+                      padding: EdgeInsets.symmetric(
+                          horizontal: 25.0, vertical: 10.0),
                       child: Column(
                         children: [
                           Align(
@@ -1186,7 +1121,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             children: [
                               ToggleButtons(
                                   borderRadius: BorderRadius.circular(4.0),
-                                  isSelected: Provider.of<ProfileUpdate>(context,
+                                  isSelected: Provider.of<ProfileUpdate>(
+                                          context,
                                           listen: false)
                                       .playStyleIsSelected,
                                   constraints: BoxConstraints(
@@ -1226,8 +1162,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                     // 플레이 스타일
                     Padding(
-                      padding:
-                          EdgeInsets.symmetric(horizontal: 25.0, vertical: 10.0),
+                      padding: EdgeInsets.symmetric(
+                          horizontal: 25.0, vertical: 10.0),
                       child: Column(
                         children: [
                           Align(
@@ -1239,7 +1175,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             children: [
                               ToggleButtons(
                                   borderRadius: BorderRadius.circular(4.0),
-                                  isSelected: Provider.of<ProfileUpdate>(context,
+                                  isSelected: Provider.of<ProfileUpdate>(
+                                          context,
                                           listen: false)
                                       .rubberIsSelected,
                                   constraints: BoxConstraints(
@@ -1289,8 +1226,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                     // 러버
                     Padding(
-                      padding:
-                          EdgeInsets.symmetric(horizontal: 25.0, vertical: 10.0),
+                      padding: EdgeInsets.symmetric(
+                          horizontal: 25.0, vertical: 10.0),
                       child: Column(
                         children: [
                           Align(
@@ -1302,7 +1239,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             children: [
                               ToggleButtons(
                                   borderRadius: BorderRadius.circular(4.0),
-                                  isSelected: Provider.of<ProfileUpdate>(context,
+                                  isSelected: Provider.of<ProfileUpdate>(
+                                          context,
                                           listen: false)
                                       .racketIsSelected,
                                   constraints: BoxConstraints(
@@ -1381,225 +1319,135 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     //   ),
                     // ), // 활동 지역
                     Padding(
-                      padding:
-                          EdgeInsets.only(left: 25.0, right: 25.0, bottom: 20.0),
+                      padding: EdgeInsets.only(
+                          left: 25.0, right: 25.0, bottom: 20.0),
                       child: ConstrainedBox(
                         constraints: BoxConstraints.tightFor(width: 100.0),
                         child: ElevatedButton(
                           onPressed: () async {
-                            if (Platform.isAndroid) {
+
                               showDialog(
                                 context: context,
                                 builder: (context) {
                                   return AlertDialog(
-                                    title: Text("프로필 저장"),
-                                    content: Text("위 내용을 토대로 프로필을 저장합니다"),
+                                    insetPadding: EdgeInsets.only(left: 10.0, right: 10.0),
+                                    shape: kRoundedRectangleBorder,
+                                    title: Text("프로필 저장", textAlign: TextAlign.center,),
+                                    content: Text("위 내용을 토대로 프로필을 저장합니다", textAlign: TextAlign.center,),
                                     actions: [
-                                      TextButton(
-                                        style: TextButton.styleFrom(
-                                          textStyle: Theme.of(context)
-                                              .textTheme
-                                              .labelLarge,
-                                        ),
-                                        child: const Text("취소"),
-                                        onPressed: () async {
-                                          Navigator.pop(context);
-                                        },
-                                      ),
-                                      TextButton(
-                                        style: TextButton.styleFrom(
-                                          textStyle: Theme.of(context)
-                                              .textTheme
-                                              .labelLarge,
-                                        ),
-                                        child: const Text("확인"),
-                                        onPressed: () async {
-                                          newProfile.pingpongCourt =
-                                              Provider.of<ProfileUpdate>(context,
-                                                      listen: false)
-                                                  .pingpongList;
-                                          Navigator.pop(context);
+                                      ButtonBar(
+                                        alignment: MainAxisAlignment.spaceBetween,
+                                        mainAxisSize: MainAxisSize.max,
+                                        children: [
+                                          Container(
+                                            width: kAlertDialogTextButtonWidth,
+                                            child: TextButton(
+                                              style: kCancelButtonStyle,
+                                              child: Text("취소",
+                                                textAlign: TextAlign.center,
+                                                style: kTextButtonTextStyle,
+                                              ),
+                                              onPressed: () async {
+                                                Navigator.pop(context);
+                                              },
+                                            ),
+                                          ),
+                                          Container(
+                                            width: kAlertDialogTextButtonWidth,
+                                            child: TextButton(
+                                              style: kConfirmButtonStyle,
+                                              child: Text("확인",
+                                                textAlign: TextAlign.center,
+                                                style: kTextButtonTextStyle,
+                                              ),
+                                              onPressed: () async {
+                                                newProfile.pingpongCourt =
+                                                    Provider.of<ProfileUpdate>(
+                                                        context,
+                                                        listen: false)
+                                                        .pingpongList;
+                                                Navigator.pop(context);
 
-                                          toggleLoading(true);
+                                                toggleLoading(true);
 
-                                          newProfile.uid = _currentUser.uid;
-                                          newProfile.nickName =
-                                              _nickNameTextFormFieldController
-                                                  .text;
+                                                newProfile.uid = _currentUser.uid;
+                                                newProfile.nickName =
+                                                    _nickNameTextFormFieldController
+                                                        .text;
 
-                                          var imageName = _currentUser.uid;
-                                          var storageRef = FirebaseStorage
-                                              .instance
-                                              .ref()
-                                              .child(
-                                                  'profile_photos/$imageName.jpg');
+                                                var imageName = _currentUser.uid;
+                                                var storageRef = FirebaseStorage
+                                                    .instance
+                                                    .ref()
+                                                    .child(
+                                                    'profile_photos/$imageName.jpg');
 
-                                          if (_image == null) {
-                                            final gsReference = FirebaseStorage
-                                                .instance
-                                                .refFromURL(
-                                                    "gs://dnpp-402403.appspot.com/profile_photos/empty_profile_160.png");
-                                            final imageUrl = await gsReference
-                                                .getDownloadURL();
-                                            newProfile.photoUrl =
-                                                imageUrl.toString();
-                                          } else {
-                                            String filePath = _image!.path;
-                                            print('filePath: $filePath');
-                                            File file = File(filePath);
+                                                if (_image == null) {
+                                                  final gsReference = FirebaseStorage
+                                                      .instance
+                                                      .refFromURL(
+                                                      "gs://dnpp-402403.appspot.com/profile_photos/empty_profile_160.png");
+                                                  final imageUrl = await gsReference
+                                                      .getDownloadURL();
+                                                  print('imageUrl: $imageUrl');
+                                                  newProfile.photoUrl =
+                                                      imageUrl.toString();
+                                                } else {
+                                                  String filePath = _image!.path;
+                                                  print('filePath: $filePath');
+                                                  File file = File(filePath);
 
-                                            var uploadTask =
-                                                storageRef.putFile(file);
-                                            var downloadUrl =
-                                                await (await uploadTask)
-                                                    .ref
-                                                    .getDownloadURL();
-                                            print('downloadUrl: $downloadUrl');
-                                            newProfile.photoUrl =
-                                                downloadUrl.toString();
-                                          }
+                                                  var uploadTask =
+                                                  storageRef.putFile(file);
+                                                  var downloadUrl =
+                                                  await (await uploadTask)
+                                                      .ref
+                                                      .getDownloadURL();
+                                                  print('downloadUrl: $downloadUrl');
+                                                  newProfile.photoUrl =
+                                                      downloadUrl.toString();
+                                                }
 
-                                          final docRef = db
-                                              .collection("UserData")
-                                              .withConverter(
-                                                fromFirestore:
-                                                    UserProfile.fromFirestore,
-                                                toFirestore:
-                                                    (UserProfile newProfile,
-                                                            options) =>
-                                                        newProfile.toFirestore(),
-                                              )
-                                              .doc(_currentUser.uid);
+                                                final docRef = db
+                                                    .collection("UserData")
+                                                    .withConverter(
+                                                  fromFirestore:
+                                                  UserProfile.fromFirestore,
+                                                  toFirestore: (UserProfile
+                                                  newProfile,
+                                                      options) =>
+                                                      newProfile.toFirestore(),
+                                                )
+                                                    .doc(_currentUser.uid);
 
-                                          await docRef.set(newProfile);
+                                                await docRef.set(newProfile);
 
-                                          toggleLoading(false);
+                                                toggleLoading(false);
 
-                                          setState(() {
-                                            isEditing = false;
-                                          });
+                                                setState(() {
+                                                  isEditing = false;
+                                                });
 
-                                          _viewVerticalScrollController.animateTo(
-                                            0.0,
-                                            duration: Duration(milliseconds: 500),
-                                            curve: Curves.easeInOut,
-                                          );
+                                                _viewVerticalScrollController
+                                                    .animateTo(
+                                                  0.0,
+                                                  duration:
+                                                  Duration(milliseconds: 500),
+                                                  curve: Curves.easeInOut,
+                                                );
 
-                                          // Navigator.pushNamed(
-                                          //     context, HomeScreen.id);
-                                        },
+                                                // Navigator.pushNamed(
+                                                //     context, HomeScreen.id);
+                                              },
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ],
                                   );
                                 },
                               );
-                            } else if (Platform.isIOS) {
-                              showCupertinoDialog(
-                                context: context,
-                                builder: (context) {
-                                  return CupertinoAlertDialog(
-                                    title: Text("프로필 저장"),
-                                    content: Text("위 내용을 토대로 프로필을 저장합니다"),
-                                    actions: [
-                                      CupertinoDialogAction(
-                                        isDefaultAction: false,
-                                        child: Text(
-                                          "취소",
-                                          style: TextStyle(
-                                              fontWeight: FontWeight.normal),
-                                        ),
-                                        onPressed: () async {
-                                          Navigator.pop(context);
-                                        },
-                                      ),
-                                      CupertinoDialogAction(
-                                        isDefaultAction: true,
-                                        child: Text(
-                                          "확인",
-                                          style: TextStyle(
-                                              fontWeight: FontWeight.normal),
-                                        ),
-                                        onPressed: () async {
-                                          newProfile.pingpongCourt =
-                                              Provider.of<ProfileUpdate>(context,
-                                                      listen: false)
-                                                  .pingpongList;
-                                          Navigator.pop(context);
 
-                                          toggleLoading(true);
-
-                                          newProfile.uid = _currentUser.uid;
-                                          newProfile.nickName =
-                                              _nickNameTextFormFieldController
-                                                  .text;
-
-                                          var imageName = _currentUser.uid;
-                                          var storageRef = FirebaseStorage
-                                              .instance
-                                              .ref()
-                                              .child(
-                                                  'profile_photos/$imageName.jpg');
-
-                                          if (_image == null) {
-                                            final gsReference = FirebaseStorage
-                                                .instance
-                                                .refFromURL(
-                                                    "gs://dnpp-402403.appspot.com/profile_photos/empty_profile_160.png");
-                                            final imageUrl = await gsReference
-                                                .getDownloadURL();
-                                            newProfile.photoUrl =
-                                                imageUrl.toString();
-                                          } else {
-                                            String filePath = _image!.path;
-                                            print('filePath: $filePath');
-                                            File file = File(filePath);
-
-                                            var uploadTask =
-                                                storageRef.putFile(file);
-                                            var downloadUrl =
-                                                await (await uploadTask)
-                                                    .ref
-                                                    .getDownloadURL();
-                                            print('downloadUrl: $downloadUrl');
-                                            newProfile.photoUrl =
-                                                downloadUrl.toString();
-                                          }
-
-                                          final docRef = db
-                                              .collection("UserData")
-                                              .withConverter(
-                                                fromFirestore:
-                                                    UserProfile.fromFirestore,
-                                                toFirestore:
-                                                    (UserProfile newProfile,
-                                                            options) =>
-                                                        newProfile.toFirestore(),
-                                              )
-                                              .doc(_currentUser.uid);
-
-                                          await docRef.set(newProfile);
-
-                                          toggleLoading(false);
-
-                                          setState(() {
-                                            isEditing = false;
-                                          });
-
-                                          _viewVerticalScrollController.animateTo(
-                                            0.0,
-                                            duration: Duration(milliseconds: 500),
-                                            curve: Curves.easeInOut,
-                                          );
-
-                                          // Navigator.pushNamed(
-                                          //     context, HomeScreen.id);
-                                        },
-                                      ),
-                                    ],
-                                  );
-                                },
-                              );
-                            }
                           },
                           child: Text(
                             '저장',
