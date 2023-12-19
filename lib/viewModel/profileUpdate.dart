@@ -19,7 +19,19 @@ class ProfileUpdate with ChangeNotifier {
 
   ScrollController horizontalScrollController = ScrollController();
 
-  late UserProfile userProfile;
+  //late UserProfile userProfile;
+  UserProfile userProfile = UserProfile(
+      uid: 'uid',
+      nickName: '사용자',
+      photoUrl: 'https://firebasestorage.googleapis.com/v0/b/dnpp-402403.appspot.com/o/profile_photos%2Fempty_profile_160.png?alt=media&token=4fc4c247-c9b0-473e-b38f-ee6b78967536',
+      gender: '밝히지 않음',
+      ageRange: '20대',
+      playedYears: 'playedYears',
+      address: ['address'],
+      pingpongCourt: [],
+      playStyle: '공격',
+      rubber: '미정',
+      racket: '미정');
 
   Future<List<PingpongList>> extractPingpongList() async {
     return pingpongList;
@@ -74,7 +86,6 @@ class ProfileUpdate with ChangeNotifier {
   }
 
   Future<List<bool>> initializeGenderIsSelected(String gender) async {
-
     if (gender == '남') {
       genderIsSelected = [true, false, false];
     } else if (gender == '여') {
@@ -87,13 +98,11 @@ class ProfileUpdate with ChangeNotifier {
   }
 
   Future<double> initializeAgeRange(String ageRange) async {
-
     int extractedIndex = UserProfile.ageRangeList.indexOf(ageRange);
     return extractedIndex.toDouble();
   }
 
   Future<double> initializePlayedYears(String playedYears) async {
-
     int extractedIndex = UserProfile.playedYearsList.indexOf(playedYears);
     return extractedIndex.toDouble();
   }
@@ -110,7 +119,6 @@ class ProfileUpdate with ChangeNotifier {
   }
 
   Future<List<bool>> initializePlayStyleIsSelected(String playStyle) async {
-
     if (playStyle == '공격') {
       playStyleIsSelected = [true, false];
     } else if (playStyle == '수비') {
@@ -146,7 +154,6 @@ class ProfileUpdate with ChangeNotifier {
   }
 
   Future<List<bool>> initializeRubberIsSelected(String rubber) async {
-
     if (rubber == '평면') {
       rubberIsSelected = [true, false, false, false];
     } else if (rubber == '핌플') {
@@ -186,7 +193,6 @@ class ProfileUpdate with ChangeNotifier {
   }
 
   Future<List<bool>> initializeRacketIsSelected(String racket) async {
-
     if (racket == '펜홀더') {
       racketIsSelected = [true, false, false, false];
     } else if (racket == '쉐이크') {
@@ -374,4 +380,3 @@ class ProfileUpdate with ChangeNotifier {
 //     return genderIsSelected;
 //   }
 // }
-

@@ -2,8 +2,11 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:dnpp/constants.dart';
+import 'package:dnpp/models/customAppointment.dart';
 import 'package:dnpp/models/main_chartBasic.dart';
 import 'package:dnpp/models/pingpongList.dart';
+import 'package:dnpp/viewModel/courtAppointmentUpdate.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:intl/intl.dart';
@@ -15,13 +18,18 @@ import 'package:syncfusion_flutter_calendar/calendar.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../models/userProfile.dart';
+import '../repository/repository_loadData.dart';
 import '../viewModel/loginStatusUpdate.dart';
 import '../viewModel/profileUpdate.dart';
 import '../widgets/chart/main_barChart.dart';
 
-import '../viewModel/appointmentUpdate.dart';
+import '../viewModel/personalAppointmentUpdate.dart';
 import '../widgets/chart/main_lineChart.dart';
+import '../widgets/paging/main_bannerPage.dart';
+import '../widgets/paging/main_chartPage.dart';
+import '../widgets/paging/main_courtPage.dart';
 import '../widgets/paging/main_graphs.dart';
+import 'package:custom_refresh_indicator/custom_refresh_indicator.dart';
 
 class MainScreen extends StatefulWidget {
   static String id = '/MainScreenID';
@@ -31,9 +39,22 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> {
+
   final PageController _imagePageController = PageController(initialPage: 0);
-  final PageController _barChartPageController = PageController();
-  int _currentPage = 0;
+  final PageController _firstBarChartPageController = PageController();
+  final PageController _secondBarChartPageController = PageController(
+    viewportFraction: 0.90, // 보이는 영역의 비율 조절
+  );
+  final PageController _thirdBarChartPageController = PageController(
+    viewportFraction: 0.90, // 보이는 영역의 비율 조절
+  );
+  int _currentimage = 0;
+  int _currentPersonal = 0;
+  int _currentCourt = 0;
+
+  int _indexPersonal = -1;
+  int _indexCourt = -1;
+  bool isMyTime = false;
 
   Map<String?, Uint8List?> imageMap = {};
   Map<String?, String?> urlMap = {};
@@ -46,11 +67,10 @@ class _MainScreenState extends State<MainScreen> {
   FirebaseFirestore db = FirebaseFirestore.instance;
 
   bool isLoading = false;
+  bool isRefresh = false;
 
-  double _buttonwidth(BuildContext context, int buttoncount) {
-    final width = (MediaQuery.of(context).size.width - 80) / buttoncount;
-    return width;
-  }
+  String _courtTitle = '';
+  String _courtRoadAddress = '';
 
   Future<void> downloadAllImages() async {
     setState(() {
@@ -113,94 +133,84 @@ class _MainScreenState extends State<MainScreen> {
     }
 
     print('downloadAllImages 완료');
-    await loadDoc();
+
     print('loadDoc 완료');
   }
 
-  Future<void> loadDoc() async {
-    final User currentUser =
-        Provider.of<LoginStatusUpdate>(context, listen: false).currentUser;
-
-    final docRef = db.collection("UserData").doc(currentUser.uid);
-
+  Future<void> loadData() async {
     try {
-      docRef.get().then(
-        (DocumentSnapshot<Map<String, dynamic>> doc) async {
-          if (doc.exists) {
-            final data = doc.data() as Map<String, dynamic>;
+      await downloadAllImages();
+      print('await downloadAllImages(); completed');
 
-            final _userProfile = UserProfile(
-              uid: data['uid'] ?? '',
-              nickName: data['nickName'] ?? '',
-              photoUrl: data['photoUrl'],
-              gender: data['gender'] ?? '',
-              ageRange: data['ageRange'] ?? '',
-              playedYears: data['playedYears'] ?? '',
-              address: (data['address'] as List<dynamic>?)
-                  ?.map<String>((dynamic item) => item.toString())
-                  .toList() ?? [],
-              pingpongCourt: (data['pingpongCourt'] as List<dynamic>?)
-                  ?.map<PingpongList>((dynamic item) {
-                return PingpongList(
-                  title: item['title'],
-                  link: item['link'],
-                  description: item['description'],
-                  telephone: item['telephone'],
-                  address: item['address'],
-                  roadAddress: item['roadAddress'],
-                  mapx: item['mapx'] ?? 0.0,
-                  mapy: item['mapy'] ?? 0.0,
-                );
-              }).toList(),
-              playStyle: data['playStyle'] ?? '',
-              rubber: data['rubber'] ?? '',
-              racket: data['racket'] ?? '',
-            );
+      if (Provider.of<LoginStatusUpdate>(context, listen: false).isLoggedIn) {
+        await LoadData().fetchUserData(context);
 
-            print('photourl: ${_userProfile.photoUrl}');
+        await Provider.of<PersonalAppointmentUpdate>(context, listen: false)
+            .personalDaywiseDurationsCalculate(
+                false, isMyTime, _courtTitle, _courtRoadAddress);
+        await Provider.of<PersonalAppointmentUpdate>(context, listen: false)
+            .personalCountHours(
+                false, isMyTime, _courtTitle, _courtRoadAddress);
+        await Provider.of<CourtAppointmentUpdate>(context, listen: false)
+            .courtDaywiseDurationsCalculate(
+                false, false, _courtTitle, _courtRoadAddress);
+        await Provider.of<CourtAppointmentUpdate>(context, listen: false)
+            .courtCountHours(false, false, _courtTitle, _courtRoadAddress);
 
-            await Provider.of<ProfileUpdate>(
-                    context,
-                    listen: false)
-                .updateUserProfile(_userProfile);
+        setState(() {
+          _secondBarChartPageController.animateTo(
+            _secondBarChartPageController.position.minScrollExtent,
+            duration: Duration(milliseconds: 250),
+            curve: Curves.easeInOut,
+          );
 
-          } else {
-            print('Document does not exist');
-          }
-        },
-        onError: (e) => print("Error getting document: $e"),
-      );
+          _thirdBarChartPageController.animateTo(
+            _thirdBarChartPageController.position.minScrollExtent,
+            duration: Duration(milliseconds: 250),
+            curve: Curves.easeInOut,
+          );
+        });
+      } else {}
+
+      print('await fetchUserData(); completed');
     } catch (e) {
       print(e);
-    } finally {
-      print('함수 완료');
     }
+
+    isRefresh = false;
+  }
+
+  @override
+  void dispose() {
+    _firstBarChartPageController.dispose();
+    _secondBarChartPageController.dispose();
+    _thirdBarChartPageController.dispose();
+    super.dispose();
   }
 
   @override
   void initState() {
-    // try {
-    //   Provider.of<AppointmentUpdate>(context, listen: false).daywiseDurationsCalculate();
-    // } catch (e){
-    //   print(e);
-    // }
     FirebaseAuth.instance.authStateChanges().listen((user) {
       if (user == null) {
         // user == null
         print('SignupScreen user isNotLoggedIn');
         print('SignupScreen user: $user');
         print('신규유저 이므로 프로필 생성 필요');
+
+        Provider.of<LoginStatusUpdate>(context, listen: false)
+            .falseIsLoggedIn();
       } else {
         // user != null
         print('SignupScreen user isLoggedIn');
         print('SignupScreen user: $user');
 
         //Provider.of<LoginStatusUpdate>(context, listen: false).currentUser = user;
+        Provider.of<LoginStatusUpdate>(context, listen: false).trueIsLoggedIn();
         Provider.of<LoginStatusUpdate>(context, listen: false)
             .updateCurrentUser(user);
 
         if (user.providerData.isNotEmpty) {
-          print('user.providerData.isNotEmpty');
+          //print('user.providerData.isNotEmpty');
           print(
               'SignupScreen user.providerData: ${user.providerData.first.providerId.toString()}');
 
@@ -219,7 +229,99 @@ class _MainScreenState extends State<MainScreen> {
       }
     });
 
-    myFuture = downloadAllImages();
+    _secondBarChartPageController.addListener(() async {
+      final int newPage = _secondBarChartPageController.page?.round() ?? 0;
+
+      if (newPage != _currentPersonal) {
+        _currentPersonal = newPage;
+        print('_currentPersonal: $_currentPersonal');
+        //setState(() {
+        // 요일 버튼 눌린 것이 초기화 되어야 함
+        Provider.of<PersonalAppointmentUpdate>(context, listen: false)
+            .resetSelectedList();
+        //Provider.of<CourtAppointmentUpdate>(context, listen: false).resetSelectedList();
+        //});
+
+        if (_currentPersonal != 0) {
+          _indexPersonal = _currentPersonal - 1;
+          isMyTime = false;
+          print('isMyTime: $isMyTime');
+        } else {
+          _indexPersonal = _currentPersonal;
+          isMyTime = true;
+          print('isMyTime: $isMyTime');
+        }
+        print('_currentPersonal index: $_indexPersonal');
+
+        _courtTitle = Provider.of<ProfileUpdate>(context, listen: false)
+                .userProfile
+                .pingpongCourt?[_indexPersonal]
+                .title ??
+            '';
+        _courtRoadAddress = Provider.of<ProfileUpdate>(context, listen: false)
+                .userProfile
+                .pingpongCourt?[_indexPersonal]
+                .roadAddress ??
+            '';
+
+        await Provider.of<PersonalAppointmentUpdate>(context, listen: false)
+            .personalDaywiseDurationsCalculate(
+                false, isMyTime, _courtTitle, _courtRoadAddress);
+        await Provider.of<PersonalAppointmentUpdate>(context, listen: false)
+            .personalCountHours(
+                false, isMyTime, _courtTitle, _courtRoadAddress);
+
+        // Provider.of<AppointmentUpdate>(context, listen: false)
+        //     .updateRecentDays(0);
+        setState(() {});
+      }
+    });
+    _thirdBarChartPageController.addListener(() async {
+      final int newPage = _thirdBarChartPageController.page?.round() ?? 0;
+
+      if (newPage != _currentCourt) {
+        _currentCourt = newPage;
+        print('_currentCourt: $_currentCourt');
+        //setState(() {
+        // 요일 버튼 눌린 것이 초기화 되어야 함
+        Provider.of<CourtAppointmentUpdate>(context, listen: false)
+            .resetSelectedList();
+        //Provider.of<CourtAppointmentUpdate>(context, listen: false).resetSelectedList();
+        //});
+
+        // if (_currentCourt != 0) {
+        //   _indexCourt = _currentCourt - 1;
+        //
+        // } else {
+        _indexCourt = _currentCourt;
+        //}
+
+        print('_currentCourt index: $_indexCourt');
+
+        _courtTitle = Provider.of<ProfileUpdate>(context, listen: false)
+                .userProfile
+                .pingpongCourt?[_indexCourt]
+                .title ??
+            '';
+        _courtRoadAddress = Provider.of<ProfileUpdate>(context, listen: false)
+                .userProfile
+                .pingpongCourt?[_indexCourt]
+                .roadAddress ??
+            '';
+
+        await Provider.of<CourtAppointmentUpdate>(context, listen: false)
+            .courtDaywiseDurationsCalculate(
+                false, false, _courtTitle, _courtRoadAddress);
+        await Provider.of<CourtAppointmentUpdate>(context, listen: false)
+            .courtCountHours(false, false, _courtTitle, _courtRoadAddress);
+
+        // Provider.of<AppointmentUpdate>(context, listen: false)
+        //     .updateRecentDays(0);
+        setState(() {});
+      }
+    });
+
+    myFuture = loadData();
     super.initState(); // downloadAllImages()가 완료된 후에 initState()를 호출
   }
 
@@ -232,237 +334,208 @@ class _MainScreenState extends State<MainScreen> {
       child: Scaffold(
         body: Stack(
           children: [
-            ListView(
-              children: [
-                //MainScreenPageView(pageController: _pageController, imageUrls: imageUrls ),
-                FutureBuilder<void>(
-                  future: myFuture,
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return Container(
-                        width: width,
-                        height: height,
-                      );
-                    } else if (snapshot.hasError) {
-                      return Center(
-                        child: Text('Error: ${snapshot.error}'),
-                      );
-                    } else {
-                      // Images are downloaded, use the data
-                      // imageList = snapshot.data ?? [];
-                      WidgetsBinding.instance!.addPostFrameCallback((_) {
-                        Timer.periodic(Duration(seconds: 1), (timer) {
-                          // if (_currentPage < imageList.length - 1) {
-                          //   _currentPage++;
-                          // } else {
-                          //   _currentPage = 0;
-                          // }
+            FutureBuilder<void>(
+              future: myFuture,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return Container(
+                    width: width,
+                    height: height,
+                  );
+                } else if (snapshot.hasError) {
+                  return Center(
+                    child: Text('Error: ${snapshot.error}'),
+                  );
+                } else if (snapshot.connectionState == ConnectionState.done) {
+                  WidgetsBinding.instance!.addPostFrameCallback((_) {
+                    Timer.periodic(Duration(seconds: 1), (timer) {
+                      // if (_currentimage < imageList.length - 1) {
+                      //   _currentimage++;
+                      // } else {
+                      //   _currentimage = 0;
+                      // }
 
-                          _imagePageController.animateToPage(
-                            _currentPage,
-                            duration: Duration(seconds: 1),
-                            curve: Curves.easeInOut,
-                          );
-                        });
-                      });
-                      return MainBannerPageView(
-                        pageController: _imagePageController,
-                        width: width,
-                        height: height,
-                        imageMap: imageMap,
-                        urlMap: urlMap,
-                        refStringList: refStringList,
+                      // _imagePageController.animateToPage(
+                      //   _currentimage,
+                      //   duration: Duration(seconds: 1),
+                      //   curve: Curves.easeInOut,
+                      // );
+                    });
+                  });
+                  // CustomMaterialIndicator // onRefresh: refreshData,
+                  return CustomMaterialIndicator(
+                    //LoadData().fetchUserData(context)
+                    onRefresh: () {
+                      isRefresh = true;
+                      return loadData(); //LoadData().refreshData(context);
+                    },
+                    indicatorBuilder: (context, controller) {
+                      return Icon(
+                        Icons.refresh,
+                        color: Colors.grey,
+                        size: 30,
                       );
-                    }
-                  },
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    ToggleButtons(
-                        borderRadius: BorderRadius.circular(4.0),
-                        children: [
-                          Padding(
-                            padding:
-                                const EdgeInsets.symmetric(horizontal: 8.0),
-                            child: Text('최근 7일'),
-                          ),
-                          Padding(
-                            padding:
-                                const EdgeInsets.symmetric(horizontal: 8.0),
-                            child: Text('최근 28일'),
-                          ),
-                          Padding(
-                            padding:
-                                const EdgeInsets.symmetric(horizontal: 8.0),
-                            child: Text('최근 3개월'),
-                          ),
-                        ],
-                        isSelected: Provider.of<AppointmentUpdate>(context,
-                                listen: false)
-                            .isSelected,
-                        constraints: BoxConstraints(
-                          minHeight: 40.0, // 36.0,
-                          minWidth: _buttonwidth(context, 3),
+                    },
+                    child: ListView(
+                      children: [
+                        MainBannerPageView(
+                          pageController: _imagePageController,
+                          width: width,
+                          height: height,
+                          imageMap: imageMap,
+                          urlMap: urlMap,
+                          refStringList: refStringList,
                         ),
-                        onPressed: (index) async {
-                          setState(() {
-                            Provider.of<AppointmentUpdate>(context,
-                                    listen: false)
-                                .updateChart(index);
-                          });
-                        }),
-                  ],
-                ),
-                MainChartPageView(pageController: _barChartPageController),
-              ],
+                        Padding(
+                          padding: const EdgeInsets.only(
+                              left: 10.0, right: 10.0, top: 10),
+                          child: SizedBox(
+                            height: 30.0,
+                            child: ListView.builder(
+                              scrollDirection: Axis.horizontal,
+                              controller: _firstBarChartPageController,
+                              itemCount: Provider.of<PersonalAppointmentUpdate>(
+                                      context,
+                                      listen: false)
+                                  .isSelectedString
+                                  .length,
+                              itemBuilder: (BuildContext context, int index) {
+                                return Padding(
+                                  padding: const EdgeInsets.only(
+                                      left: 3.0, right: 3.0),
+                                  child: Container(
+                                    width: 100.0,
+                                    decoration: BoxDecoration(
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.grey.withOpacity(0.1),
+                                          //spreadRadius: 5,
+                                          blurRadius: 5,
+                                          offset: Offset(0, 0.1),
+                                        ),
+                                      ],
+                                    ),
+                                    child: OutlinedButton(
+                                      onPressed: () async {
+                                        setState(() {
+                                          Provider.of<PersonalAppointmentUpdate>(
+                                                  context,
+                                                  listen: false)
+                                              .updateChart(index);
+
+                                          Provider.of<CourtAppointmentUpdate>(
+                                                  context,
+                                                  listen: false)
+                                              .updateChart(index);
+                                        });
+                                      },
+                                      style: OutlinedButton.styleFrom(
+                                        side: BorderSide.none,
+                                        foregroundColor:
+                                            Provider.of<PersonalAppointmentUpdate>(
+                                                        context,
+                                                        listen: false)
+                                                    .isSelected[index]
+                                                ? Colors.white
+                                                : Colors.white.withOpacity(0.5),
+                                        backgroundColor: Provider.of<
+                                                        PersonalAppointmentUpdate>(
+                                                    context,
+                                                    listen: false)
+                                                .isSelected[index]
+                                            ? Colors.lightBlue.withOpacity(0.9)
+                                            : Colors.lightBlue.withOpacity(0.5),
+                                        shape: kRoundedRectangleBorder,
+                                      ),
+                                      child: Text(Provider.of<
+                                                  PersonalAppointmentUpdate>(
+                                              context,
+                                              listen: false)
+                                          .isSelectedString[index]),
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        ), // toggleButtons
+
+                        // Consumer<CourtAppointmentUpdate>(
+                        //   builder: (context, taskData, child) {
+                        //     return BarChart(
+                        //         individualBarDataCourt(),
+                        //     );
+                        //   },
+                        // ) :
+                        Consumer<PersonalAppointmentUpdate>(
+                          builder: (context, taskData, child) {
+                            return MainPersonalChartPageView(
+                                pageController: _secondBarChartPageController);
+                          },
+                        ),
+
+                        // MainPersonalChartPageView(
+                        //     pageController: _secondBarChartPageController
+                        // ),
+                        Center(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 10.0),
+                            child: Text(
+                              '탁구장 방문 데이터',
+                              style: kAppointmentTextStyle,
+                            ),
+                          ),
+                        ),
+
+                        // Consumer<CourtAppointmentUpdate>(
+                        //   builder: (context, taskData, child) {
+                        //     return BarChart(
+                        //         individualBarDataCourt(),
+                        //     );
+                        //   },
+                        // ) :
+                        // Consumer<PersonalAppointmentUpdate>(
+                        //   builder: (context, taskData, child) {
+                        //       return BarChart(
+                        //         individualBarDataPersonal(),
+                        //     );
+                        //   },
+                        // );
+                        // MainCourtChartPageView(
+                        //     pageController: _thirdBarChartPageController
+                        // ),
+                        Consumer<CourtAppointmentUpdate>(
+                          builder: (context, taskData, child) {
+                            return MainCourtChartPageView(
+                                pageController: _thirdBarChartPageController);
+                          },
+                        ),
+                      ],
+                    ),
+                  );
+                } else {
+                  return Container(
+                    width: width,
+                    height: height,
+                  );
+                }
+              },
             ),
             if (isLoading)
-              Container(
-                color: Colors.black.withOpacity(0.5), // Semi-transparent black
-                child: Center(
-                  child: CircularProgressIndicator(),
+              IgnorePointer(
+                ignoring: isLoading,
+                child: Container(
+                  color: Colors.black.withOpacity(0.5),
+                  // Semi-transparent black
+                  child: Center(
+                    child: isRefresh ? null : CircularProgressIndicator(),
+                  ),
                 ),
               ),
+
           ],
         ),
       ),
-    );
-  }
-}
-
-class MainBannerPageView extends StatelessWidget {
-  final PageController pageController;
-
-  final Map<String?, Uint8List?> imageMap;
-  final Map<String?, String?> urlMap;
-  final Map<String, String> refStringList;
-
-  final double width;
-  final double height;
-
-  MainBannerPageView({
-    required this.pageController,
-    required this.width,
-    required this.height,
-    required this.imageMap,
-    required this.urlMap,
-    required this.refStringList,
-  });
-
-  Future<void> _launchUrl(String _url) async {
-    print('_launchURL 진입');
-    final Uri _newUrl = Uri.parse(_url);
-    if (!await launchUrl(_newUrl)) {
-      throw Exception('Could not launch $_newUrl');
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 25.0, vertical: 5.0),
-          child: Container(
-            height: height, // or any desired height
-            width: width, // 4:3 aspect ratio
-            child: PageView.builder(
-              controller: pageController,
-              itemCount: refStringList.length,
-              itemBuilder: (context, index) {
-                return GestureDetector(
-                  onTap: () async {
-                    print('refStringList: $refStringList');
-                    await _launchUrl("${urlMap[refStringList['$index']]}");
-                  },
-                  child: Container(
-                    decoration: BoxDecoration(
-                      image: DecorationImage(
-                        //refStringList['$index'] 가 파일의 fullpath 추출한 부분을 의미함
-                        image: MemoryImage(
-                            imageMap[refStringList['$index']] ?? Uint8List(0)),
-                        //MemoryImage(imageMap['$index'] ?? Uint8List(0)),
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class MainChartPageView extends StatelessWidget {
-  final PageController pageController;
-
-  MainChartPageView({required this.pageController});
-
-  List<ChartBasic> ChartBasicList = [
-    ChartBasic('나의 훈련 시간', Colors.black),
-    ChartBasic('보라매탁구장 방문 데이터', Colors.blue),
-    ChartBasic('신대방탁구장 방문 데이터', Colors.orange),
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Container(
-          height: 400,
-          child: PageView.builder(
-            controller: pageController,
-            itemCount: ChartBasicList.length,
-            itemBuilder: (context, index) {
-              print('ChartBasicList.length: ${ChartBasicList.length}');
-              if (index == 0) {
-                return Container(
-                  decoration: ShapeDecoration(
-                    shape: RoundedRectangleBorder(
-                      borderRadius:
-                          BorderRadius.only(topLeft: Radius.circular(20)),
-                    ),
-                    color: Colors.grey, // 배경색을 지정하세요.
-                  ),
-                  child: GraphsWidget(
-                    index: index,
-                    titleText: ChartBasicList[index].text,
-                    backgroundColor: ChartBasicList[index].color,
-                  ),
-                );
-              } else if (index == ChartBasicList.length - 1) {
-                return Container(
-                  decoration: ShapeDecoration(
-                    shape: RoundedRectangleBorder(
-                      borderRadius:
-                          BorderRadius.only(topRight: Radius.circular(20)),
-                    ),
-                    color: Colors.grey, // 배경색을 지정하세요.
-                  ),
-                  child: GraphsWidget(
-                    index: index,
-                    titleText: ChartBasicList[index].text,
-                    backgroundColor: ChartBasicList[index].color,
-                  ),
-                );
-              } else {
-                return Container(
-                  color: Colors.grey,
-                  child: GraphsWidget(
-                    index: index,
-                    titleText: ChartBasicList[index].text,
-                    backgroundColor: ChartBasicList[index].color,
-                  ),
-                );
-              }
-            },
-          ),
-        ),
-      ],
     );
   }
 }

@@ -8,6 +8,7 @@ import 'package:flutter_naver_map/flutter_naver_map.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../constants.dart';
 import '../../models/pingpongList.dart';
 import '../../viewModel/mapWidgetUpdate.dart';
 import '../../viewModel/profileUpdate.dart';
@@ -74,64 +75,16 @@ class PingpongListElement extends StatelessWidget {
                               .addPingpongList(_element);
                         } else {
                           print('활동 탁구장 등록은 총 5개까지만 가능합니다.');
-                          if (Platform.isAndroid) {
-                            showDialog(
-                              context: context,
-                              builder: (context) {
-                                return AlertDialog(
-                                  title: Text("알림"),
-                                  content: Text("활동 탁구장 등록은 총 5개까지만 가능합니다"),
-                                  actions: [
-                                    TextButton(
-                                      style: TextButton.styleFrom(
-                                        textStyle: Theme.of(context)
-                                            .textTheme
-                                            .labelLarge,
-                                      ),
-                                      child: const Text("확인"),
-                                      onPressed: () async {
-                                        Navigator.pop(context);
-                                      },
-                                    ),
-                                  ],
-                                );
-                              },
-                            );
-                          } else if (Platform.isIOS) {
-                            showCupertinoDialog(
-                              context: context,
-                              builder: (context) {
-                                return CupertinoAlertDialog(
-                                  title: Text("알림"),
-                                  content: Text("활동 탁구장 등록은 총 5개까지만 가능합니다"),
-                                  actions: [
-                                    CupertinoDialogAction(
-                                      isDefaultAction: true,
-                                      child: Text(
-                                        "확인",
-                                        style: TextStyle(
-                                            fontWeight: FontWeight.normal),
-                                      ),
-                                      onPressed: () async {
-                                        Navigator.pop(context);
-                                      },
-                                    ),
-                                  ],
-                                );
-                              },
-                            );
-                          }
-                        }
-                      } else {
-                        print('이미 선택된 탁구장입니다.');
 
-                        if (Platform.isAndroid) {
                           showDialog(
                             context: context,
                             builder: (context) {
                               return AlertDialog(
-                                title: Text("이미 선택된 탁구장입니다"),
-                                content: Text("다른 탁구장을 선택해주세요"),
+                                insetPadding:
+                                    EdgeInsets.only(left: 10.0, right: 10.0),
+                                shape: kRoundedRectangleBorder,
+                                title: Text("알림"),
+                                content: Text("활동 탁구장 등록은 총 5개까지만 가능합니다"),
                                 actions: [
                                   TextButton(
                                     style: TextButton.styleFrom(
@@ -148,30 +101,34 @@ class PingpongListElement extends StatelessWidget {
                               );
                             },
                           );
-                        } else if (Platform.isIOS) {
-                          showCupertinoDialog(
-                            context: context,
-                            builder: (context) {
-                              return CupertinoAlertDialog(
-                                title: Text("이미 선택된 탁구장입니다"),
-                                content: Text("다른 탁구장을 선택해주세요"),
-                                actions: [
-                                  CupertinoDialogAction(
-                                    isDefaultAction: true,
-                                    child: Text(
-                                      "확인",
-                                      style: TextStyle(
-                                          fontWeight: FontWeight.normal),
-                                    ),
-                                    onPressed: () async {
-                                      Navigator.pop(context);
-                                    },
-                                  ),
-                                ],
-                              );
-                            },
-                          );
                         }
+                      } else {
+                        print('이미 선택된 탁구장입니다.');
+
+                        showDialog(
+                          context: context,
+                          builder: (context) {
+                            return AlertDialog(
+                              insetPadding:
+                                  EdgeInsets.only(left: 10.0, right: 10.0),
+                              shape: kRoundedRectangleBorder,
+                              title: Text("이미 선택된 탁구장입니다"),
+                              content: Text("다른 탁구장을 선택해주세요"),
+                              actions: [
+                                TextButton(
+                                  style: TextButton.styleFrom(
+                                    textStyle:
+                                        Theme.of(context).textTheme.labelLarge,
+                                  ),
+                                  child: const Text("확인"),
+                                  onPressed: () async {
+                                    Navigator.pop(context);
+                                  },
+                                ),
+                              ],
+                            );
+                          },
+                        );
                       }
                     },
                     child: Provider.of<ProfileUpdate>(context, listen: false)

@@ -51,40 +51,41 @@ class _SignupScreenState extends State<SignupScreen> {
 
   @override
   void initState() {
-    FirebaseAuth.instance.authStateChanges().listen((user) {
-      if (user == null) {
-        // user == null
-        print('SignupScreen user isNotLoggedIn');
-        print('SignupScreen user: $user');
-        print('신규유저 이므로 프로필 생성 필요');
-      } else {
-        // user != null
-        print('SignupScreen user isLoggedIn');
-        print('SignupScreen user: $user');
-
-        //Provider.of<LoginStatusUpdate>(context, listen: false).currentUser = user;
-        Provider.of<LoginStatusUpdate>(context, listen: false)
-            .updateCurrentUser(user);
-
-        if (user.providerData.isNotEmpty) {
-          print('user.providerData.isNotEmpty');
-          print(
-              'SignupScreen user.providerData: ${user.providerData.first.providerId.toString()}');
-
-          String providerId = user.providerData.first.providerId.toString();
-          switch (providerId) {
-            case 'google.com':
-              return print('구글로 로그인');
-            case 'apple.com':
-              return print('애플로 로그인');
-          }
-          //Provider.of<LoginStatusUpdate>(context, listen: false).updateProviderId(user.providerData.first.providerId.toString());
-        } else if (user.providerData.isEmpty) {
-          print('카카오로 로그인한 상태');
-          print('user.providerData.isEmpty');
-        }
-      }
-    });
+    // FirebaseAuth.instance.authStateChanges().listen((user) {
+    //   if (user == null) {
+    //     // user == null
+    //     print('SignupScreen user isNotLoggedIn');
+    //     print('SignupScreen user: $user');
+    //     print('신규유저 이므로 프로필 생성 필요');
+    //     print('user: $user');
+    //
+    //   } else {
+    //     // user != null
+    //     print('SignupScreen user isLoggedIn');
+    //     print('SignupScreen user: $user');
+    //
+    //     Provider.of<LoginStatusUpdate>(context, listen: false)
+    //         .updateCurrentUser(user);
+    //
+    //     if (user.providerData.isNotEmpty) {
+    //       print('user.providerData.isNotEmpty');
+    //       print(
+    //           'SignupScreen user.providerData: ${user.providerData.first.providerId.toString()}');
+    //
+    //       String providerId = user.providerData.first.providerId.toString();
+    //       switch (providerId) {
+    //         case 'google.com':
+    //           return print('구글로 로그인');
+    //         case 'apple.com':
+    //           return print('애플로 로그인');
+    //       }
+    //       //Provider.of<LoginStatusUpdate>(context, listen: false).updateProviderId(user.providerData.first.providerId.toString());
+    //     } else if (user.providerData.isEmpty) {
+    //       print('카카오로 로그인한 상태');
+    //       print('user.providerData.isEmpty');
+    //     }
+    //   }
+    // });
 
     super.initState();
   }
