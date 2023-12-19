@@ -1,10 +1,13 @@
 import 'dart:convert';
+
 import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:crypto/crypto.dart';
 import 'package:dnpp/dataSource/firebase_auth_remote_data_source.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_naver_login/flutter_naver_login.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -16,7 +19,6 @@ import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 class FirebaseRepository {
   final _fireAuthInstance = FirebaseAuth.instance;
 
-  //final _firestoreInstance = FirebaseFirestore.instance;
   FirebaseFirestore db = FirebaseFirestore.instance;
 
   final _firebaseAuthDataSource = FirebaseAuthRemoteDataSource();
@@ -27,11 +29,113 @@ class FirebaseRepository {
 
     try {
       await FirebaseAuth.instance.signOut();
-      print("Success");
+      print("signOut Success");
     } catch (e) {
       print('e.toString(): ${e.toString()}');
     }
   }
+
+
+  Future< void > deleteUserAccount() async {
+    print('deleteUserAccount start!');
+
+    try {
+      await FirebaseAuth.instance.currentUser!.delete();
+      print('deleteUserAccount 완료');
+      print('여기서 유저 데이터 삭제 및 해당 유저의 Appointment 문서 모두 삭제 필요');
+
+    } on FirebaseAuthException catch (e) {
+      print(e);
+
+      if (e.code == "requires-recent-login") {
+        print('e.code: ${e.code}');
+        await _reauthenticateAndDelete();
+
+      } else {
+        // Handle other Firebase exceptions
+      }
+    } catch (e) {
+      print(e);
+
+    }
+  }
+
+  Future<void> _reauthenticateAndDelete() async {
+    print('_reauthenticateAndDelete start!');
+
+    try {
+
+      final providerData = FirebaseAuth.instance.currentUser?.providerData;
+      print('providerData: $providerData');
+      print('providerData?.isEmpty: ${providerData?.isEmpty}');
+
+      if (providerData!.isEmpty) {
+        print('카카오로 로그인함');
+
+        if (await AuthApi.instance.hasToken()) {
+          try {
+            AccessTokenInfo tokenInfo =
+            await UserApi.instance.accessTokenInfo();
+            print('토큰 유효성 체크 성공 ${tokenInfo.id} ${tokenInfo.expiresIn}');
+
+            try {
+              // 카카오계정으로 로그인
+              OAuthToken token = await UserApi.instance.loginWithKakaoAccount();
+              print('로그인 성공 ${token.accessToken}');
+
+              try {
+                await UserApi.instance.unlink();
+                print('연결 끊기 성공, SDK에서 토큰 삭제');
+              } catch (error) {
+                print('연결 끊기 실패 $error');
+              }
+
+            } catch (error) {
+              print('로그인 실패 $error');
+            }
+
+          } catch (error) {
+            if (error is KakaoException && error.isInvalidTokenError()) {
+              print('토큰 만료 $error');
+            } else {
+              print('토큰 정보 조회 실패 $error');
+            }
+
+          }
+        } else {
+          print('발급된 토큰 없음');
+          try {
+            OAuthToken token = await UserApi.instance.loginWithKakaoAccount();
+            print('로그인 성공 ${token.accessToken}');
+          } catch (error) {
+            print('로그인 실패 $error');
+          }
+        }
+
+      }
+
+      if (AppleAuthProvider().providerId == providerData?.first.providerId) {
+        print('AppleAuthProvider');
+        await FirebaseAuth.instance.currentUser!
+            .reauthenticateWithProvider(AppleAuthProvider());
+
+      } else if (GoogleAuthProvider().providerId == providerData?.first.providerId) {
+        print('GoogleAuthProvider');
+        await FirebaseAuth.instance.currentUser!
+            .reauthenticateWithProvider(GoogleAuthProvider());
+
+      } else {
+        print('else else else else');
+      }
+      print('delete 직전');
+
+      await FirebaseAuth.instance.currentUser?.delete();
+    } catch (e) {
+      // Handle exceptions
+      print('_reauthenticateAndDelete $e');
+    }
+  }
+
 
   Future kakaoLoginFirebaseRegister() async {
 

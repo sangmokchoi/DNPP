@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:syncfusion_flutter_calendar/calendar.dart';
 
 class CustomAppointment {
+  String? id;
   String pingpongCourtName;
   String pingpongCourtAddress;
   String userUid;
@@ -17,31 +18,25 @@ class CustomAppointment {
   });
 
   factory CustomAppointment.fromFirestore(
-      DocumentSnapshot<Map<String, dynamic>> snapshot,
-      SnapshotOptions? options,
-      ) {
+    DocumentSnapshot<Map<String, dynamic>> snapshot,
+    SnapshotOptions? options,
+  ) {
     final data = snapshot.data();
+
     return CustomAppointment(
       pingpongCourtName: data?['pingpongCourtName'],
       pingpongCourtAddress: data?['pingpongCourtAddress'],
       userUid: data?['userUid'],
-      appointments: (data?['appointments'] as List<dynamic>?)
-          !.map((appointmentData) => Appointment(
-        startTimeZone: appointmentData['startTimeZone'],
-        endTimeZone: appointmentData['endTimeZone'],
-        recurrenceRule: appointmentData['recurrenceRule'],
-        isAllDay: appointmentData['isAllDay'],
-        notes: appointmentData['notes'],
-        location: appointmentData['location'],
-        resourceIds: appointmentData['resourceIds'],
-        recurrenceId: appointmentData['recurrenceId'],
-        id: appointmentData['id'],
-        startTime: appointmentData['startTime'],
-        endTime: appointmentData['endTime'],
-        subject: appointmentData['subject'],
-        color: appointmentData['color'],
-        recurrenceExceptionDates: appointmentData['recurrenceExceptionDates'],
-      ))
+      appointments: (data?['appointments'] as List<dynamic>?)!
+          .map((appointmentData) => Appointment(
+                startTime: appointmentData['startTime'],
+                endTime: appointmentData['endTime'],
+                subject: appointmentData['subject'],
+                //color: appointmentData['color'],
+                isAllDay: appointmentData['isAllDay'],
+                notes: appointmentData['notes'],
+                recurrenceRule: appointmentData['recurrenceRule'],
+              ))
           .toList(),
     );
   }
@@ -52,25 +47,18 @@ class CustomAppointment {
       if (pingpongCourtAddress != null)
         "pingpongCourtAddress": pingpongCourtAddress,
       if (userUid != null) "userUid": userUid,
-      if (appointments != null) "appointments": appointments // Change this line
-          ?.map((appointment) => {
-        'startTimeZone': appointment.startTimeZone,
-        'endTimeZone': appointment.endTimeZone,
-        'recurrenceRule': appointment.recurrenceRule,
-        'isAllDay': appointment.isAllDay,
-        'notes': appointment.notes,
-        'location': appointment.location,
-        'resourceIds': appointment.resourceIds,
-        'recurrenceId': appointment.recurrenceId,
-        'id': appointment.id,
-        'startTime': appointment.startTime,
-        'endTime': appointment.endTime,
-        'subject': appointment.subject,
-        'color': appointment.color,
-        'recurrenceExceptionDates': appointment.recurrenceExceptionDates,
-      })
-          .toList(),
+      if (appointments != null)
+        "appointments": appointments // Change this line
+            ?.map((appointment) => {
+                  'startTime': appointment.startTime,
+                  'endTime': appointment.endTime,
+                  'subject': appointment.subject,
+                  //'color': appointment.color,
+                  'isAllDay': appointment.isAllDay,
+                  'notes': appointment.notes,
+                  'recurrenceRule': appointment.recurrenceRule,
+                })
+            .toList(),
     };
   }
 }
-
