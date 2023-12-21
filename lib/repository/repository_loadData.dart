@@ -129,9 +129,8 @@ class LoadData {
 
             //print('_customAppointment: ${_customAppointment}');
             // //Provider.of<AppointmentUpdate>(context, listen: false).meetings.add(_appointment?.first);
-            print('if (_appointment != null || _appointment.isNotEmpty) 직전 진입');
+
             if (_appointment != null || _appointment.isNotEmpty) {
-              print('if (_appointment != null || _appointment.isNotEmpty) 내 진입');
               Provider.of<PersonalAppointmentUpdate>(context, listen: false)
                   .addCustomMeeting(_customAppointment);
               Provider.of<PersonalAppointmentUpdate>(context, listen: false)

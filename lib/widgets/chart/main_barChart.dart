@@ -6,20 +6,17 @@ import '../../constants.dart';
 import '../../viewModel/courtAppointmentUpdate.dart';
 import '../../viewModel/personalAppointmentUpdate.dart';
 
-class MainBarChart extends StatefulWidget {
+class MainBarChart extends StatelessWidget {
+
   MainBarChart({required this.isCourt});
 
   final bool isCourt;
 
   final Color barBackgroundColor = Colors.white.withOpacity(0.3);
   final Color barColor = Colors.white;
-  final Color touchedBarColor = Colors.green;
 
-  @override
-  State<MainBarChart> createState() => _MainBarChartState();
-}
+  late BuildContext buildcontext;
 
-class _MainBarChartState extends State<MainBarChart> {
   final Duration animDuration = const Duration(milliseconds: 250);
   int touchedIndex = -1;
   bool isPlaying = false;
@@ -28,17 +25,15 @@ class _MainBarChartState extends State<MainBarChart> {
   int pressedInt = -1;
 
   @override
-  void initState() {
-    super.initState();
-  }
-
-  @override
   Widget build(BuildContext context) {
+
+    buildcontext = context;
+
     return FutureBuilder(
       future: Future.delayed(Duration(milliseconds: 0)),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.done) {
-          if (widget.isCourt) {
+          if (isCourt) {
 //daywiseDurations
             if (Provider.of<CourtAppointmentUpdate>(context, listen: false)
                   .daywiseDurations
@@ -339,71 +334,70 @@ class _MainBarChartState extends State<MainBarChart> {
         constraints: BoxConstraints.tightFor(width: 35.0),
         child: SelectableButton(
           onPressed: () async {
-            setState(() {
               //isSelected = !isSelected;
               // 해당 버튼을 클릭하면 다른 버튼들의 선택을 해제하고 현재 버튼을 선택
 
-              if (Provider.of<PersonalAppointmentUpdate>(context, listen: false)
+              if (Provider.of<PersonalAppointmentUpdate>(buildcontext, listen: false)
                       .selectedList[value.toInt()] !=
                   true) {
                 // 클릭되지 않은 요일 클릭
-                Provider.of<PersonalAppointmentUpdate>(context, listen: false)
+                Provider.of<PersonalAppointmentUpdate>(buildcontext, listen: false)
                         .selectedList =
                     List.filled(
-                        Provider.of<PersonalAppointmentUpdate>(context,
+                        Provider.of<PersonalAppointmentUpdate>(buildcontext,
                                 listen: false)
                             .selectedList
                             .length,
                         false);
-                Provider.of<PersonalAppointmentUpdate>(context, listen: false)
+                Provider.of<PersonalAppointmentUpdate>(buildcontext, listen: false)
                         .selectedList[value.toInt()] =
-                    !Provider.of<PersonalAppointmentUpdate>(context,
+                    !Provider.of<PersonalAppointmentUpdate>(buildcontext,
                             listen: false)
                         .selectedList[value.toInt()];
                 pressedInt = value.toInt();
                 print('pressedInt: $pressedInt');
                 print(
-                    'recentDays: ${Provider.of<PersonalAppointmentUpdate>(context, listen: false).recentDays}');
+                    'recentDays: ${Provider.of<PersonalAppointmentUpdate>(buildcontext, listen: false).recentDays}');
 
-                if (Provider.of<PersonalAppointmentUpdate>(context,
+                if (Provider.of<PersonalAppointmentUpdate>(buildcontext,
                             listen: false)
                         .recentDays ==
                     0) {
                   // 최근 7일 클릭시 recentDays
-                  Provider.of<PersonalAppointmentUpdate>(context, listen: false)
+                  Provider.of<PersonalAppointmentUpdate>(buildcontext, listen: false)
                       .updateLast7DaysHourlyCountsByDaysOfWeek(pressedInt);
 
-                } else if (Provider.of<PersonalAppointmentUpdate>(context,
+                } else if (Provider.of<PersonalAppointmentUpdate>(buildcontext,
                             listen: false)
                         .recentDays ==
                     1) {
-                  Provider.of<PersonalAppointmentUpdate>(context, listen: false)
+                  Provider.of<PersonalAppointmentUpdate>(buildcontext, listen: false)
                       .updateLast28DaysHourlyCountsByDaysOfWeek(pressedInt);
 
-                } else if (Provider.of<PersonalAppointmentUpdate>(context,
+                } else if (Provider.of<PersonalAppointmentUpdate>(buildcontext,
                             listen: false)
                         .recentDays ==
                     2) {
-                  Provider.of<PersonalAppointmentUpdate>(context, listen: false)
+                  Provider.of<PersonalAppointmentUpdate>(buildcontext, listen: false)
                       .updateLast3MonthsHourlyCountsByDaysOfWeek(pressedInt);
 
-                } else if (Provider.of<PersonalAppointmentUpdate>(context,
+                } else if (Provider.of<PersonalAppointmentUpdate>(buildcontext,
                             listen: false)
                         .recentDays ==
                     3) {
-                  Provider.of<PersonalAppointmentUpdate>(context, listen: false)
+                  Provider.of<PersonalAppointmentUpdate>(buildcontext, listen: false)
                       .updateNext28daysHourlyCountsByDaysOfWeek(pressedInt);
 
                 }
               } else {
                 // 요일이 한 번 클릭된 상태에서 클릭된 요일 클릭
-                Provider.of<PersonalAppointmentUpdate>(context, listen: false)
+                Provider.of<PersonalAppointmentUpdate>(buildcontext, listen: false)
                         .selectedList[value.toInt()] =
-                    !Provider.of<PersonalAppointmentUpdate>(context,
+                    !Provider.of<PersonalAppointmentUpdate>(buildcontext,
                             listen: false)
                         .selectedList[value.toInt()];
                 int indexOfTrue = Provider.of<PersonalAppointmentUpdate>(
-                        context,
+                    buildcontext,
                         listen: false)
                     .isSelected
                     .indexOf(true);
@@ -411,23 +405,23 @@ class _MainBarChartState extends State<MainBarChart> {
 
                 // 요일 해제 시, 전체의 시간대로 보이게끔 초기화
                 if (indexOfTrue == 0) {
-                  Provider.of<PersonalAppointmentUpdate>(context, listen: false)
+                  Provider.of<PersonalAppointmentUpdate>(buildcontext, listen: false)
                       .updateLast7DaysHourlyCounts();
 
                 } else if (indexOfTrue == 1) {
-                  Provider.of<PersonalAppointmentUpdate>(context, listen: false)
+                  Provider.of<PersonalAppointmentUpdate>(buildcontext, listen: false)
                       .updateLast28DaysHourlyCounts();
 
                 } else if (indexOfTrue == 2) {
-                  Provider.of<PersonalAppointmentUpdate>(context, listen: false)
+                  Provider.of<PersonalAppointmentUpdate>(buildcontext, listen: false)
                       .updateLast3MonthsHourlyCounts();
 
                 } else if (indexOfTrue == 3) {
-                  Provider.of<PersonalAppointmentUpdate>(context, listen: false)
+                  Provider.of<PersonalAppointmentUpdate>(buildcontext, listen: false)
                       .updateNext28daysHourlyCounts();
                 }
               }
-            });
+
           },
           style: ButtonStyle(
             shape: MaterialStateProperty.all<RoundedRectangleBorder>(
@@ -444,7 +438,7 @@ class _MainBarChartState extends State<MainBarChart> {
             ),
           ),
           selected:
-              Provider.of<PersonalAppointmentUpdate>(context, listen: false)
+              Provider.of<PersonalAppointmentUpdate>(buildcontext, listen: false)
                   .selectedList[value.toInt()], // Provider.of<PersonalAppointmentUpdate>(context, listen: false).falseSelectedList
           child: text,
         ),
@@ -493,87 +487,87 @@ class _MainBarChartState extends State<MainBarChart> {
         constraints: BoxConstraints.tightFor(width: 35.0),
         child: SelectableButton(
           onPressed: () async {
-            setState(() {
+
               // 해당 버튼을 클릭하면 다른 버튼들의 선택을 해제하고 현재 버튼을 선택
-              if (Provider.of<CourtAppointmentUpdate>(context, listen: false)
+              if (Provider.of<CourtAppointmentUpdate>(buildcontext, listen: false)
                       .selectedList[value.toInt()] !=
                   true) {
                 // 클릭되지 않는 요일 클릭
-                Provider.of<CourtAppointmentUpdate>(context, listen: false)
+                Provider.of<CourtAppointmentUpdate>(buildcontext, listen: false)
                         .selectedList =
                     List.filled(
-                        Provider.of<CourtAppointmentUpdate>(context,
+                        Provider.of<CourtAppointmentUpdate>(buildcontext,
                                 listen: false)
                             .selectedList
                             .length,
                         false);
-                Provider.of<CourtAppointmentUpdate>(context, listen: false)
+                Provider.of<CourtAppointmentUpdate>(buildcontext, listen: false)
                         .selectedList[value.toInt()] =
-                    !Provider.of<CourtAppointmentUpdate>(context, listen: false)
+                    !Provider.of<CourtAppointmentUpdate>(buildcontext, listen: false)
                         .selectedList[value.toInt()];
                 pressedInt = value.toInt();
                 print('pressedInt: $pressedInt');
                 print(
-                    'recentDays: ${Provider.of<CourtAppointmentUpdate>(context, listen: false).recentDays}');
+                    'recentDays: ${Provider.of<CourtAppointmentUpdate>(buildcontext, listen: false).recentDays}');
 
-                if (Provider.of<CourtAppointmentUpdate>(context, listen: false)
+                if (Provider.of<CourtAppointmentUpdate>(buildcontext, listen: false)
                         .recentDays ==
                     0) {
                   // 최근 7일 클릭시 recentDays
-                  Provider.of<CourtAppointmentUpdate>(context, listen: false)
+                  Provider.of<CourtAppointmentUpdate>(buildcontext, listen: false)
                       .updateLast7DaysHourlyCountsByDaysOfWeek(pressedInt);
 
-                } else if (Provider.of<CourtAppointmentUpdate>(context,
+                } else if (Provider.of<CourtAppointmentUpdate>(buildcontext,
                             listen: false)
                         .recentDays ==
                     1) {
-                  Provider.of<CourtAppointmentUpdate>(context, listen: false)
+                  Provider.of<CourtAppointmentUpdate>(buildcontext, listen: false)
                       .updateLast28DaysHourlyCountsByDaysOfWeek(pressedInt);
 
-                } else if (Provider.of<CourtAppointmentUpdate>(context,
+                } else if (Provider.of<CourtAppointmentUpdate>(buildcontext,
                             listen: false)
                         .recentDays ==
                     2) {
-                  Provider.of<CourtAppointmentUpdate>(context, listen: false)
+                  Provider.of<CourtAppointmentUpdate>(buildcontext, listen: false)
                       .updateLast3MonthsHourlyCountsByDaysOfWeek(pressedInt);
 
-                } else if (Provider.of<CourtAppointmentUpdate>(context,
+                } else if (Provider.of<CourtAppointmentUpdate>(buildcontext,
                             listen: false)
                         .recentDays ==
                     3) {
-                  Provider.of<CourtAppointmentUpdate>(context, listen: false)
+                  Provider.of<CourtAppointmentUpdate>(buildcontext, listen: false)
                       .updateNext28daysHourlyCountsByDaysOfWeek(pressedInt);
 
                 }
 
               } else {
                 // 요일이 한 번 클릭된 상태에서 클릭된 요일 클릭
-                Provider.of<CourtAppointmentUpdate>(context, listen: false)
+                Provider.of<CourtAppointmentUpdate>(buildcontext, listen: false)
                         .selectedList[value.toInt()] =
-                    !Provider.of<CourtAppointmentUpdate>(context, listen: false)
+                    !Provider.of<CourtAppointmentUpdate>(buildcontext, listen: false)
                         .selectedList[value.toInt()];
                 int indexOfTrue =
-                    Provider.of<CourtAppointmentUpdate>(context, listen: false)
+                    Provider.of<CourtAppointmentUpdate>(buildcontext, listen: false)
                         .isSelected
                         .indexOf(true);
                 print('indexOfTrue: $indexOfTrue');
 
                 // 요일 해제 시, 전체의 시간대로 보이게끔 초기화
                 if (indexOfTrue == 0) {
-                  Provider.of<CourtAppointmentUpdate>(context, listen: false)
+                  Provider.of<CourtAppointmentUpdate>(buildcontext, listen: false)
                       .updateLast7DaysHourlyCounts();
                 } else if (indexOfTrue == 1) {
-                  Provider.of<CourtAppointmentUpdate>(context, listen: false)
+                  Provider.of<CourtAppointmentUpdate>(buildcontext, listen: false)
                       .updateLast28DaysHourlyCounts();
                 } else if (indexOfTrue == 2) {
-                  Provider.of<CourtAppointmentUpdate>(context, listen: false)
+                  Provider.of<CourtAppointmentUpdate>(buildcontext, listen: false)
                       .updateLast3MonthsHourlyCounts();
                 } else if (indexOfTrue == 3) {
-                  Provider.of<CourtAppointmentUpdate>(context, listen: false)
+                  Provider.of<CourtAppointmentUpdate>(buildcontext, listen: false)
                       .updateNext28daysHourlyCounts();
                 }
               }
-            });
+
           },
           style: ButtonStyle(
             shape: MaterialStateProperty.all<RoundedRectangleBorder>(
@@ -589,7 +583,7 @@ class _MainBarChartState extends State<MainBarChart> {
               },
             ),
           ),
-          selected: Provider.of<CourtAppointmentUpdate>(context, listen: false)
+          selected: Provider.of<CourtAppointmentUpdate>(buildcontext, listen: false)
               .selectedList[value.toInt()],
           child: text,
         ),
@@ -605,23 +599,23 @@ class _MainBarChartState extends State<MainBarChart> {
     double width = 22,
     List<int> showTooltips = const [],
   }) {
-    barColor ??= widget.barColor;
+    barColor ??= barColor;
     return BarChartGroupData(
       x: x,
       barRods: [
         BarChartRodData(
           toY: isTouched ? y + 1 : y,
-          color: isTouched ? widget.touchedBarColor : barColor,
+          color: Colors.white,
           width: width,
           borderSide: isTouched
-              ? BorderSide(color: widget.touchedBarColor)
+              ? BorderSide(color: Colors.white)
               : const BorderSide(color: Colors.white, width: 0),
           backDrawRodData: BackgroundBarChartRodData(
             show: true,
-            toY: Provider.of<PersonalAppointmentUpdate>(context, listen: false)
+            toY: Provider.of<PersonalAppointmentUpdate>(buildcontext, listen: false)
                     .calculateAverage() *
                 1.5,
-            color: widget.barBackgroundColor,
+            color: barBackgroundColor,
           ),
         ),
       ],
@@ -637,23 +631,23 @@ class _MainBarChartState extends State<MainBarChart> {
     double width = 22,
     List<int> showTooltips = const [],
   }) {
-    barColor ??= widget.barColor;
+    barColor ??= barColor;
     return BarChartGroupData(
       x: x,
       barRods: [
         BarChartRodData(
           toY: isTouched ? y + 1 : y,
-          color: isTouched ? widget.touchedBarColor : barColor,
+          color: Colors.white,
           width: width,
           borderSide: isTouched
-              ? BorderSide(color: widget.touchedBarColor)
+              ? BorderSide(color: Colors.white)
               : const BorderSide(color: Colors.white, width: 0),
           backDrawRodData: BackgroundBarChartRodData(
             show: true,
-            toY: Provider.of<CourtAppointmentUpdate>(context, listen: false)
+            toY: Provider.of<CourtAppointmentUpdate>(buildcontext, listen: false)
                     .calculateAverage() *
                 1.5,
-            color: widget.barBackgroundColor,
+            color: barBackgroundColor,
           ),
         ),
       ],
@@ -666,49 +660,49 @@ class _MainBarChartState extends State<MainBarChart> {
           case 0:
             return makeGroupDataPersonal(
                 0,
-                Provider.of<PersonalAppointmentUpdate>(context, listen: false)
+                Provider.of<PersonalAppointmentUpdate>(buildcontext, listen: false)
                         .daywiseDurations['월'] ??
                     0.0,
                 isTouched: i == touchedIndex);
           case 1:
             return makeGroupDataPersonal(
                 1,
-                Provider.of<PersonalAppointmentUpdate>(context, listen: false)
+                Provider.of<PersonalAppointmentUpdate>(buildcontext, listen: false)
                         .daywiseDurations['화'] ??
                     0.0,
                 isTouched: i == touchedIndex);
           case 2:
             return makeGroupDataPersonal(
                 2,
-                Provider.of<PersonalAppointmentUpdate>(context, listen: false)
+                Provider.of<PersonalAppointmentUpdate>(buildcontext, listen: false)
                         .daywiseDurations['수'] ??
                     0.0,
                 isTouched: i == touchedIndex);
           case 3:
             return makeGroupDataPersonal(
                 3,
-                Provider.of<PersonalAppointmentUpdate>(context, listen: false)
+                Provider.of<PersonalAppointmentUpdate>(buildcontext, listen: false)
                         .daywiseDurations['목'] ??
                     0.0,
                 isTouched: i == touchedIndex);
           case 4:
             return makeGroupDataPersonal(
                 4,
-                Provider.of<PersonalAppointmentUpdate>(context, listen: false)
+                Provider.of<PersonalAppointmentUpdate>(buildcontext, listen: false)
                         .daywiseDurations['금'] ??
                     0.0,
                 isTouched: i == touchedIndex);
           case 5:
             return makeGroupDataPersonal(
                 5,
-                Provider.of<PersonalAppointmentUpdate>(context, listen: false)
+                Provider.of<PersonalAppointmentUpdate>(buildcontext, listen: false)
                         .daywiseDurations['토'] ??
                     0.0,
                 isTouched: i == touchedIndex);
           case 6:
             return makeGroupDataPersonal(
                 6,
-                Provider.of<PersonalAppointmentUpdate>(context, listen: false)
+                Provider.of<PersonalAppointmentUpdate>(buildcontext, listen: false)
                         .daywiseDurations['일'] ??
                     0.0,
                 isTouched: i == touchedIndex);
@@ -722,49 +716,49 @@ class _MainBarChartState extends State<MainBarChart> {
           case 0:
             return makeGroupDataCourt(
                 0,
-                Provider.of<CourtAppointmentUpdate>(context, listen: false)
+                Provider.of<CourtAppointmentUpdate>(buildcontext, listen: false)
                         .daywiseDurations['월'] ??
                     0.0,
                 isTouched: i == touchedIndex);
           case 1:
             return makeGroupDataCourt(
                 1,
-                Provider.of<CourtAppointmentUpdate>(context, listen: false)
+                Provider.of<CourtAppointmentUpdate>(buildcontext, listen: false)
                         .daywiseDurations['화'] ??
                     0.0,
                 isTouched: i == touchedIndex);
           case 2:
             return makeGroupDataCourt(
                 2,
-                Provider.of<CourtAppointmentUpdate>(context, listen: false)
+                Provider.of<CourtAppointmentUpdate>(buildcontext, listen: false)
                         .daywiseDurations['수'] ??
                     0.0,
                 isTouched: i == touchedIndex);
           case 3:
             return makeGroupDataCourt(
                 3,
-                Provider.of<CourtAppointmentUpdate>(context, listen: false)
+                Provider.of<CourtAppointmentUpdate>(buildcontext, listen: false)
                         .daywiseDurations['목'] ??
                     0.0,
                 isTouched: i == touchedIndex);
           case 4:
             return makeGroupDataCourt(
                 4,
-                Provider.of<CourtAppointmentUpdate>(context, listen: false)
+                Provider.of<CourtAppointmentUpdate>(buildcontext, listen: false)
                         .daywiseDurations['금'] ??
                     0.0,
                 isTouched: i == touchedIndex);
           case 5:
             return makeGroupDataCourt(
                 5,
-                Provider.of<CourtAppointmentUpdate>(context, listen: false)
+                Provider.of<CourtAppointmentUpdate>(buildcontext, listen: false)
                         .daywiseDurations['토'] ??
                     0.0,
                 isTouched: i == touchedIndex);
           case 6:
             return makeGroupDataCourt(
                 6,
-                Provider.of<CourtAppointmentUpdate>(context, listen: false)
+                Provider.of<CourtAppointmentUpdate>(buildcontext, listen: false)
                         .daywiseDurations['일'] ??
                     0.0,
                 isTouched: i == touchedIndex);
@@ -774,8 +768,10 @@ class _MainBarChartState extends State<MainBarChart> {
       });
 }
 
-class SelectableButton extends StatefulWidget {
-  const SelectableButton({
+
+class SelectableButton extends StatelessWidget {
+
+  SelectableButton({
     super.key,
     required this.selected,
     this.style,
@@ -788,25 +784,13 @@ class SelectableButton extends StatefulWidget {
   final VoidCallback? onPressed;
   final Widget child;
 
-  @override
-  State<SelectableButton> createState() => _SelectableButtonState();
-}
-
-class _SelectableButtonState extends State<SelectableButton> {
-  late final MaterialStatesController statesController;
-
-  @override
-  void initState() {
-    super.initState();
-    statesController = MaterialStatesController(
-        <MaterialState>{if (widget.selected) MaterialState.selected});
-  }
+  late final MaterialStatesController statesController = MaterialStatesController(<MaterialState>{if (selected) MaterialState.selected});
 
   @override
   void didUpdateWidget(SelectableButton oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.selected != oldWidget.selected) {
-      statesController.update(MaterialState.selected, widget.selected);
+    //super.didUpdateWidget(oldWidget);
+    if (selected != oldWidget.selected) {
+      statesController.update(MaterialState.selected, selected);
     }
   }
 
@@ -818,9 +802,9 @@ class _SelectableButtonState extends State<SelectableButton> {
       ),
       child: TextButton(
         statesController: statesController,
-        style: widget.style,
-        onPressed: widget.onPressed,
-        child: widget.child,
+        style: style,
+        onPressed: onPressed,
+        child: child,
       ),
     );
   }

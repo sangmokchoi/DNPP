@@ -170,8 +170,10 @@ class _MainScreenState extends State<MainScreen> {
             curve: Curves.easeInOut,
           );
         });
-      } else {}
 
+      } else {
+
+      }
       print('await fetchUserData(); completed');
     } catch (e) {
       print(e);
@@ -190,12 +192,12 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   void initState() {
-    FirebaseAuth.instance.authStateChanges().listen((user) {
+    FirebaseAuth.instance.authStateChanges().listen((user) async {
       if (user == null) {
         // user == null
         print('SignupScreen user isNotLoggedIn');
         print('SignupScreen user: $user');
-        print('신규유저 이므로 프로필 생성 필요');
+        print('신규유저 이므로 프로필 생성 필요 또는 로그아웃한 상태');
 
         Provider.of<LoginStatusUpdate>(context, listen: false)
             .falseIsLoggedIn();
@@ -225,6 +227,20 @@ class _MainScreenState extends State<MainScreen> {
         } else if (user.providerData.isEmpty) {
           print('카카오로 로그인한 상태');
           print('user.providerData.isEmpty');
+        }
+
+        // 이전에 유저 정보가 있으면, 로그아웃했다가 다시 들어온 유저로 인식하고, 프로필 설정 화면으로 보낼 필요가 없음
+        final docRef = db.collection("UserData").doc(user.uid);
+        DocumentSnapshot doc = await docRef.get();
+
+        if (doc.exists) {
+          // 문서가 존재하면 이전에 저장한 유저 정보가 있다고 판단
+          print('문서가 존재하면 이전에 저장한 유저 정보가 있다고 판단 UserData exists for ${user.uid}');
+          Provider.of<LoginStatusUpdate>(context, listen: false).updateIsUserDataExists(true);
+        } else {
+          // 문서가 존재하지 않으면 이전에 저장한 유저 정보가 없다고 판단
+          print('문서가 존재하지 않으면 이전에 저장한 유저 정보가 없다고 판단 No UserData for ${user.uid}');
+          Provider.of<LoginStatusUpdate>(context, listen: false).updateIsUserDataExists(false);
         }
       }
     });
