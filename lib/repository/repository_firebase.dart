@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:crypto/crypto.dart';
 import 'package:dnpp/dataSource/firebase_auth_remote_data_source.dart';
+import 'package:dnpp/viewModel/profileUpdate.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
@@ -14,6 +15,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:kakao_flutter_sdk/kakao_flutter_sdk_user.dart';
 import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart';
 import 'package:kakao_flutter_sdk_user/kakao_flutter_sdk_user.dart' as kakao;
+import 'package:provider/provider.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
 class FirebaseRepository {
@@ -137,13 +139,17 @@ class FirebaseRepository {
   }
 
 
-  Future kakaoLoginFirebaseRegister() async {
+  Future kakaoLoginFirebaseRegister(BuildContext context) async {
 
     print('socialLogin 진입');
     user = await kakao.UserApi.instance.me();
+
+    //print('user: ${user}');
     print('id: ${user!.id}');
+    print('name: ${user!.kakaoAccount!.profile!.nickname!}');//
     print('email: ${user!.kakaoAccount!.email!}');
-    print('profile: ${user!.kakaoAccount!.profile}');
+    //print('profile: ${user!.kakaoAccount!.profile}');
+    print('profileImageUrl: ${user!.kakaoAccount!.profile?.profileImageUrl}');
 
     final token = await _firebaseAuthDataSource.createCustomToken({
       'uid': user!.id.toString(),
@@ -156,11 +162,16 @@ class FirebaseRepository {
     await FirebaseAuth.instance.signInWithCustomToken(token);
     print('socialLogin 완료');
 
+    await Provider.of<ProfileUpdate>(context, listen: false).updateName(user!.kakaoAccount!.profile!.nickname!);
+    await Provider.of<ProfileUpdate>(context, listen: false).updateId(user!.id.toString());
+    await Provider.of<ProfileUpdate>(context, listen: false).updateEmail(user!.kakaoAccount!.email!);
+    await Provider.of<ProfileUpdate>(context, listen: false).updateImageUrl(user!.kakaoAccount!.profile!.profileImageUrl!);
+
     print('유저에게 사진 및 프로필 정보를 가져올지 말지 이때 문의 필요');
 
   }
 
-  Future<void> signInWithGoogle() async {
+  Future<void> signInWithGoogle(BuildContext context) async {
     // Trigger the authentication flow
     final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
 
@@ -181,13 +192,22 @@ class FirebaseRepository {
       //User? user = _credential.user;
       var user = _credential.user;
 
+      await Provider.of<ProfileUpdate>(context, listen: false).updateName(user?.displayName ?? '');
+      await Provider.of<ProfileUpdate>(context, listen: false).updateId(user?.uid ?? '');
+      await Provider.of<ProfileUpdate>(context, listen: false).updateEmail(user?.email ?? '');
+      await Provider.of<ProfileUpdate>(context, listen: false).updateImageUrl(user?.photoURL ?? '');
+
+      print('id: ${Provider.of<ProfileUpdate>(context, listen: false).id}');
+      print('email: ${Provider.of<ProfileUpdate>(context, listen: false).email}');
+      print('imageUrl: ${Provider.of<ProfileUpdate>(context, listen: false).imageUrl}');
+
       //logger.e(user);
       print('signInWithGoogle user: $user');
       print('유저에게 사진 및 프로필 정보를 가져올지 말지 이때 문의 필요');
     }
   }
 
-  Future<void> signInWithApple() async {
+  Future<void> signInWithApple(BuildContext context) async {
     try {
       final appleCredential = await SignInWithApple.getAppleIDCredential(
         scopes: [
@@ -206,6 +226,20 @@ class FirebaseRepository {
       final authResult =
       await FirebaseAuth.instance.signInWithCredential(oauthCredential);
       print('signInWithApple: $authResult');
+
+      if (authResult.user != null) {
+        var user = authResult.user;
+
+        await Provider.of<ProfileUpdate>(context, listen: false).updateName(user!.displayName!);
+        await Provider.of<ProfileUpdate>(context, listen: false).updateId(user!.uid);
+        await Provider.of<ProfileUpdate>(context, listen: false).updateEmail(user!.email!);
+        await Provider.of<ProfileUpdate>(context, listen: false).updateImageUrl(user!.photoURL ?? '');
+
+        print('id: ${Provider.of<ProfileUpdate>(context, listen: false).id}');
+        print('email: ${Provider.of<ProfileUpdate>(context, listen: false).email}');
+        print('imageUrl: ${Provider.of<ProfileUpdate>(context, listen: false).imageUrl}');
+
+      }
 
       print('유저에게 사진 및 프로필 정보를 가져올지 말지 이때 문의 필요');
       //setUser(authResult.user);
@@ -239,13 +273,13 @@ class FirebaseRepository {
     }
   }
 
-  Future<void> kakaoLogin() async {
+  Future<void> kakaoLogin(BuildContext context) async {
     if (await kakao.isKakaoTalkInstalled()) {
       print('isKakaoTalkInstalled yes');
       try {
         await kakao.UserApi.instance.loginWithKakaoTalk();
         print('카카오톡으로 로그인 성공1');
-        await kakaoLoginFirebaseRegister();
+        await kakaoLoginFirebaseRegister(context);
       } catch (error) {
         print('카카오톡으로 로그인 실패1 $error');
 
@@ -258,21 +292,24 @@ class FirebaseRepository {
         try {
           await kakao.UserApi.instance.loginWithKakaoAccount();
           print('카카오계정으로 로그인 성공2');
-          await kakaoLoginFirebaseRegister();
+          await kakaoLoginFirebaseRegister(context);
         } catch (error) {
           print('카카오계정으로 로그인 실패2 $error');
         }
       }
     } else {
       print('isKakaoTalkInstalled NO');
+
       try {
         await kakao.UserApi.instance.loginWithKakaoAccount();
         print('카카오계정으로 로그인 성공3');
-        await kakaoLoginFirebaseRegister();
+        await kakaoLoginFirebaseRegister(context);
+
       } catch (error) {
         print('카카오계정으로 로그인 실패3 $error');
       }
     }
+
   }
 
   Future<void> kakaoProfile() async{ // 현재 접속한 유저의 프로필을 가져오는 함수
@@ -433,44 +470,8 @@ class FirebaseRepository {
   //   return await _fireAuthInstance.signInWithCredential(oauthCredential);
   // }
 
+  Future<void> permissionPersonalInfo(bool isOkayToGet) async {
 
-// Stream<UserModel?> getUserStream() {
-//   //userChanges()는 User타입의 객체를 Stream으로 갖고오는 Firebase제공 함수이다.
-//   //Firebase와 연결된 User가 변경될 때 마다 transform()을 실행한다.
-//   //userModel은 제공해주는 타입이 아니라, 직접 만들어야 한다.
-//   //model클래스 생성에 대해서는 freezed에 대해서 설명할때 또 다루겠다.
-//   return _fireAuthInstance.userChanges().transform(
-//       StreamTransformer<User?, UserModel?>.fromHandlers(
-//           handleData: (user, sink) async {
-//
-//             //user타입을 갖고오는데 실패했으면 stream에 아무것도 추가하지 않는다.
-//             if (user == null) {
-//               sink.add(null);
-//               return;
-//             }
-//
-//             var userCollection = _firestoreInstance.collection("user");
-//             Map<String, dynamic> userDoc = {};
-//
-//             try {
-//               //try catch로 유저 있어요?를 물어본다. 유저가 있다면 데이터를 긁어와주고 끝
-//               var snapshot = await userCollection.doc(user.uid).get();
-//               userDoc = snapshot.data() as Map<String, dynamic>;
-//             } catch (e) {
-//               //유저가 없으면 만들어주자
-//               var addedUser = await userCollection.doc(user.uid).set({
-//                 //나의 UserModel에 있는 param들을 넣는다.
-//                 'uid': user.uid,
-//                 'createdAt': DateTime.now(),
-//                 'email': user.email,
-//                 'nickName': '',
-//                 'isTermChecked': false,
-//                 'age': 0,
-//               });
-//               var snapshot = await userCollection.doc(user.uid).get();
-//               userDoc = snapshot.data() as Map<String, dynamic>;
-//             }
-//             return sink.add(UserModel.fromJson(userDoc));
-//           }));
-// }
+  }
+
 }

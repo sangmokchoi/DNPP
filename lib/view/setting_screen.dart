@@ -5,6 +5,7 @@ import 'package:dnpp/models/userProfile.dart';
 import 'package:dnpp/view/main_screen.dart';
 import 'package:dnpp/view/profile_screen.dart';
 import 'package:dnpp/viewModel/loginStatusUpdate.dart';
+import 'package:dnpp/viewModel/personalAppointmentUpdate.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/cupertino.dart';
@@ -16,6 +17,7 @@ import 'package:dnpp/repository/repository_firebase.dart' as viewModel;
 
 import '../constants.dart';
 import '../models/pingpongList.dart';
+import '../viewModel/courtAppointmentUpdate.dart';
 import '../viewModel/profileUpdate.dart';
 import 'home_screen.dart';
 
@@ -38,15 +40,6 @@ class _SettingScreenState extends State<SettingScreen> {
     '로그아웃',
     '회원 탈퇴'
   ];
-
-  void hideNavBar() {
-    PersistentTabController();
-  }
-
-  @override
-  void initState() {
-    super.initState();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -166,11 +159,19 @@ class _SettingScreenState extends State<SettingScreen> {
                           await viewModel.FirebaseRepository().signOut();
                           await Future.delayed(Duration.zero);
 
+                          await Provider.of<PersonalAppointmentUpdate>(context, listen: false).resetMeetings();
+                          await Provider.of<PersonalAppointmentUpdate>(context, listen: false).resetHourlyCounts();
+                          await Provider.of<PersonalAppointmentUpdate>(context, listen: false).resetDaywiseDurations();
+                          await Provider.of<PersonalAppointmentUpdate>(context, listen: false).resetSelectedList();
+
+                          await Provider.of<CourtAppointmentUpdate>(context, listen: false).resetMeetings();
+                          await Provider.of<CourtAppointmentUpdate>(context, listen: false).resetHourlyCounts();
+                          await Provider.of<CourtAppointmentUpdate>(context, listen: false).resetDaywiseDurations();
+                          await Provider.of<CourtAppointmentUpdate>(context, listen: false).resetSelectedList();
+
                           Navigator.pop(context);
 
-                          setState(() {
-
-                          });
+                          setState(() {});
 
                           // await Provider.of<LoginStatusUpdate>(context,
                           //         listen: false)
@@ -180,6 +181,16 @@ class _SettingScreenState extends State<SettingScreen> {
                           print('회원 탈퇴');
                           await viewModel.FirebaseRepository().deleteUserAccount();
                           //Navigator.pushNamed(context, '/');
+                          await Provider.of<PersonalAppointmentUpdate>(context, listen: false).resetMeetings();
+                          await Provider.of<PersonalAppointmentUpdate>(context, listen: false).resetHourlyCounts();
+                          await Provider.of<PersonalAppointmentUpdate>(context, listen: false).resetDaywiseDurations();
+                          await Provider.of<PersonalAppointmentUpdate>(context, listen: false).resetSelectedList();
+
+                          await Provider.of<CourtAppointmentUpdate>(context, listen: false).resetMeetings();
+                          await Provider.of<CourtAppointmentUpdate>(context, listen: false).resetHourlyCounts();
+                          await Provider.of<CourtAppointmentUpdate>(context, listen: false).resetDaywiseDurations();
+                          await Provider.of<CourtAppointmentUpdate>(context, listen: false).resetSelectedList();
+
                           PersistentNavBarNavigator.pushNewScreenWithRouteSettings(
                             context,
                             screen: HomeScreen(),

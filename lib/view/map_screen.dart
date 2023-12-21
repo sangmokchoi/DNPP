@@ -241,7 +241,7 @@ class _MapScreenState extends State<MapScreen> {
           return Scaffold(
             appBar: AppBar(
               iconTheme: IconThemeData(
-                color: Colors.blue, // 원하는 색상으로 변경
+                color: kMainColor, // 원하는 색상으로 변경
                 size: 24.0, // 아이콘 크기 설정
               ),
               titleTextStyle: kAppbarTextStyle,
@@ -291,7 +291,7 @@ class _MapScreenState extends State<MapScreen> {
                                     margin: EdgeInsets.only(right: 5.0),
                                     padding: EdgeInsets.all(8.0),
                                     decoration: BoxDecoration(
-                                      border: Border.all(color: Colors.blue),
+                                      border: Border.all(color: kMainColor),
                                       borderRadius: BorderRadius.circular(20.0),
                                     ),
                                     child: Row(
@@ -301,7 +301,7 @@ class _MapScreenState extends State<MapScreen> {
                                                   listen: false)
                                               .pingpongList[index]
                                               .title,
-                                          style: TextStyle(color: Colors.blue),
+                                          style: TextStyle(color: kMainColor),
                                         ),
                                         SizedBox(
                                           width: 24.0,

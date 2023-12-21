@@ -19,6 +19,13 @@ class ProfileUpdate with ChangeNotifier {
 
   ScrollController horizontalScrollController = ScrollController();
 
+  bool isGetImageUrl = false;
+
+  String name = '';
+  String id = '';
+  String email = '';
+  String imageUrl = '';
+
   //late UserProfile userProfile;
   UserProfile userProfile = UserProfile(
       uid: 'uid',
@@ -35,6 +42,36 @@ class ProfileUpdate with ChangeNotifier {
 
   Future<List<PingpongList>> extractPingpongList() async {
     return pingpongList;
+  }
+
+  Future updateIsGetImageUrl(bool value) async {
+    isGetImageUrl = value;
+    print('isGetImageUrl: $isGetImageUrl');
+    notifyListeners();
+  }
+
+  Future updateName(String value) async {
+    name = value;
+    print('name: $name');
+    notifyListeners();
+  }
+
+  Future updateId(String value) async {
+    id = value;
+    print('id: $id');
+    notifyListeners();
+  }
+
+  Future updateEmail(String value) async {
+    email = value;
+    print('email: $email');
+    notifyListeners();
+  }
+
+  Future updateImageUrl(String value) async {
+    imageUrl = value;
+    print('imageUrl: $imageUrl');
+    notifyListeners();
   }
 
   void scrollListView() {

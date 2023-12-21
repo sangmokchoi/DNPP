@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:syncfusion_flutter_calendar/calendar.dart';
+import '../../constants.dart';
 import '../../dataSource/SFcalendar_dataSource.dart';
 import '../../models/customAppointment.dart';
 import '../../viewModel/loginStatusUpdate.dart';
@@ -134,8 +135,8 @@ class CustomSFCalendar extends StatelessWidget {
         agendaItemHeight: 60,
         agendaViewHeight: 170,
         monthCellStyle: MonthCellStyle(
-          trailingDatesBackgroundColor: Colors.blue.withOpacity(0.15),
-          leadingDatesBackgroundColor: Colors.blue.withOpacity(0.15),
+          trailingDatesBackgroundColor: kMainColor.withOpacity(0.15),
+          leadingDatesBackgroundColor: kMainColor.withOpacity(0.15),
           textStyle: TextStyle(
             fontSize: 15,
           ),

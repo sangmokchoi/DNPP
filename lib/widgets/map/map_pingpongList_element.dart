@@ -60,7 +60,7 @@ class PingpongListElement extends StatelessWidget {
                                   .pingpongList
                                   .contains(_element)
                               ? Colors.blueGrey
-                              : Colors.blue,
+                              : kMainColor,
                       textStyle: TextStyle(fontSize: 15),
                     ),
                     onPressed: () {

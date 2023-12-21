@@ -59,6 +59,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String pickedLocation = '';
   List<String> pickedLocationList = [];
 
+  String userPhotoUrl = '';
+
   UserProfile newProfile = UserProfile(
       uid: '',
       nickName: '',
@@ -82,7 +84,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     if (currentUserProfile.uid != 'uid') {
       newProfile = currentUserProfile;
-      print('userProfile이 초기화된 경우');
+      print('userProfile이 서버에 등록된 경우');
+      print('newProfile: ${newProfile.photoUrl}');
 
       _nickNameTextFormFieldController.text = newProfile.nickName;
 
@@ -111,9 +114,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
           .initializeRubberIsSelected(newProfile.rubber);
       await Provider.of<ProfileUpdate>(context, listen: false)
           .initializeRacketIsSelected(newProfile.racket);
+      print('_image: ${_image}');
+      print('userPhotoUrl: ${userPhotoUrl}');
+
     } else {
       // 여기서 newProfile을 미선언하거나 기본값으로 초기화할 수 있습니다.
-      print('userProfile이 초기화되지 않은 경우');
+      print('userProfile이 서버에 등록되지 않은 경우');
+
+      //_image = XFile(Provider.of<ProfileUpdate>(context, listen: false).imageUrl);
+      _nickNameTextFormFieldController.text =
+          Provider.of<ProfileUpdate>(context, listen: false).name;
+
+      if (Provider.of<ProfileUpdate>(context, listen: false).isGetImageUrl) {
+        userPhotoUrl =
+            Provider
+                .of<ProfileUpdate>(context, listen: false)
+                .imageUrl;
+        newProfile.photoUrl =
+            Provider
+                .of<ProfileUpdate>(context, listen: false)
+                .imageUrl;
+      }
+
+      print('_image: ${_image}');
+      print('userPhotoUrl: ${userPhotoUrl}');
+
     }
 
     setState(() {});
@@ -162,7 +187,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         Positioned(
           child: Padding(
             padding: const EdgeInsets.all(10.0),
-            child: _image != null
+            child: (_image != null) || (userPhotoUrl != '')
                 ? Container(
                     width: 80,
                     height: 80,
@@ -170,7 +195,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         borderRadius: BorderRadius.all(Radius.circular(40.0)),
                         image: DecorationImage(
                           fit: BoxFit.cover,
-                          image: FileImage(File(_image!.path)),
+                          image: (_image != null)
+                              ? FileImage(File(_image!.path))
+                              : NetworkImage(newProfile.photoUrl)
+                                  as ImageProvider<Object>, //,
                         ) //가져온 이미지를 화면에 띄워주는 코드
                         ),
                   )
@@ -197,56 +225,58 @@ class _ProfileScreenState extends State<ProfileScreen> {
               size: 40,
             ),
             onPressed: () async {
-
-                showDialog(
-                  context: context,
-                  builder: (context) {
-                    return AlertDialog(
-                      insetPadding: EdgeInsets.only(left: 10.0, right: 10.0),
-                      shape: kRoundedRectangleBorder,
-                      title: Text("프로필 수정", textAlign: TextAlign.center),
-                      content: Text("프로필 사진 변경을 위한 방법을\n선택해주세요", textAlign: TextAlign.center,),
-                      actions: [
-                        ButtonBar(
-                          alignment: MainAxisAlignment.spaceBetween,
-                          mainAxisSize: MainAxisSize.max,
-                          children: [
-                            Container(
-                              width: kAlertDialogTextButtonWidth,
-                              child: TextButton(
-                                style: kConfirmButtonStyle,
-                                child: Text(
-                                    "카메라 촬영",
-                                  textAlign: TextAlign.center,
-                                  style: kTextButtonTextStyle,
-                                ),
-                                onPressed: () async {
-                                  getImage(ImageSource.camera);
-                                  Navigator.pop(context);
-                                },
+              showDialog(
+                context: context,
+                builder: (context) {
+                  return AlertDialog(
+                    insetPadding: EdgeInsets.only(left: 10.0, right: 10.0),
+                    shape: kRoundedRectangleBorder,
+                    title: Text("프로필 수정", textAlign: TextAlign.center),
+                    content: Text(
+                      "프로필 사진 변경을 위한 방법을\n선택해주세요",
+                      textAlign: TextAlign.center,
+                    ),
+                    actions: [
+                      ButtonBar(
+                        alignment: MainAxisAlignment.spaceBetween,
+                        mainAxisSize: MainAxisSize.max,
+                        children: [
+                          Container(
+                            width: kAlertDialogTextButtonWidth,
+                            child: TextButton(
+                              style: kConfirmButtonStyle,
+                              child: Text(
+                                "카메라 촬영",
+                                textAlign: TextAlign.center,
+                                style: kTextButtonTextStyle,
                               ),
+                              onPressed: () async {
+                                getImage(ImageSource.camera);
+                                Navigator.pop(context);
+                              },
                             ),
-                            Container(
-                              width: kAlertDialogTextButtonWidth,
-                              child: TextButton(
-                                style: kConfirmButtonStyle,
-                                child: Text(
-                                    "사진첩 선택",
-                                  textAlign: TextAlign.center,
-                                  style: kTextButtonTextStyle,
-                                ),
-                                onPressed: () async {
-                                  getImage(ImageSource.gallery);
-                                  Navigator.pop(context);
-                                },
+                          ),
+                          Container(
+                            width: kAlertDialogTextButtonWidth,
+                            child: TextButton(
+                              style: kConfirmButtonStyle,
+                              child: Text(
+                                "사진첩 선택",
+                                textAlign: TextAlign.center,
+                                style: kTextButtonTextStyle,
                               ),
+                              onPressed: () async {
+                                getImage(ImageSource.gallery);
+                                Navigator.pop(context);
+                              },
                             ),
-                          ],
-                        ),
-                      ],
-                    );
-                  },
-                );
+                          ),
+                        ],
+                      ),
+                    ],
+                  );
+                },
+              );
             },
           ),
         ),
@@ -326,80 +356,96 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     // )
                     Container(
                       width: 50.0,
-                      child: isEditing
-                          ? null
-                          : TextButton(
-                              // 편집 버튼 누르기 전까지는 유저 interaction 비활성화
-                              onPressed: () {
-                                //Navigator.pop(context);
+                      child: null,
 
-                                showDialog(
-                                  context: context,
-                                  builder: (context) {
-                                    return AlertDialog(
-                                      insetPadding: EdgeInsets.only(left: 10.0, right: 10.0),
-                                      shape: kRoundedRectangleBorder,
-                                      title: Text('프로필 편집', textAlign: TextAlign.center),
-                                      content: Text('프로필을 편집하시겠습니까?', textAlign: TextAlign.center),
-                                      actions: [
-                                        ButtonBar(
-                                          alignment: MainAxisAlignment.spaceBetween,
-                                          mainAxisSize: MainAxisSize.max,
-                                          children: [
-                                            Container(
-                                              width: kAlertDialogTextButtonWidth, //MediaQuery.of(context).size.width * 0.3,
-                                              child: TextButton(
-                                                style: kCancelButtonStyle,//ButtonStyle(backgroundColor: MaterialStateProperty.all(Colors.grey),),
-                                                onPressed: () {
-                                                  Navigator.pop(context);
-                                                },
-                                                child: Text('취소',
-                                                  textAlign: TextAlign.center,
-                                                  style: kTextButtonTextStyle,
-                                                ),
-                                              ),
-                                            ),
-                                            Container(
-                                              width: kAlertDialogTextButtonWidth, //MediaQuery.of(context).size.width * 0.3,
-                                              child: TextButton(
-                                                style: kConfirmButtonStyle,//ButtonStyle(backgroundColor: MaterialStateProperty.all(Colors.blue),),
-                                                onPressed: () {
-                                                  Navigator.pop(context);
-
-                                                  setState(() {
-                                                    isEditing = true;
-                                                  });
-                                                },
-                                                child: Text('확인',
-                                                  textAlign: TextAlign.center,
-                                                  style: kTextButtonTextStyle,
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ],
-                                    );
-                                  },
-                                );
-                              },
-                              child: Text(
-                                '편집',
-                                style: kElevationButtonStyle,
-                                textAlign: TextAlign.end,
-                              ),
-                            ),
+                    // Container(
+                    //   width: 50.0,
+                    //   child: isEditing
+                    //       ? null
+                    //       : TextButton(
+                    //           // 편집 버튼 누르기 전까지는 유저 interaction 비활성화
+                    //           onPressed: () {
+                    //             //Navigator.pop(context);
+                    //
+                    //             showDialog(
+                    //               context: context,
+                    //               builder: (context) {
+                    //                 return AlertDialog(
+                    //                   insetPadding: EdgeInsets.only(
+                    //                       left: 10.0, right: 10.0),
+                    //                   shape: kRoundedRectangleBorder,
+                    //                   title: Text('프로필 편집',
+                    //                       textAlign: TextAlign.center),
+                    //                   content: Text('프로필을 편집하시겠습니까?',
+                    //                       textAlign: TextAlign.center),
+                    //                   actions: [
+                    //                     ButtonBar(
+                    //                       alignment:
+                    //                           MainAxisAlignment.spaceBetween,
+                    //                       mainAxisSize: MainAxisSize.max,
+                    //                       children: [
+                    //                         Container(
+                    //                           width:
+                    //                               kAlertDialogTextButtonWidth,
+                    //                           //MediaQuery.of(context).size.width * 0.3,
+                    //                           child: TextButton(
+                    //                             style: kCancelButtonStyle,
+                    //                             //ButtonStyle(backgroundColor: MaterialStateProperty.all(Colors.grey),),
+                    //                             onPressed: () {
+                    //                               Navigator.pop(context);
+                    //                             },
+                    //                             child: Text(
+                    //                               '취소',
+                    //                               textAlign: TextAlign.center,
+                    //                               style: kTextButtonTextStyle,
+                    //                             ),
+                    //                           ),
+                    //                         ),
+                    //                         Container(
+                    //                           width:
+                    //                               kAlertDialogTextButtonWidth,
+                    //                           //MediaQuery.of(context).size.width * 0.3,
+                    //                           child: TextButton(
+                    //                             style: kConfirmButtonStyle,
+                    //                             //ButtonStyle(backgroundColor: MaterialStateProperty.all(Colors.blue),),
+                    //                             onPressed: () {
+                    //                               Navigator.pop(context);
+                    //
+                    //                               setState(() {
+                    //                                 isEditing = true;
+                    //                               });
+                    //                             },
+                    //                             child: Text(
+                    //                               '확인',
+                    //                               textAlign: TextAlign.center,
+                    //                               style: kTextButtonTextStyle,
+                    //                             ),
+                    //                           ),
+                    //                         ),
+                    //                       ],
+                    //                     ),
+                    //                   ],
+                    //                 );
+                    //               },
+                    //             );
+                    //           },
+                    //           child: Text(
+                    //             '편집',
+                    //             style: kElevationButtonStyle,
+                    //             textAlign: TextAlign.end,
+                    //           ),
+                    //         ),
                     ),
                   ],
                 ),
               ), // 프로필 설정 Text
               AbsorbPointer(
-                absorbing: isEditing ? false : true,
+                absorbing: false, //isEditing ? false : true,
                 //isEditing == true이면, AbsorbPointer는 false여야 수정 가능
                 child: buildProfilePhoto(),
               ), // 유저 프로필 사진
               AbsorbPointer(
-                absorbing: isEditing ? false : true,
+                absorbing: false, //isEditing ? false : true,
                 //isEditing == true이면, AbsorbPointer는 false여야 수정 가능
                 child: Column(
                   children: [
@@ -497,7 +543,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                           SliderTheme(
                             data: SliderThemeData(
-                              thumbColor: Colors.blue,
+                              thumbColor: kMainColor,
                             ),
                             child: Slider(
                               value: _currentAgeRangeSliderValue,
@@ -533,7 +579,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             children: [
                               Text('경력', style: kProfileTextStyle),
                               Text(
-                                  UserProfile.playedYearsList[_currentPlayedYearsSliderValue.toInt()],
+                                  UserProfile.playedYearsList[
+                                      _currentPlayedYearsSliderValue.toInt()],
                                   style: kProfileTextStyle),
                             ],
                           ),
@@ -553,8 +600,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               divisions:
                                   UserProfile.playedYearsList.length.toInt() -
                                       1,
-                              label:
-                                  UserProfile.playedYearsList[_currentPlayedYearsSliderValue.toInt()],
+                              label: UserProfile.playedYearsList[
+                                  _currentPlayedYearsSliderValue.toInt()],
                               onChanged: (double value) {
                                 setState(() {
                                   _currentPlayedYearsSliderValue = value;
@@ -612,7 +659,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                         padding: EdgeInsets.all(8.0),
                                         decoration: BoxDecoration(
                                           border:
-                                              Border.all(color: Colors.blue),
+                                              Border.all(color: kMainColor),
                                           borderRadius:
                                               BorderRadius.circular(20.0),
                                         ),
@@ -621,7 +668,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                             Text(
                                               pickedLocationList[index],
                                               style:
-                                                  TextStyle(color: Colors.blue),
+                                                  TextStyle(color: kMainColor),
                                             ),
                                             SizedBox(
                                               width: 24.0,
@@ -634,63 +681,81 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                         onPressed: () {
                                           print('IconButton 클릭');
 
-                                            showDialog(
-                                              context: context,
-                                              builder: (context) {
-                                                return AlertDialog(
-                                                  insetPadding: EdgeInsets.only(left: 10.0, right: 10.0),
-                                                  shape: kRoundedRectangleBorder,
-                                                  title: Text("선택할 지역을 삭제할까요?", textAlign: TextAlign.center,),
-                                                  content: Text(
-                                                      "삭제를 원한다면\n확인 버튼을 클릭해주세요",
-                                                  textAlign: TextAlign.center,),
-                                                  actions: [
-                                                    ButtonBar(
-                                                      alignment: MainAxisAlignment.spaceBetween,
-                                                      mainAxisSize: MainAxisSize.max,
-                                                      children: [
-                                                        Container(
-                                                          width: kAlertDialogTextButtonWidth,
-                                                          child: TextButton(
-                                                            style: kCancelButtonStyle,
-                                                            child: Text("취소",
-                                                              textAlign: TextAlign.center,
-                                                              style: kTextButtonTextStyle,
-                                                            ),
-                                                            onPressed: () async {
-                                                              Navigator.pop(context);
-                                                            },
+                                          showDialog(
+                                            context: context,
+                                            builder: (context) {
+                                              return AlertDialog(
+                                                insetPadding: EdgeInsets.only(
+                                                    left: 10.0, right: 10.0),
+                                                shape: kRoundedRectangleBorder,
+                                                title: Text(
+                                                  "선택할 지역을 삭제할까요?",
+                                                  textAlign: TextAlign.center,
+                                                ),
+                                                content: Text(
+                                                  "삭제를 원한다면\n확인 버튼을 클릭해주세요",
+                                                  textAlign: TextAlign.center,
+                                                ),
+                                                actions: [
+                                                  ButtonBar(
+                                                    alignment: MainAxisAlignment
+                                                        .spaceBetween,
+                                                    mainAxisSize:
+                                                        MainAxisSize.max,
+                                                    children: [
+                                                      Container(
+                                                        width:
+                                                            kAlertDialogTextButtonWidth,
+                                                        child: TextButton(
+                                                          style:
+                                                              kCancelButtonStyle,
+                                                          child: Text(
+                                                            "취소",
+                                                            textAlign: TextAlign
+                                                                .center,
+                                                            style:
+                                                                kTextButtonTextStyle,
                                                           ),
+                                                          onPressed: () async {
+                                                            Navigator.pop(
+                                                                context);
+                                                          },
                                                         ),
-                                                        Container(
-                                                          width: kAlertDialogTextButtonWidth,
-                                                          child: TextButton(
-                                                            style: kConfirmButtonStyle,
-                                                            child: Text("확인",
-                                                              textAlign: TextAlign.center,
-                                                              style: kTextButtonTextStyle,
-                                                            ),
-                                                            onPressed: () async {
-                                                              Navigator.pop(context);
-                                                              setState(() {
-                                                                String
-                                                                    deleteLocation =
-                                                                    pickedLocationList[
-                                                                        index];
-                                                                pickedLocationList
-                                                                    .remove(
-                                                                        deleteLocation);
-                                                              });
-                                                            },
+                                                      ),
+                                                      Container(
+                                                        width:
+                                                            kAlertDialogTextButtonWidth,
+                                                        child: TextButton(
+                                                          style:
+                                                              kConfirmButtonStyle,
+                                                          child: Text(
+                                                            "확인",
+                                                            textAlign: TextAlign
+                                                                .center,
+                                                            style:
+                                                                kTextButtonTextStyle,
                                                           ),
+                                                          onPressed: () async {
+                                                            Navigator.pop(
+                                                                context);
+                                                            setState(() {
+                                                              String
+                                                                  deleteLocation =
+                                                                  pickedLocationList[
+                                                                      index];
+                                                              pickedLocationList
+                                                                  .remove(
+                                                                      deleteLocation);
+                                                            });
+                                                          },
                                                         ),
-                                                      ],
-                                                    ),
-                                                  ],
-                                                );
-                                              },
-                                            );
-
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ],
+                                              );
+                                            },
+                                          );
                                         },
                                         icon: Icon(
                                           CupertinoIcons.clear_circled,
@@ -827,89 +892,125 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                                             print(
                                                                 '활동 지역 등록은 총 3개까지만 가능합니다.');
 
-                                                              showDialog(
-                                                                context:
-                                                                    context,
-                                                                builder:
-                                                                    (context) {
-                                                                  return AlertDialog(
-                                                                    insetPadding: EdgeInsets.only(left: 10.0, right: 10.0),
-                                                                    shape: kRoundedRectangleBorder,
-                                                                    title: Text(
-                                                                        "알림", textAlign: TextAlign.center,),
-                                                                    content: Text(
-                                                                        "활동 지역 등록은\n총 3개까지만 가능합니다", textAlign: TextAlign.center,),
-                                                                    actions: [
-                                                                      ButtonBar(
-                                                                        alignment: MainAxisAlignment.center,
-                                                                        // mainAxisSize: MainAxisSize.max,
-                                                                        children: [
-                                                                          Container(
-                                                                            width: kAlertDialogTextButtonWidth,
-                                                                            child: TextButton(
-                                                                            style: kConfirmButtonStyle,
-                                                                            child: Text(
-                                                                                "확인",
-                                                                              textAlign: TextAlign.center,
-                                                                              style: kTextButtonTextStyle,
-                                                                            ),
-                                                                            onPressed:
-                                                                                () async {
-                                                                              Navigator.pop(
-                                                                                  context);
-                                                                            },
-                                                                        ),
-                                                                          ),
-                                                                      ],
-                                                                      ),
-                                                                    ],
-                                                                  );
-                                                                },
-                                                              );
-
-                                                          }
-                                                        } else {
-                                                          print(
-                                                              '이미 선택된 위치입니다.');
-
                                                             showDialog(
                                                               context: context,
                                                               builder:
                                                                   (context) {
                                                                 return AlertDialog(
-                                                                  insetPadding: EdgeInsets.only(left: 10.0, right: 10.0),
-                                                                  shape: kRoundedRectangleBorder,
+                                                                  insetPadding:
+                                                                      EdgeInsets.only(
+                                                                          left:
+                                                                              10.0,
+                                                                          right:
+                                                                              10.0),
+                                                                  shape:
+                                                                      kRoundedRectangleBorder,
                                                                   title: Text(
-                                                                      "이미 선택된 지역입니다", textAlign: TextAlign.center,),
+                                                                    "알림",
+                                                                    textAlign:
+                                                                        TextAlign
+                                                                            .center,
+                                                                  ),
                                                                   content: Text(
-                                                                      "다른 지역을 선택해주세요", textAlign: TextAlign.center,),
+                                                                    "활동 지역 등록은\n총 3개까지만 가능합니다",
+                                                                    textAlign:
+                                                                        TextAlign
+                                                                            .center,
+                                                                  ),
                                                                   actions: [
                                                                     ButtonBar(
-                                                                      alignment: MainAxisAlignment.center,
+                                                                      alignment:
+                                                                          MainAxisAlignment
+                                                                              .center,
+                                                                      // mainAxisSize: MainAxisSize.max,
                                                                       children: [
                                                                         Container(
-                                                                          width: kAlertDialogTextButtonWidth,
-                                                                          child: TextButton(
-                                                                          style: kConfirmButtonStyle,
-                                                                          child: Text(
+                                                                          width:
+                                                                              kAlertDialogTextButtonWidth,
+                                                                          child:
+                                                                              TextButton(
+                                                                            style:
+                                                                                kConfirmButtonStyle,
+                                                                            child:
+                                                                                Text(
                                                                               "확인",
-                                                                            textAlign: TextAlign.center,
-                                                                            style: kTextButtonTextStyle,
+                                                                              textAlign: TextAlign.center,
+                                                                              style: kTextButtonTextStyle,
+                                                                            ),
+                                                                            onPressed:
+                                                                                () async {
+                                                                              Navigator.pop(context);
+                                                                            },
                                                                           ),
-                                                                          onPressed:
-                                                                              () async {
-                                                                            Navigator.pop(
-                                                                                context);
-                                                                          },
-                                                                      ),
                                                                         ),
-                                                                    ],
+                                                                      ],
                                                                     ),
                                                                   ],
                                                                 );
                                                               },
                                                             );
+                                                          }
+                                                        } else {
+                                                          print(
+                                                              '이미 선택된 위치입니다.');
 
+                                                          showDialog(
+                                                            context: context,
+                                                            builder: (context) {
+                                                              return AlertDialog(
+                                                                insetPadding:
+                                                                    EdgeInsets.only(
+                                                                        left:
+                                                                            10.0,
+                                                                        right:
+                                                                            10.0),
+                                                                shape:
+                                                                    kRoundedRectangleBorder,
+                                                                title: Text(
+                                                                  "이미 선택된 지역입니다",
+                                                                  textAlign:
+                                                                      TextAlign
+                                                                          .center,
+                                                                ),
+                                                                content: Text(
+                                                                  "다른 지역을 선택해주세요",
+                                                                  textAlign:
+                                                                      TextAlign
+                                                                          .center,
+                                                                ),
+                                                                actions: [
+                                                                  ButtonBar(
+                                                                    alignment:
+                                                                        MainAxisAlignment
+                                                                            .center,
+                                                                    children: [
+                                                                      Container(
+                                                                        width:
+                                                                            kAlertDialogTextButtonWidth,
+                                                                        child:
+                                                                            TextButton(
+                                                                          style:
+                                                                              kConfirmButtonStyle,
+                                                                          child:
+                                                                              Text(
+                                                                            "확인",
+                                                                            textAlign:
+                                                                                TextAlign.center,
+                                                                            style:
+                                                                                kTextButtonTextStyle,
+                                                                          ),
+                                                                          onPressed:
+                                                                              () async {
+                                                                            Navigator.pop(context);
+                                                                          },
+                                                                        ),
+                                                                      ),
+                                                                    ],
+                                                                  ),
+                                                                ],
+                                                              );
+                                                            },
+                                                          );
                                                         }
                                                       });
                                                     },
@@ -1007,7 +1108,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                         padding: EdgeInsets.all(8.0),
                                         decoration: BoxDecoration(
                                           border:
-                                              Border.all(color: Colors.blue),
+                                              Border.all(color: kMainColor),
                                           borderRadius:
                                               BorderRadius.circular(20.0),
                                         ),
@@ -1020,7 +1121,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                                   .pingpongList[index]
                                                   .title,
                                               style:
-                                                  TextStyle(color: Colors.blue),
+                                                  TextStyle(color: kMainColor),
                                             ),
                                             SizedBox(
                                               width: 24.0,
@@ -1032,61 +1133,80 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                         onPressed: () {
                                           print('IconButton 클릭');
 
-                                            showDialog(
-                                              context: context,
-                                              builder: (context) {
-                                                return AlertDialog(
-                                                  insetPadding: EdgeInsets.only(left: 10.0, right: 10.0),
-                                                  shape: kRoundedRectangleBorder,
-                                                  title:
-                                                      Text("선택할 탁구장을 삭제할까요?", textAlign: TextAlign.center,),
-                                                  content: Text(
-                                                      "삭제를 원한다면\n확인 버튼을 클릭해주세요", textAlign: TextAlign.center,),
-                                                  actions: [
-                                                    ButtonBar(
-                                                      alignment: MainAxisAlignment.spaceBetween,
-                                                      mainAxisSize: MainAxisSize.max,
-                                                      children: [
-                                                        Container(
-                                                          width: kAlertDialogTextButtonWidth,
-                                                          child: TextButton(
-                                                            style: kCancelButtonStyle,
-                                                            child: Text("취소",
-                                                              textAlign: TextAlign.center,
-                                                              style: kTextButtonTextStyle,
-                                                            ),
-                                                            onPressed: () async {
-                                                              Navigator.pop(context);
-                                                            },
+                                          showDialog(
+                                            context: context,
+                                            builder: (context) {
+                                              return AlertDialog(
+                                                insetPadding: EdgeInsets.only(
+                                                    left: 10.0, right: 10.0),
+                                                shape: kRoundedRectangleBorder,
+                                                title: Text(
+                                                  "선택할 탁구장을 삭제할까요?",
+                                                  textAlign: TextAlign.center,
+                                                ),
+                                                content: Text(
+                                                  "삭제를 원한다면\n확인 버튼을 클릭해주세요",
+                                                  textAlign: TextAlign.center,
+                                                ),
+                                                actions: [
+                                                  ButtonBar(
+                                                    alignment: MainAxisAlignment
+                                                        .spaceBetween,
+                                                    mainAxisSize:
+                                                        MainAxisSize.max,
+                                                    children: [
+                                                      Container(
+                                                        width:
+                                                            kAlertDialogTextButtonWidth,
+                                                        child: TextButton(
+                                                          style:
+                                                              kCancelButtonStyle,
+                                                          child: Text(
+                                                            "취소",
+                                                            textAlign: TextAlign
+                                                                .center,
+                                                            style:
+                                                                kTextButtonTextStyle,
                                                           ),
+                                                          onPressed: () async {
+                                                            Navigator.pop(
+                                                                context);
+                                                          },
                                                         ),
-                                                        Container(
-                                                          width: kAlertDialogTextButtonWidth,
-                                                          child: TextButton(
-                                                            style: kConfirmButtonStyle,
-                                                            child: Text("확인",
-                                                              textAlign: TextAlign.center,
-                                                              style: kTextButtonTextStyle,
-                                                            ),
-                                                            onPressed: () async {
-                                                              Navigator.pop(context);
-                                                              setState(() {
-                                                                Provider.of<ProfileUpdate>(
-                                                                        context,
-                                                                        listen: false)
-                                                                    .removePingpongList(
-                                                                        index);
-                                                              });
-                                                            },
+                                                      ),
+                                                      Container(
+                                                        width:
+                                                            kAlertDialogTextButtonWidth,
+                                                        child: TextButton(
+                                                          style:
+                                                              kConfirmButtonStyle,
+                                                          child: Text(
+                                                            "확인",
+                                                            textAlign: TextAlign
+                                                                .center,
+                                                            style:
+                                                                kTextButtonTextStyle,
                                                           ),
+                                                          onPressed: () async {
+                                                            Navigator.pop(
+                                                                context);
+                                                            setState(() {
+                                                              Provider.of<ProfileUpdate>(
+                                                                      context,
+                                                                      listen:
+                                                                          false)
+                                                                  .removePingpongList(
+                                                                      index);
+                                                            });
+                                                          },
                                                         ),
-                                                      ],
-                                                    ),
-                                                  ],
-                                                );
-                                              },
-                                            );
-
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ],
+                                              );
+                                            },
+                                          );
                                         },
                                         icon: Icon(
                                           CupertinoIcons.clear_circled,
@@ -1325,129 +1445,146 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         constraints: BoxConstraints.tightFor(width: 100.0),
                         child: ElevatedButton(
                           onPressed: () async {
-
-                              showDialog(
-                                context: context,
-                                builder: (context) {
-                                  return AlertDialog(
-                                    insetPadding: EdgeInsets.only(left: 10.0, right: 10.0),
-                                    shape: kRoundedRectangleBorder,
-                                    title: Text("프로필 저장", textAlign: TextAlign.center,),
-                                    content: Text("위 내용을 토대로 프로필을 저장합니다", textAlign: TextAlign.center,),
-                                    actions: [
-                                      ButtonBar(
-                                        alignment: MainAxisAlignment.spaceBetween,
-                                        mainAxisSize: MainAxisSize.max,
-                                        children: [
-                                          Container(
-                                            width: kAlertDialogTextButtonWidth,
-                                            child: TextButton(
-                                              style: kCancelButtonStyle,
-                                              child: Text("취소",
-                                                textAlign: TextAlign.center,
-                                                style: kTextButtonTextStyle,
-                                              ),
-                                              onPressed: () async {
-                                                Navigator.pop(context);
-                                              },
+                            showDialog(
+                              context: context,
+                              builder: (context) {
+                                return AlertDialog(
+                                  insetPadding:
+                                      EdgeInsets.only(left: 10.0, right: 10.0),
+                                  shape: kRoundedRectangleBorder,
+                                  title: Text(
+                                    "프로필 저장",
+                                    textAlign: TextAlign.center,
+                                  ),
+                                  content: Text(
+                                    "위 내용을 토대로 프로필을 저장합니다",
+                                    textAlign: TextAlign.center,
+                                  ),
+                                  actions: [
+                                    ButtonBar(
+                                      alignment: MainAxisAlignment.spaceBetween,
+                                      mainAxisSize: MainAxisSize.max,
+                                      children: [
+                                        Container(
+                                          width: kAlertDialogTextButtonWidth,
+                                          child: TextButton(
+                                            style: kCancelButtonStyle,
+                                            child: Text(
+                                              "취소",
+                                              textAlign: TextAlign.center,
+                                              style: kTextButtonTextStyle,
                                             ),
+                                            onPressed: () async {
+                                              Navigator.pop(context);
+                                            },
                                           ),
-                                          Container(
-                                            width: kAlertDialogTextButtonWidth,
-                                            child: TextButton(
-                                              style: kConfirmButtonStyle,
-                                              child: Text("확인",
-                                                textAlign: TextAlign.center,
-                                                style: kTextButtonTextStyle,
-                                              ),
-                                              onPressed: () async {
-                                                newProfile.pingpongCourt =
-                                                    Provider.of<ProfileUpdate>(
-                                                        context,
-                                                        listen: false)
-                                                        .pingpongList;
-                                                Navigator.pop(context);
+                                        ),
+                                        Container(
+                                          width: kAlertDialogTextButtonWidth,
+                                          child: TextButton(
+                                            style: kConfirmButtonStyle,
+                                            child: Text(
+                                              "확인",
+                                              textAlign: TextAlign.center,
+                                              style: kTextButtonTextStyle,
+                                            ),
+                                            onPressed: () async {
+                                              newProfile.pingpongCourt =
+                                                  Provider.of<ProfileUpdate>(
+                                                          context,
+                                                          listen: false)
+                                                      .pingpongList;
+                                              Navigator.pop(context);
 
-                                                toggleLoading(true);
+                                              toggleLoading(true);
 
-                                                newProfile.uid = _currentUser.uid;
-                                                newProfile.nickName =
-                                                    _nickNameTextFormFieldController
-                                                        .text;
+                                              newProfile.uid = _currentUser.uid;
+                                              newProfile.nickName =
+                                                  _nickNameTextFormFieldController
+                                                      .text;
 
-                                                var imageName = _currentUser.uid;
-                                                var storageRef = FirebaseStorage
+                                              var imageName = _currentUser.uid;
+                                              var storageRef = FirebaseStorage
+                                                  .instance
+                                                  .ref()
+                                                  .child(
+                                                      'profile_photos/$imageName.jpg');
+
+                                              //userPhotoUrl
+                                              if (_image == null && userPhotoUrl == '') {
+                                                final gsReference = FirebaseStorage
                                                     .instance
-                                                    .ref()
-                                                    .child(
-                                                    'profile_photos/$imageName.jpg');
+                                                    .refFromURL(
+                                                        "gs://dnpp-402403.appspot.com/profile_photos/empty_profile_160.png");
+                                                final imageUrl =
+                                                    await gsReference
+                                                        .getDownloadURL();
+                                                print('imageUrl: $imageUrl');
+                                                newProfile.photoUrl =
+                                                    imageUrl.toString();
 
-                                                if (_image == null) {
-                                                  final gsReference = FirebaseStorage
-                                                      .instance
-                                                      .refFromURL(
-                                                      "gs://dnpp-402403.appspot.com/profile_photos/empty_profile_160.png");
-                                                  final imageUrl = await gsReference
-                                                      .getDownloadURL();
-                                                  print('imageUrl: $imageUrl');
-                                                  newProfile.photoUrl =
-                                                      imageUrl.toString();
-                                                } else {
-                                                  String filePath = _image!.path;
-                                                  print('filePath: $filePath');
-                                                  File file = File(filePath);
+                                              } else if (userPhotoUrl != '') {
 
-                                                  var uploadTask =
-                                                  storageRef.putFile(file);
-                                                  var downloadUrl =
-                                                  await (await uploadTask)
-                                                      .ref
-                                                      .getDownloadURL();
-                                                  print('downloadUrl: $downloadUrl');
-                                                  newProfile.photoUrl =
-                                                      downloadUrl.toString();
-                                                }
+                                                print('newProfile.photoUrl : ${newProfile.photoUrl}');
 
-                                                final docRef = db
-                                                    .collection("UserData")
-                                                    .withConverter(
-                                                  fromFirestore:
-                                                  UserProfile.fromFirestore,
-                                                  toFirestore: (UserProfile
-                                                  newProfile,
-                                                      options) =>
-                                                      newProfile.toFirestore(),
-                                                )
-                                                    .doc(_currentUser.uid);
+                                              } else if (_image != null) {
 
-                                                await docRef.set(newProfile);
+                                                String filePath = _image!.path;
+                                                print('filePath: $filePath');
+                                                File file = File(filePath);
 
-                                                toggleLoading(false);
+                                                var uploadTask =
+                                                storageRef.putFile(file);
+                                                var downloadUrl =
+                                                await (await uploadTask)
+                                                    .ref
+                                                    .getDownloadURL();
+                                                print(
+                                                    'downloadUrl: $downloadUrl');
+                                                newProfile.photoUrl =
+                                                    downloadUrl.toString();
+                                              }
 
-                                                setState(() {
-                                                  isEditing = false;
-                                                });
+                                              final docRef = db
+                                                  .collection("UserData")
+                                                  .withConverter(
+                                                    fromFirestore: UserProfile
+                                                        .fromFirestore,
+                                                    toFirestore:
+                                                        (UserProfile newProfile,
+                                                                options) =>
+                                                            newProfile
+                                                                .toFirestore(),
+                                                  )
+                                                  .doc(_currentUser.uid);
 
-                                                _viewVerticalScrollController
-                                                    .animateTo(
-                                                  0.0,
-                                                  duration:
-                                                  Duration(milliseconds: 500),
-                                                  curve: Curves.easeInOut,
-                                                );
+                                              await docRef.set(newProfile);
 
-                                                // Navigator.pushNamed(
-                                                //     context, HomeScreen.id);
-                                              },
-                                            ),
+                                              toggleLoading(false);
+
+                                              setState(() {
+                                                isEditing = false;
+                                              });
+
+                                              _viewVerticalScrollController
+                                                  .animateTo(
+                                                0.0,
+                                                duration:
+                                                    Duration(milliseconds: 500),
+                                                curve: Curves.easeInOut,
+                                              );
+
+                                              // Navigator.pushNamed(
+                                              //     context, HomeScreen.id);
+                                            },
                                           ),
-                                        ],
-                                      ),
-                                    ],
-                                  );
-                                },
-                              );
-
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                );
+                              },
+                            );
                           },
                           child: Text(
                             '저장',

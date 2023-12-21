@@ -3,20 +3,16 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
+import '../../constants.dart';
 import '../../viewModel/courtAppointmentUpdate.dart';
 import '../../viewModel/personalAppointmentUpdate.dart';
 
-class MainLineChart extends StatefulWidget {
+class MainLineChart extends StatelessWidget {
   MainLineChart({required this.isCourt});
 
   //final int index; //0이면 나의 훈련시간
   final bool isCourt;
 
-  @override
-  State<MainLineChart> createState() => _MainLineChartState();
-}
-
-class _MainLineChartState extends State<MainLineChart> {
   @override
   Widget build(BuildContext context) {
     return Stack(children: [
@@ -24,7 +20,7 @@ class _MainLineChartState extends State<MainLineChart> {
         future: Future.delayed(Duration(milliseconds: 0)),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.done) {
-            if (widget.isCourt) {
+            if (isCourt) {
 
               if (Provider.of<CourtAppointmentUpdate>(context, listen: false)
                   .courtHourlyCounts //personalHourlyCounts
@@ -38,7 +34,7 @@ class _MainLineChartState extends State<MainLineChart> {
               }
 
               else {
-                return LineChart(mainLineChartDataCourt());
+                return LineChart(mainLineChartDataCourt(context));
               }
 
             } else {
@@ -53,7 +49,7 @@ class _MainLineChartState extends State<MainLineChart> {
                   ),
                 );
               } else {
-                return LineChart(mainLineChartDataPersonal());
+                return LineChart(mainLineChartDataPersonal(context));
               }
             }
 
@@ -69,8 +65,7 @@ class _MainLineChartState extends State<MainLineChart> {
     ]);
   }
 
-
-  LineChartData mainLineChartDataCourt() {
+  LineChartData mainLineChartDataCourt(BuildContext context) {
     return LineChartData(
       gridData: FlGridData(
         show: true,
@@ -115,7 +110,7 @@ class _MainLineChartState extends State<MainLineChart> {
               1.5,
       lineBarsData: [
         LineChartBarData(
-          spots: showingGroupsCourt(),
+          spots: showingGroupsCourt(context),
           isCurved: true,
           barWidth: 2,
           curveSmoothness: 0.1,
@@ -124,7 +119,7 @@ class _MainLineChartState extends State<MainLineChart> {
             show: true,
             getDotPainter: (spot, percent, barData, index) {
               return FlDotCirclePainter(
-                color: Colors.blue,
+                color: kMainColor,
                 radius: 2.5,
                 strokeWidth: 3.0,
                 strokeColor: Colors.transparent,
@@ -137,8 +132,8 @@ class _MainLineChartState extends State<MainLineChart> {
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
               colors: [
-                Colors.blue.withOpacity(0.5),
-                Colors.blue.withOpacity(0.1),
+                kMainColor.withOpacity(0.5),
+                kMainColor.withOpacity(0.1),
               ],
             ),
           ),
@@ -146,7 +141,8 @@ class _MainLineChartState extends State<MainLineChart> {
       ],
     );
   }
-  LineChartData mainLineChartDataPersonal() {
+
+  LineChartData mainLineChartDataPersonal(BuildContext context) {
     return LineChartData(
       gridData: FlGridData(
         show: true,
@@ -191,7 +187,7 @@ class _MainLineChartState extends State<MainLineChart> {
           1.5,
       lineBarsData: [
         LineChartBarData(
-          spots: showingGroupsPersonal(),
+          spots: showingGroupsPersonal(context),
           isCurved: true,
           barWidth: 2,
           curveSmoothness: 0.1,
@@ -200,7 +196,7 @@ class _MainLineChartState extends State<MainLineChart> {
             show: true,
             getDotPainter: (spot, percent, barData, index) {
               return FlDotCirclePainter(
-                color: Colors.blue,
+                color: kMainColor,
                 radius: 2.5,
                 strokeWidth: 3.0,
                 strokeColor: Colors.transparent,
@@ -213,8 +209,8 @@ class _MainLineChartState extends State<MainLineChart> {
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
               colors: [
-                Colors.blue.withOpacity(0.5),
-                Colors.blue.withOpacity(0.1),
+                kMainColor.withOpacity(0.5),
+                kMainColor.withOpacity(0.1),
               ],
             ),
           ),
@@ -223,7 +219,7 @@ class _MainLineChartState extends State<MainLineChart> {
     );
   }
 
-  List<FlSpot> showingGroupsPersonal() => List.generate(
+  List<FlSpot> showingGroupsPersonal(BuildContext context) => List.generate(
         24,
         (i) {
           return FlSpot(
@@ -233,7 +229,8 @@ class _MainLineChartState extends State<MainLineChart> {
                   0.0);
         },
       );
-  List<FlSpot> showingGroupsCourt() => List.generate(
+
+  List<FlSpot> showingGroupsCourt(BuildContext context) => List.generate(
         24,
         (i) {
           return FlSpot(
