@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 
+import '../constants.dart';
 import '../models/pingpongList.dart';
 import '../widgets/map/map_addressList_element.dart';
 import '../widgets/map/map_pingpongList_element.dart';
@@ -98,7 +99,7 @@ class MapWidgetUpdate with ChangeNotifier {
 
       });
 
-      nMarker.setIconTintColor(Colors.blue);
+      nMarker.setIconTintColor(kMainColor);
     }
 
     double absMapY = (maxMapY - mapy/count).abs();

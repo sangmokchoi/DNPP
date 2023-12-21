@@ -7,14 +7,18 @@ import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
 import 'package:syncfusion_flutter_calendar/calendar.dart';
 
+import '../constants.dart';
+
 class PersonalAppointmentUpdate extends ChangeNotifier {
-  void updateSegmentedButtonTitle(String title) {
-    segmentedButtonTitle = title;
-    notifyListeners();
-  }
 
   final CalendarController calendarController = CalendarController();
   String segmentedButtonTitle = '월';
+
+  Future<void> updateSegmentedButtonTitle(String title) async {
+    segmentedButtonTitle = title;
+    notifyListeners();
+    print('segmentedButtonTitle: $segmentedButtonTitle');
+  }
 
   List<CustomAppointment> customAppointmentMeetings = <CustomAppointment>[];
   List<Appointment> newMeetings = [];
@@ -57,7 +61,7 @@ class PersonalAppointmentUpdate extends ChangeNotifier {
   Color color = Color.fromRGBO(33, 150, 243, 1.0);
 
 //Color(0xFF2196F3);
-  Color d = Colors.blueAccent;
+  Color d = kMainColor;
   bool isOpened = false;
   bool isAllDay = false;
 
@@ -72,7 +76,7 @@ class PersonalAppointmentUpdate extends ChangeNotifier {
 
   int repeatTimes = 1;
 
-  void updateCalendarView(String calendarTitle) {
+  Future<void> updateCalendarView(String calendarTitle) async {
     if (calendarTitle == '월') {
       calendarController.view = CalendarView.month;
       segmentedButtonTitle = calendarTitle;
@@ -111,7 +115,7 @@ class PersonalAppointmentUpdate extends ChangeNotifier {
       DateTime.now().add(Duration(minutes: 20)).hour,
       (DateTime.now().add(Duration(minutes: 20)).minute / 5).round() * 5,
     );
-    color = Colors.blueAccent;
+    color = kMainColor;
     isOpened = false;
     isAllDay = false;
     notes = '';
