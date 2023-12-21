@@ -4,6 +4,8 @@ const kNaverMapApiKey = '7evubnn4j6';
 const kAppbarTextStyle =
     TextStyle(color: Colors.black, fontSize: 20.0, fontWeight: FontWeight.bold);
 
+const kMainColor = Color(0xFF46ABF6);
+
 const kAppointmentTextStyle = TextStyle(
     // 시간시간, 종료시간
     color: Colors.black,
@@ -53,7 +55,7 @@ final kCancelButtonStyle = ButtonStyle(
 );
 
 final kConfirmButtonStyle = ButtonStyle(
-  backgroundColor: MaterialStateProperty.all(Colors.blue),
+  backgroundColor: MaterialStateProperty.all(kMainColor),
 );
 
 const kAlertDialogTextButtonWidth = 120.0;

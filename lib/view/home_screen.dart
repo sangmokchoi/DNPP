@@ -14,6 +14,8 @@ import 'calendar_screen.dart';
 
 import 'package:firebase_storage/firebase_storage.dart';
 
+GlobalKey<_HomeScreenState> homePageKey = GlobalKey<_HomeScreenState>();
+
 class HomeScreen extends StatefulWidget {
   static String id = '/';
 
@@ -101,10 +103,17 @@ class _HomeScreenState extends State<HomeScreen> {
     _hideNavBar = false;
   }
 
+  void onItemSelected(int index) {
+    _controller.jumpToTab(index);
+    // 추가로 수행해야 할 로직이 있다면 여기에 추가
+    print('onItemSelected pressed');
+  }
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
       child: PersistentTabView(
+        key: homePageKey,
         context,
         controller: _controller,
         onItemSelected: (int) {

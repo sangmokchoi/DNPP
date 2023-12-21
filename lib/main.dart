@@ -1,5 +1,6 @@
 //import 'dart:js';
 
+import 'package:dnpp/constants.dart';
 import 'package:dnpp/view/calendar_screen.dart';
 import 'package:dnpp/view/main_screen.dart';
 import 'package:dnpp/view/map_screen.dart';
@@ -12,6 +13,7 @@ import 'package:dnpp/viewModel/personalAppointmentUpdate.dart';
 import 'package:dnpp/viewModel/loginStatusUpdate.dart';
 import 'package:dnpp/viewModel/mapWidgetUpdate.dart';
 import 'package:dnpp/viewModel/profileUpdate.dart';
+import 'package:dnpp/viewModel/sharedPreference.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:animated_splash_screen/animated_splash_screen.dart';
 
@@ -68,6 +70,9 @@ class HomePage extends StatelessWidget {
         ChangeNotifierProvider(
           create: (context) => LoginStatusUpdate(),
         ),
+        ChangeNotifierProvider(
+          create: (context) => SharedPreference(),
+        ),
       ],
       child: GestureDetector(
         onTap: () {
@@ -75,7 +80,7 @@ class HomePage extends StatelessWidget {
         },
         child: MaterialApp(
           home: AnimatedSplashScreen(
-            backgroundColor: Theme.of(context).primaryColor,
+            backgroundColor: kMainColor, //Theme.of(context).primaryColor,
             splash: Container(
               decoration: BoxDecoration(
                 image: DecorationImage(
@@ -88,8 +93,8 @@ class HomePage extends StatelessWidget {
             splashTransition: SplashTransition.fadeTransition,
           ),
           theme: ThemeData(
-            primaryColor: Colors.blueAccent,
-            primarySwatch: Colors.blue,
+            primaryColor: kMainColor,//Colors.blueAccent,
+            //primarySwatch: Colors.blue,
             secondaryHeaderColor: Colors.grey,
           ),
           //initialRoute: HomeScreen.id,
