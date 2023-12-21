@@ -7,6 +7,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
 import 'package:syncfusion_flutter_calendar/calendar.dart';
 
+import '../constants.dart';
+
 class CourtAppointmentUpdate extends ChangeNotifier {
   void updateSegmentedButtonTitle(String title) {
     segmentedButtonTitle = title;
@@ -57,7 +59,7 @@ class CourtAppointmentUpdate extends ChangeNotifier {
   Color color = Color.fromRGBO(33, 150, 243, 1.0);
 
 //Color(0xFF2196F3);
-  Color d = Colors.blueAccent;
+  Color d = kMainColor;
   bool isOpened = false;
   bool isAllDay = false;
 
@@ -111,7 +113,7 @@ class CourtAppointmentUpdate extends ChangeNotifier {
       DateTime.now().add(Duration(minutes: 20)).hour,
       (DateTime.now().add(Duration(minutes: 20)).minute / 5).round() * 5,
     );
-    color = Colors.blueAccent;
+    color = kMainColor;
     isOpened = false;
     isAllDay = false;
     notes = '';

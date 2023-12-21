@@ -96,26 +96,34 @@ class _CalendarScreenState extends State<CalendarScreen> {
   }
 
   void openModalBottomSheet(BuildContext context, dynamic appointmentDetails) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      builder: (BuildContext context) {
-        return ListView(children: [
-          Padding(
-            padding: EdgeInsets.only(
-                bottom: MediaQuery.of(context).viewInsets.bottom),
-            child: Consumer<PersonalAppointmentUpdate>(
-              builder: (context, taskData, child) {
-                return EditAppointment(
-                  context: context,
-                  userCourt: '',
-                  oldMeeting: appointmentDetails,
-                );
-              },
-            ),
-          ),
-        ]);
-      },
+    // showModalBottomSheet(
+    //   context: context,
+    //   isScrollControlled: true,
+    //   builder: (BuildContext context) {
+    //     return ListView(children: [
+    //       Padding(
+    //         padding: EdgeInsets.only(
+    //             bottom: MediaQuery.of(context).viewInsets.bottom),
+    //         child: Consumer<PersonalAppointmentUpdate>(
+    //           builder: (context, taskData, child) {
+    //             return EditAppointment(
+    //               context: context,
+    //               userCourt: '',
+    //               oldMeeting: appointmentDetails,
+    //             );
+    //           },
+    //         ),
+    //       ),
+    //     ]);
+    //   },
+    // );
+    PersistentNavBarNavigator.pushNewScreen(
+      context,
+      screen: EditAppointment(
+          context: context, userCourt: '', oldMeeting: appointmentDetails),
+      withNavBar: true,
+      // OPTIONAL VALUE. True by default.
+      pageTransitionAnimation: PageTransitionAnimation.slideUp,
     );
   }
 
@@ -369,25 +377,36 @@ class _CalendarScreenState extends State<CalendarScreen> {
             onPressed: () {
               if (Provider.of<LoginStatusUpdate>(context, listen: false)
                   .isLoggedIn) {
-                showModalBottomSheet(
-                  isScrollControlled: true,
-                  context: context,
-                  builder: (BuildContext context) {
-                    return ListView(children: [
-                      Padding(
-                        padding: EdgeInsets.only(
-                            bottom: MediaQuery.of(context).viewInsets.bottom),
-                        child: Consumer<PersonalAppointmentUpdate>(
-                            builder: (context, taskData, child) {
-                          return AddAppointment(
-                            userCourt: '',
-                            context: context,
-                          );
-                        }),
-                      ),
-                    ]);
-                  },
+
+                // showModalBottomSheet(
+                //   isScrollControlled: true,
+                //   context: context,
+                //   builder: (BuildContext context) {
+                //     return ListView(children: [
+                //       Padding(
+                //         padding: EdgeInsets.only(
+                //             bottom: MediaQuery.of(context).viewInsets.bottom),
+                //         child: Consumer<PersonalAppointmentUpdate>(
+                //             builder: (context, taskData, child) {
+                //           return AddAppointment(
+                //             userCourt: '',
+                //             context: context,
+                //           );
+                //         }),
+                //       ),
+                //     ]);
+                //   },
+                // );
+
+                PersistentNavBarNavigator.pushNewScreen(
+                  context,
+                  screen: AddAppointment(
+                      context: context, userCourt: ''),
+                  withNavBar: true,
+                  // OPTIONAL VALUE. True by default.
+                  pageTransitionAnimation: PageTransitionAnimation.slideUp,
                 );
+
               } else {
                 showDialog(
                   context: context,
@@ -395,23 +414,31 @@ class _CalendarScreenState extends State<CalendarScreen> {
                     return AlertDialog(
                       insetPadding: EdgeInsets.only(left: 10.0, right: 10.0),
                       shape: kRoundedRectangleBorder,
-                      title: Text('알림'),
-                      content: Text('로그인이 필요한 화면입니다\n회원가입 화면으로 이동합니다'),
+                      title: Center(child: Text('알림')),
+                      content: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text('로그인이 필요한 화면입니다\n로그인 화면으로 이동합니다'),
+                        ],
+                      ),
                       actions: [
-                        TextButton(
-                          onPressed: () {
-                            Navigator.of(context).pop();
-                            // 로그인 페이지로 이
-                            PersistentNavBarNavigator.pushNewScreen(
-                              context,
-                              screen: SignupScreen(),
-                              withNavBar: false,
-                              // OPTIONAL VALUE. True by default.
-                              pageTransitionAnimation:
-                                  PageTransitionAnimation.fade,
-                            );
-                          },
-                          child: Text('확인'),
+                        Center(
+                          child: ElevatedButton(
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                              // 로그인 페이지로 이
+                              PersistentNavBarNavigator.pushNewScreen(
+                                context,
+                                screen: SignupScreen(),
+                                withNavBar: false,
+                                // OPTIONAL VALUE. True by default.
+                                pageTransitionAnimation:
+                                    PageTransitionAnimation.fade,
+                              );
+
+                            },
+                            child: Text('확인'),
+                          ),
                         ),
                       ],
                     );
@@ -434,7 +461,10 @@ class _CalendarScreenState extends State<CalendarScreen> {
                       child: Padding(
                     padding:
                         EdgeInsets.only(left: 10.0, right: 10.0, bottom: 5.0),
-                    child: SingleChoice(),
+                    child: Consumer<PersonalAppointmentUpdate>(
+                        builder: (context, taskData, child) {
+                      return SingleChoice();
+                    }),
                   )),
                 ],
               ),
@@ -455,12 +485,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
   }
 }
 
-class SingleChoice extends StatefulWidget {
-  @override
-  State<SingleChoice> createState() => _SingleChoiceState();
-}
-
-class _SingleChoiceState extends State<SingleChoice> {
+class SingleChoice extends StatelessWidget {
   final List<String> _list = ['전체', '월', '주', '일'];
 
   @override
@@ -496,23 +521,17 @@ class _SingleChoiceState extends State<SingleChoice> {
               label: Text(_list[3]),
               icon: Icon(Icons.calendar_view_day))
         ],
-        selected: <String>{
+        selected: {
           Provider.of<PersonalAppointmentUpdate>(context, listen: false)
               .segmentedButtonTitle
         }, //<String>{_selected},
-        onSelectionChanged: (newSelection) {
-          setState(() {
-            print(newSelection);
-            // _selected = newSelection.first;
-            // print(_selected);
-            Provider.of<PersonalAppointmentUpdate>(context, listen: false)
-                .updateSegmentedButtonTitle(newSelection.first);
-            Provider.of<PersonalAppointmentUpdate>(context, listen: false)
-                .updateCalendarView(Provider.of<PersonalAppointmentUpdate>(
-                        context,
-                        listen: false)
-                    .segmentedButtonTitle);
-          });
+        onSelectionChanged: (newSelection) async {
+          print(newSelection);
+
+          await Provider.of<PersonalAppointmentUpdate>(context, listen: false)
+              .updateSegmentedButtonTitle(newSelection.first);
+          await Provider.of<PersonalAppointmentUpdate>(context, listen: false)
+              .updateCalendarView(newSelection.first);
         },
         style: ButtonStyle(
           textStyle: MaterialStateProperty.all<TextStyle>(

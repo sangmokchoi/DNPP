@@ -12,7 +12,27 @@ class LoginStatusUpdate with ChangeNotifier {
   late User currentUser;
 
   String providerId = '';
+  bool isAgreementChecked = false;
   bool isLoggedIn = false;
+  bool isUserDataExists = false;
+
+  Future<void> updateIsAgreementChecked(bool value) async {
+    isAgreementChecked = value;
+    print('isAgreementChecked: $isAgreementChecked');
+    notifyListeners();
+  }
+
+  Future<void> toggleIsAgreementChecked() async {
+    isAgreementChecked = !isAgreementChecked;
+    print('isAgreementChecked: $isAgreementChecked');
+    notifyListeners();
+  }
+
+  Future<void> updateIsUserDataExists(bool value) async {
+    isUserDataExists = value;
+    print('isUserDataExists: $isUserDataExists');
+    notifyListeners();
+  }
 
   Future<void> trueIsLoggedIn() async {
     isLoggedIn = true;

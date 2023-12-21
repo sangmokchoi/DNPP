@@ -41,7 +41,7 @@ class MainPersonalChartPageView extends StatelessWidget {
                     //index: index, // index == 0
                     titleText: '나의 훈련 시간',
                     backgroundColor:
-                        Colors.blue,
+                        kMainColor,
                       isCourt: false // isCourt: false 이면 개인화된 차트 제공
                   ),
                 );

@@ -302,691 +302,671 @@ class _EditAppointmentState extends State<EditAppointment> {
 
   @override
   Widget build(BuildContext defaultContext) {
-    return Container(
-      child: Center(
-        child: Padding(
-          padding:
-              EdgeInsets.only(left: 20.0, right: 20.0, top: 5.0, bottom: 10.0),
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: <Widget>[
-                Padding(
-                  padding: EdgeInsets.symmetric(vertical: 5.0),
-                  child: Column(
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          TextButton(
-                            style: ButtonStyle(
-                              alignment: Alignment.centerLeft,
-                            ),
-                            onPressed: () async {
-                              Navigator.pop(defaultContext);
-                              await Provider.of<PersonalAppointmentUpdate>(
-                                      defaultContext,
-                                      listen: false)
-                                  .clear();
-                            },
-                            child: Text(
-                              _editAppointment ? '취소' : '뒤로',
-                              style: kElevationButtonStyle,
-                            ),
-                          ),
-                          Expanded(
-                            child: Text(
-                              _editAppointment ? '일정 수정' : '일정',
-                              style: kAppointmentTextStyle,
-                              textAlign: TextAlign.center,
-                            ),
-                          ),
-                          TextButton(
-                            style: ButtonStyle(
-                              alignment: Alignment.centerRight,
-                            ),
-                            child: Text(
-                              '저장',
-                              style: _editAppointment
-                                  ? kElevationButtonStyle
-                                  : kElevationButtonStyle.copyWith(
-                                      color: Colors.transparent),
-                            ),
-                            onPressed: _editAppointment
-                                ? () async {
-
-                                    await toggleLoading(true, defaultContext);
-
-                                    final _newMeeting = Appointment(
-                                      startTime: Provider.of<
-                                                  PersonalAppointmentUpdate>(
-                                              defaultContext,
-                                              listen: false)
-                                          .fromDate,
-                                      endTime: Provider.of<
-                                                  PersonalAppointmentUpdate>(
-                                              defaultContext,
-                                              listen: false)
-                                          .toDate,
-                                      subject: _eventNametextController.text,
-                                      isAllDay: Provider.of<
-                                                  PersonalAppointmentUpdate>(
-                                              defaultContext,
-                                              listen: false)
-                                          .isAllDay,
-                                      notes: _memoTextController.text,
-                                      recurrenceRule: Provider.of<
-                                                  PersonalAppointmentUpdate>(
-                                              defaultContext,
-                                              listen: false)
-                                          .recurrenceRule,
-                                    );
-
-                                    await Provider.of<
-                                                PersonalAppointmentUpdate>(
-                                            defaultContext,
-                                            listen: false)
-                                        .addRecurrenceExceptionDates(
-                                            widget.oldMeeting,
-                                            _newMeeting,
-                                            _onlyThisAppointment,
-                                            false);
-
-                                    widget.oldMeeting.startTime =
-                                        Provider.of<PersonalAppointmentUpdate>(
-                                                defaultContext,
-                                                listen: false)
-                                            .fromDate;
-                                    widget.oldMeeting.endTime =
-                                        Provider.of<PersonalAppointmentUpdate>(
-                                                defaultContext,
-                                                listen: false)
-                                            .toDate;
-                                    widget.oldMeeting.subject =
-                                        _eventNametextController.text;
-                                    widget.oldMeeting.isAllDay =
-                                        Provider.of<PersonalAppointmentUpdate>(
-                                                defaultContext,
-                                                listen: false)
-                                            .isAllDay;
-                                    widget.oldMeeting.notes =
-                                        _memoTextController.text;
-                                    widget.oldMeeting.recurrenceRule =
-                                        Provider.of<PersonalAppointmentUpdate>(
-                                                defaultContext,
-                                                listen: false)
-                                            .recurrenceRule;
-
-                                    await Provider.of<
-                                                PersonalAppointmentUpdate>(
-                                            defaultContext,
-                                            listen: false)
-                                        .updateMeeting(
-                                            widget.oldMeeting, _newMeeting);
-
-                                    // 여기에서 서버에 일정 등록 필요
-                                    final docRef = db
-                                        .collection("Appointments")
-                                        .withConverter(
-                                          fromFirestore:
-                                              CustomAppointment.fromFirestore,
-                                          toFirestore: (CustomAppointment
-                                                      customAppointment,
-                                                  options) =>
-                                              customAppointment.toFirestore(),
-                                        )
-                                        .doc(oldmeetingAppointments?.id);
-
-                                    final newCustomAppointment =
-                                        CustomAppointment(
-                                      appointments: [widget.oldMeeting],
-                                      //[_newMeeting],
-                                      pingpongCourtName:
-                                      chosenCourtName,
-                                      pingpongCourtAddress:
-                                      chosenCourtRoadAddress,
-                                      userUid: Provider.of<LoginStatusUpdate>(
-                                              defaultContext,
-                                              listen: false)
-                                          .currentUser
-                                          .uid,
-                                    );
-
-                                    final newAppointmentData =
-                                        newCustomAppointment.toFirestore();
-
-                                    await docRef.update(newAppointmentData);
-
-                                    await Provider.of<
-                                                PersonalAppointmentUpdate>(
-                                            defaultContext,
-                                            listen: false)
-                                        .personalDaywiseDurationsCalculate(
-                                            false,
-                                            true,
-                                        chosenCourtName,
-                                            chosenCourtRoadAddress);
-                                    await Provider.of<
-                                                PersonalAppointmentUpdate>(
-                                            defaultContext,
-                                            listen: false)
-                                        .personalCountHours(
-                                            false,
-                                            true,
-                                        chosenCourtName,
-                                        chosenCourtRoadAddress);
-
-                                    await Provider.of<
-                                                PersonalAppointmentUpdate>(
-                                            defaultContext,
-                                            listen: false)
-                                        .clear();
-
-
-                                    //await LoadData().refreshData(context);
-                                    await refreshData(defaultContext);
-
-                                    await toggleLoading(false, defaultContext);
-
-                                    Navigator.pop(defaultContext);
-                                  }
-                                : () {},
-                          ),
-                        ],
-                      ), // 일정 수정을 수락한 경우 (저장 활성화)
-                      IgnorePointer(
-                        ignoring: _editAppointment ? false : true,
-                        child: Column(
+    return SafeArea(
+      child: Scaffold(
+        body: Container(
+          child: Padding(
+            padding:
+                EdgeInsets.only(left: 20.0, right: 20.0, top: 5.0, bottom: 10.0),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: <Widget>[
+                  Padding(
+                    padding: EdgeInsets.symmetric(vertical: 5.0),
+                    child: Column(
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            TextFormField(
-                              controller: _eventNametextController,
-                              decoration: InputDecoration(
-                                  labelText: '일정 제목', hintText: '예) 레슨'),
-                              style: kAppointmentDateTextStyle,
-                              onChanged: (value) {
-                                _eventName = value;
+                            TextButton(
+                              style: ButtonStyle(
+                                alignment: Alignment.centerLeft,
+                              ),
+                              onPressed: () async {
+                                Navigator.pop(defaultContext);
+                                await Provider.of<PersonalAppointmentUpdate>(
+                                        defaultContext,
+                                        listen: false)
+                                    .clear();
                               },
+                              child: Text(
+                                _editAppointment ? '취소' : '뒤로',
+                                style: kElevationButtonStyle,
+                              ),
                             ),
-                            TextFormField(
-                              controller: _memoTextController,
-                              decoration: InputDecoration(labelText: '메모'),
-                              style: kAppointmentDateTextStyle,
-                              onChanged: (value) {
-                                _memoText = value;
-                              },
+                            Expanded(
+                              child: Text(
+                                _editAppointment ? '일정 수정' : '일정',
+                                style: kAppointmentTextStyle,
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                            TextButton(
+                              style: ButtonStyle(
+                                alignment: Alignment.centerRight,
+                              ),
+                              child: Text(
+                                '저장',
+                                style: _editAppointment
+                                    ? kElevationButtonStyle
+                                    : kElevationButtonStyle.copyWith(
+                                        color: Colors.transparent),
+                              ),
+                              onPressed: _editAppointment
+                                  ? () async {
+
+                                      await toggleLoading(true, defaultContext);
+
+                                      final _newMeeting = Appointment(
+                                        startTime: Provider.of<
+                                                    PersonalAppointmentUpdate>(
+                                                defaultContext,
+                                                listen: false)
+                                            .fromDate,
+                                        endTime: Provider.of<
+                                                    PersonalAppointmentUpdate>(
+                                                defaultContext,
+                                                listen: false)
+                                            .toDate,
+                                        subject: _eventNametextController.text,
+                                        isAllDay: Provider.of<
+                                                    PersonalAppointmentUpdate>(
+                                                defaultContext,
+                                                listen: false)
+                                            .isAllDay,
+                                        notes: _memoTextController.text,
+                                        recurrenceRule: Provider.of<
+                                                    PersonalAppointmentUpdate>(
+                                                defaultContext,
+                                                listen: false)
+                                            .recurrenceRule,
+                                      );
+
+                                      await Provider.of<
+                                                  PersonalAppointmentUpdate>(
+                                              defaultContext,
+                                              listen: false)
+                                          .addRecurrenceExceptionDates(
+                                              widget.oldMeeting,
+                                              _newMeeting,
+                                              _onlyThisAppointment,
+                                              false);
+
+                                      widget.oldMeeting.startTime =
+                                          Provider.of<PersonalAppointmentUpdate>(
+                                                  defaultContext,
+                                                  listen: false)
+                                              .fromDate;
+                                      widget.oldMeeting.endTime =
+                                          Provider.of<PersonalAppointmentUpdate>(
+                                                  defaultContext,
+                                                  listen: false)
+                                              .toDate;
+                                      widget.oldMeeting.subject =
+                                          _eventNametextController.text;
+                                      widget.oldMeeting.isAllDay =
+                                          Provider.of<PersonalAppointmentUpdate>(
+                                                  defaultContext,
+                                                  listen: false)
+                                              .isAllDay;
+                                      widget.oldMeeting.notes =
+                                          _memoTextController.text;
+                                      widget.oldMeeting.recurrenceRule =
+                                          Provider.of<PersonalAppointmentUpdate>(
+                                                  defaultContext,
+                                                  listen: false)
+                                              .recurrenceRule;
+
+                                      await Provider.of<
+                                                  PersonalAppointmentUpdate>(
+                                              defaultContext,
+                                              listen: false)
+                                          .updateMeeting(
+                                              widget.oldMeeting, _newMeeting);
+
+                                      // 여기에서 서버에 일정 등록 필요
+                                      final docRef = db
+                                          .collection("Appointments")
+                                          .withConverter(
+                                            fromFirestore:
+                                                CustomAppointment.fromFirestore,
+                                            toFirestore: (CustomAppointment
+                                                        customAppointment,
+                                                    options) =>
+                                                customAppointment.toFirestore(),
+                                          )
+                                          .doc(oldmeetingAppointments?.id);
+
+                                      final newCustomAppointment =
+                                          CustomAppointment(
+                                        appointments: [widget.oldMeeting],
+                                        //[_newMeeting],
+                                        pingpongCourtName:
+                                        chosenCourtName,
+                                        pingpongCourtAddress:
+                                        chosenCourtRoadAddress,
+                                        userUid: Provider.of<LoginStatusUpdate>(
+                                                defaultContext,
+                                                listen: false)
+                                            .currentUser
+                                            .uid,
+                                      );
+
+                                      final newAppointmentData =
+                                          newCustomAppointment.toFirestore();
+
+                                      await docRef.update(newAppointmentData);
+
+                                      await Provider.of<
+                                                  PersonalAppointmentUpdate>(
+                                              defaultContext,
+                                              listen: false)
+                                          .personalDaywiseDurationsCalculate(
+                                              false,
+                                              true,
+                                          chosenCourtName,
+                                              chosenCourtRoadAddress);
+                                      await Provider.of<
+                                                  PersonalAppointmentUpdate>(
+                                              defaultContext,
+                                              listen: false)
+                                          .personalCountHours(
+                                              false,
+                                              true,
+                                          chosenCourtName,
+                                          chosenCourtRoadAddress);
+
+                                      await Provider.of<
+                                                  PersonalAppointmentUpdate>(
+                                              defaultContext,
+                                              listen: false)
+                                          .clear();
+
+
+                                      //await LoadData().refreshData(context);
+                                      await refreshData(defaultContext);
+
+                                      await toggleLoading(false, defaultContext);
+
+                                      Navigator.pop(defaultContext);
+                                    }
+                                  : () {},
                             ),
                           ],
+                        ), // 일정 수정을 수락한 경우 (저장 활성화)
+                        IgnorePointer(
+                          ignoring: _editAppointment ? false : true,
+                          child: Column(
+                            children: [
+                              TextFormField(
+                                controller: _eventNametextController,
+                                decoration: InputDecoration(
+                                    labelText: '일정 제목', hintText: '예) 레슨'),
+                                style: kAppointmentDateTextStyle,
+                                onChanged: (value) {
+                                  _eventName = value;
+                                },
+                              ),
+                              TextFormField(
+                                controller: _memoTextController,
+                                decoration: InputDecoration(labelText: '메모'),
+                                style: kAppointmentDateTextStyle,
+                                onChanged: (value) {
+                                  _memoText = value;
+                                },
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-                Padding(
-                  padding: EdgeInsets.symmetric(vertical: 10.0),
-                  child: Column(
-                    children: [
-                      IgnorePointer(
-                        ignoring: _editAppointment ? false : true,
-                        child: Column(
-                          children: [
-                            Visibility(
-                              visible: Provider.of<PersonalAppointmentUpdate>(
-                                          defaultContext)
-                                      .isAllDay
-                                  ? false
-                                  : true,
-                              child: Padding(
-                                padding: const EdgeInsets.only(
-                                    top: 5.0, bottom: 10.0),
-                                child: Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Column(
-                                      children: [
-                                        Text(
-                                          '시작 시간',
-                                          style: kAppointmentTextStyle,
-                                        ),
-                                        Text(
-                                          '종료 시간',
-                                          style: kAppointmentTextStyle,
-                                        ),
-                                      ],
-                                    ),
-                                    Column(
-                                      children: [
-                                        Text(
-                                          DateFormat('yyyy. MM. dd. (E) HH:mm',
-                                                  'ko')
-                                              .format(Provider.of<
-                                                          PersonalAppointmentUpdate>(
-                                                      defaultContext,
-                                                      listen: false)
-                                                  .fromDate),
-                                          style: kAppointmentDateTextStyle,
-                                        ),
-                                        Text(
-                                          DateFormat('yyyy. MM. dd. (E) HH:mm',
-                                                  'ko')
-                                              .format(Provider.of<
-                                                          PersonalAppointmentUpdate>(
-                                                      defaultContext,
-                                                      listen: false)
-                                                  .toDate),
-                                          style: kAppointmentDateTextStyle,
-                                        ),
-                                      ],
-                                    ),
-                                    TextButton(
-                                      style: ButtonStyle(
-                                        alignment: Alignment.centerRight,
+                  Padding(
+                    padding: EdgeInsets.symmetric(vertical: 10.0),
+                    child: Column(
+                      children: [
+                        IgnorePointer(
+                          ignoring: _editAppointment ? false : true,
+                          child: Column(
+                            children: [
+                              Visibility(
+                                visible: Provider.of<PersonalAppointmentUpdate>(
+                                            defaultContext)
+                                        .isAllDay
+                                    ? false
+                                    : true,
+                                child: Padding(
+                                  padding: const EdgeInsets.only(
+                                      top: 5.0, bottom: 10.0),
+                                  child: Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Column(
+                                        children: [
+                                          Text(
+                                            '시작 시간',
+                                            style: kAppointmentTextStyle,
+                                          ),
+                                          Text(
+                                            '종료 시간',
+                                            style: kAppointmentTextStyle,
+                                          ),
+                                        ],
                                       ),
-                                      onPressed: () async {
-                                        List<DateTime>? dateTimeList =
-                                            await showOmniDateTimeRangePicker(
-                                          context: defaultContext,
-                                          startInitialDate:
-                                              widget.oldMeeting.startTime,
-                                          startFirstDate: DateTime(2000),
-                                          startLastDate: DateTime.now().add(
-                                            const Duration(days: 10956),
+                                      Column(
+                                        children: [
+                                          Text(
+                                            DateFormat('yyyy. MM. dd. (E) HH:mm',
+                                                    'ko')
+                                                .format(Provider.of<
+                                                            PersonalAppointmentUpdate>(
+                                                        defaultContext,
+                                                        listen: false)
+                                                    .fromDate),
+                                            style: kAppointmentDateTextStyle,
                                           ),
-                                          endInitialDate:
-                                              widget.oldMeeting.endTime,
-                                          endFirstDate: DateTime(2000),
-                                          endLastDate: DateTime.now().add(
-                                            const Duration(days: 10956),
+                                          Text(
+                                            DateFormat('yyyy. MM. dd. (E) HH:mm',
+                                                    'ko')
+                                                .format(Provider.of<
+                                                            PersonalAppointmentUpdate>(
+                                                        defaultContext,
+                                                        listen: false)
+                                                    .toDate),
+                                            style: kAppointmentDateTextStyle,
                                           ),
-                                          is24HourMode: false,
-                                          isShowSeconds: false,
-                                          minutesInterval: 5,
-                                          secondsInterval: 1,
-                                          borderRadius: const BorderRadius.all(
-                                              Radius.circular(16)),
-                                          constraints: const BoxConstraints(
-                                            maxWidth: 350,
-                                            maxHeight: 650,
-                                          ),
-                                          transitionBuilder:
-                                              (context, anim1, anim2, child) {
-                                            return FadeTransition(
-                                              opacity: anim1.drive(
-                                                Tween(
-                                                  begin: 0,
-                                                  end: 1,
+                                        ],
+                                      ),
+                                      TextButton(
+                                        style: ButtonStyle(
+                                          alignment: Alignment.centerRight,
+                                        ),
+                                        onPressed: () async {
+                                          List<DateTime>? dateTimeList =
+                                              await showOmniDateTimeRangePicker(
+                                            context: defaultContext,
+                                            startInitialDate:
+                                                widget.oldMeeting.startTime,
+                                            startFirstDate: DateTime(2000),
+                                            startLastDate: DateTime.now().add(
+                                              const Duration(days: 10956),
+                                            ),
+                                            endInitialDate:
+                                                widget.oldMeeting.endTime,
+                                            endFirstDate: DateTime(2000),
+                                            endLastDate: DateTime.now().add(
+                                              const Duration(days: 10956),
+                                            ),
+                                            is24HourMode: false,
+                                            isShowSeconds: false,
+                                            minutesInterval: 5,
+                                            secondsInterval: 1,
+                                            borderRadius: const BorderRadius.all(
+                                                Radius.circular(16)),
+                                            constraints: const BoxConstraints(
+                                              maxWidth: 350,
+                                              maxHeight: 650,
+                                            ),
+                                            transitionBuilder:
+                                                (context, anim1, anim2, child) {
+                                              return FadeTransition(
+                                                opacity: anim1.drive(
+                                                  Tween(
+                                                    begin: 0,
+                                                    end: 1,
+                                                  ),
                                                 ),
-                                              ),
-                                              child: child,
-                                            );
-                                          },
-                                          transitionDuration:
-                                              const Duration(milliseconds: 200),
-                                          barrierDismissible: true,
-                                        );
+                                                child: child,
+                                              );
+                                            },
+                                            transitionDuration:
+                                                const Duration(milliseconds: 200),
+                                            barrierDismissible: true,
+                                          );
 
-                                        if (dateTimeList != null) {
-                                          print(
-                                              dateTimeList); // 여기에 시작 시간과 종료시간이 담김
+                                          if (dateTimeList != null) {
+                                            print(
+                                                dateTimeList); // 여기에 시작 시간과 종료시간이 담김
 
-                                          if (dateTimeList.first
-                                              .isAfter(dateTimeList.last)) {
-                                            // 시작일이 종료일보다 느린 상태이므로 에러임.
-                                            print('시작일이 종료일보다 느린 상태이므로 에러임');
+                                            if (dateTimeList.first
+                                                .isAfter(dateTimeList.last)) {
+                                              // 시작일이 종료일보다 느린 상태이므로 에러임.
+                                              print('시작일이 종료일보다 느린 상태이므로 에러임');
 
-                                            showDialog(
-                                                context: defaultContext,
-                                                builder: (context) {
-                                                  return AlertDialog(
-                                                    insetPadding:
-                                                        EdgeInsets.only(
-                                                            left: 10.0,
-                                                            right: 10.0),
-                                                    shape:
-                                                        kRoundedRectangleBorder,
-                                                    content: Text(
-                                                        '시작일은 종료일보다 늦어야 합니다'),
-                                                    actions: [
-                                                      TextButton(
-                                                        onPressed: () {
-                                                          Navigator.pop(
-                                                              context);
-                                                        },
-                                                        child: Text('확인'),
-                                                      )
-                                                    ],
-                                                  );
-                                                });
+                                              showDialog(
+                                                  context: defaultContext,
+                                                  builder: (context) {
+                                                    return AlertDialog(
+                                                      insetPadding:
+                                                          EdgeInsets.only(
+                                                              left: 10.0,
+                                                              right: 10.0),
+                                                      shape:
+                                                          kRoundedRectangleBorder,
+                                                      content: Text(
+                                                          '시작일은 종료일보다 늦어야 합니다'),
+                                                      actions: [
+                                                        TextButton(
+                                                          onPressed: () {
+                                                            Navigator.pop(
+                                                                context);
+                                                          },
+                                                          child: Text('확인'),
+                                                        )
+                                                      ],
+                                                    );
+                                                  });
+                                            } else {
+                                              print('시작일이 종료일보다 빠린 상태이므로 에러 아님');
+                                              Provider.of<PersonalAppointmentUpdate>(
+                                                      defaultContext,
+                                                      listen: false)
+                                                  .updateFromDate(
+                                                      dateTimeList.first);
+                                              Provider.of<PersonalAppointmentUpdate>(
+                                                      defaultContext,
+                                                      listen: false)
+                                                  .updateToDate(
+                                                      dateTimeList.last);
+                                            }
                                           } else {
-                                            print('시작일이 종료일보다 빠린 상태이므로 에러 아님');
-                                            Provider.of<PersonalAppointmentUpdate>(
-                                                    defaultContext,
-                                                    listen: false)
-                                                .updateFromDate(
-                                                    dateTimeList.first);
-                                            Provider.of<PersonalAppointmentUpdate>(
-                                                    defaultContext,
-                                                    listen: false)
-                                                .updateToDate(
-                                                    dateTimeList.last);
+                                            // dateTimeList가 null인 경우에 대한 오류 처리
+                                            print('No date/time selected.');
                                           }
-                                        } else {
-                                          // dateTimeList가 null인 경우에 대한 오류 처리
-                                          print('No date/time selected.');
-                                        }
-                                      },
-                                      child: Text(
-                                        '변경',
-                                        style: kAppointmentTextButtonStyle,
+                                        },
+                                        child: Text(
+                                          '변경',
+                                          style: kAppointmentTextButtonStyle,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    '탁구장',
+                                    style: kAppointmentTextStyle,
+                                  ),
+
+                                  // Provider.of<ProfileUpdate>(context, listen: false)
+                                  //     .userProfile
+                                  //     .pingpongCourt![0]
+                                  //     .roadAddress
+                                  //
+                                  DropdownButton(
+                                    value: Provider.of<ProfileUpdate>(defaultContext,
+                                                    listen: false)
+                                                .userProfile
+                                                .pingpongCourt
+                                                ?.map((element) =>
+                                                    element.roadAddress)
+                                                ?.contains(
+                                                    chosenCourtRoadAddress) ??
+                                            false
+                                        ? chosenCourtRoadAddress
+                                        : chosenCourtRoadAddress,//null,
+                                    //iscourtAddressNotEmpty ? √ : '없음',
+                                    items: Provider.of<ProfileUpdate>(defaultContext,
+                                                    listen: false)
+                                                .userProfile
+                                                .pingpongCourt
+                                                !.map((element) =>
+                                                    element.roadAddress ==
+                                                    chosenCourtRoadAddress).isNotEmpty
+                                        ? Provider.of<ProfileUpdate>(defaultContext,
+                                                listen: false)
+                                            .userProfile
+                                            .pingpongCourt
+                                            ?.map((element) => DropdownMenuItem(
+                                                  value: element.roadAddress,
+                                                  child: Column(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment.start,
+                                                    children: [
+                                                      Text(
+                                                        element.title,
+                                                        style:
+                                                            kAppointmentTextButtonStyle,
+                                                      ),
+                                                      Text(
+                                                        element.roadAddress,
+                                                        style:
+                                                            kAppointmentTextButtonStyle
+                                                                .copyWith(
+                                                          fontSize: 10.0,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ))
+                                            .toList()
+                                        : [
+                                            DropdownMenuItem(
+                                              value: chosenCourtRoadAddress,
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                                children: [
+                                                  Text(
+                                                    chosenCourtName,
+                                                    style:
+                                                    kAppointmentTextButtonStyle,
+                                                  ),
+                                                  Text(
+                                                    chosenCourtRoadAddress,
+                                                    style:
+                                                    kAppointmentTextButtonStyle
+                                                        .copyWith(
+                                                      fontSize: 10.0,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ],
+                                    onChanged: (value) {
+                                      setState(() {
+                                        chosenCourtRoadAddress =
+                                            value.toString(); // 사용자가 선택한 값을 저장
+
+                                        // foundCourt = Provider.of<ProfileUpdate>(
+                                        //         defaultContext,
+                                        //         listen: false)
+                                        //     .userProfile
+                                        //     .pingpongCourt
+                                        //     ?.firstWhere((element) =>
+                                        //         element.roadAddress ==
+                                        //         chosenCourtRoadAddress);
+                                      });
+                                    },
+                                  ),
+                                ],
+                              ),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    '하루 종일',
+                                    style: kAppointmentTextStyle,
+                                  ),
+                                  Checkbox(
+                                    value: Provider.of<PersonalAppointmentUpdate>(
+                                            defaultContext,
+                                            listen: false)
+                                        .isAllDay,
+                                    onChanged: (value) {
+                                      Provider.of<PersonalAppointmentUpdate>(
+                                              defaultContext,
+                                              listen: false)
+                                          .updateIsAllDay();
+                                    },
+                                  ),
+                                ],
+                              ),
+                              Visibility(
+                                visible: _onlyThisAppointment ? false : true,
+                                child: Column(
+                                  children: [
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(
+                                          '반복',
+                                          style: kAppointmentTextStyle,
+                                        ),
+                                        RepeatAppointment(),
+                                      ],
+                                    ),
+                                    Visibility(
+                                      visible:
+                                          Provider.of<PersonalAppointmentUpdate>(
+                                                      defaultContext)
+                                                  .repeatNo
+                                              ? false
+                                              : true,
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Text(
+                                            '반복 횟수',
+                                            style: kAppointmentTextStyle,
+                                          ),
+                                          RepeatTimes(Provider.of<
+                                                      PersonalAppointmentUpdate>(
+                                                  defaultContext)
+                                              .repeatString),
+                                        ],
                                       ),
                                     ),
                                   ],
                                 ),
                               ),
+                            ],
+                          ),
+                        ),
+                        Visibility(
+                          visible: _editAppointment ? false : true,
+                          // _editAppointment이 false 일때 보여야함
+                          child: TextButton(
+                            style: kElevationButtonDeletionStyle.copyWith(
+                                backgroundColor:
+                                    MaterialStatePropertyAll(kMainColor)),
+                            child: Text(
+                              '편집',
+                              style: kAppointmentTextButtonStyle.copyWith(
+                                  color: Colors.white),
                             ),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  '탁구장',
-                                  style: kAppointmentTextStyle,
-                                ),
-
-                                // Provider.of<ProfileUpdate>(context, listen: false)
-                                //     .userProfile
-                                //     .pingpongCourt![0]
-                                //     .roadAddress
-                                //
-                                DropdownButton(
-                                  value: Provider.of<ProfileUpdate>(defaultContext,
-                                                  listen: false)
-                                              .userProfile
-                                              .pingpongCourt
-                                              ?.map((element) =>
-                                                  element.roadAddress)
-                                              ?.contains(
-                                                  chosenCourtRoadAddress) ??
-                                          false
-                                      ? chosenCourtRoadAddress
-                                      : chosenCourtRoadAddress,//null,
-                                  //iscourtAddressNotEmpty ? √ : '없음',
-                                  items: Provider.of<ProfileUpdate>(defaultContext,
-                                                  listen: false)
-                                              .userProfile
-                                              .pingpongCourt
-                                              !.map((element) =>
-                                                  element.roadAddress ==
-                                                  chosenCourtRoadAddress).isNotEmpty
-                                      ? Provider.of<ProfileUpdate>(defaultContext,
-                                              listen: false)
-                                          .userProfile
-                                          .pingpongCourt
-                                          ?.map((element) => DropdownMenuItem(
-                                                value: element.roadAddress,
-                                                child: Column(
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.start,
-                                                  children: [
-                                                    Text(
-                                                      element.title,
-                                                      style:
-                                                          kAppointmentTextButtonStyle,
-                                                    ),
-                                                    Text(
-                                                      element.roadAddress,
-                                                      style:
-                                                          kAppointmentTextButtonStyle
-                                                              .copyWith(
-                                                        fontSize: 10.0,
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ))
-                                          .toList()
-                                      : [
-                                          DropdownMenuItem(
-                                            value: chosenCourtRoadAddress,
-                                            child: Column(
-                                              crossAxisAlignment:
-                                              CrossAxisAlignment.start,
+                            onPressed: () {
+                              setState(() {
+                                if (widget.oldMeeting.recurrenceRule == '') {
+                                  // 단일 일정인 경우,
+                                  _editAppointment = !_editAppointment;
+                                } else {
+                                  // 반복 일정인 경우
+                                  showDialog(
+                                      context: defaultContext,
+                                      builder: (context) {
+                                        return AlertDialog(
+                                          insetPadding: EdgeInsets.only(
+                                              left: 10.0, right: 10.0),
+                                          shape: kRoundedRectangleBorder,
+                                          actionsAlignment:
+                                              MainAxisAlignment.spaceEvenly,
+                                          actions: <Widget>[
+                                            Column(
                                               children: [
-                                                Text(
-                                                  chosenCourtName,
-                                                  style:
-                                                  kAppointmentTextButtonStyle,
+                                                TextButton(
+                                                  onPressed: () {
+                                                    _onlyThisAppointment = true;
+                                                    _editAppointment =
+                                                        !_editAppointment;
+                                                    Navigator.pop(context);
+                                                  },
+                                                  child: Text(
+                                                    '이 일정만',
+                                                    style:
+                                                        kAppointmentTextButtonStyle,
+                                                  ),
                                                 ),
-                                                Text(
-                                                  chosenCourtRoadAddress,
-                                                  style:
-                                                  kAppointmentTextButtonStyle
-                                                      .copyWith(
-                                                    fontSize: 10.0,
+                                                Divider(
+                                                  thickness: 1.0,
+                                                ),
+                                                TextButton(
+                                                  onPressed: () {
+                                                    _onlyThisAppointment = false;
+                                                    _editAppointment =
+                                                        !_editAppointment;
+                                                    Navigator.pop(context);
+                                                  },
+                                                  child: Text(
+                                                    '전체 일정 수정',
+                                                    style:
+                                                        kAppointmentTextButtonStyle,
                                                   ),
                                                 ),
                                               ],
                                             ),
-                                          ),
-                                        ],
-                                  onChanged: (value) {
-                                    setState(() {
-                                      chosenCourtRoadAddress =
-                                          value.toString(); // 사용자가 선택한 값을 저장
-
-                                      // foundCourt = Provider.of<ProfileUpdate>(
-                                      //         defaultContext,
-                                      //         listen: false)
-                                      //     .userProfile
-                                      //     .pingpongCourt
-                                      //     ?.firstWhere((element) =>
-                                      //         element.roadAddress ==
-                                      //         chosenCourtRoadAddress);
-                                    });
-                                  },
-                                ),
-                              ],
+                                          ],
+                                        );
+                                      });
+                                }
+                              });
+                            },
+                          ),
+                        ), // 수정
+                        Visibility(
+                          visible: _editAppointment ? true : false,
+                          //_editAppointment이 true 일때 보여야함
+                          child: ElevatedButton(
+                            style: kElevationButtonDeletionStyle,
+                            child: Text(
+                              '삭제',
+                              style: kAppointmentTextButtonStyle.copyWith(
+                                  color: Colors.white),
                             ),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  '하루 종일',
-                                  style: kAppointmentTextStyle,
-                                ),
-                                Checkbox(
-                                  value: Provider.of<PersonalAppointmentUpdate>(
-                                          defaultContext,
-                                          listen: false)
-                                      .isAllDay,
-                                  onChanged: (value) {
-                                    Provider.of<PersonalAppointmentUpdate>(
-                                            defaultContext,
-                                            listen: false)
-                                        .updateIsAllDay();
-                                  },
-                                ),
-                              ],
-                            ),
-                            Visibility(
-                              visible: _onlyThisAppointment ? false : true,
-                              child: Column(
-                                children: [
-                                  Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Text(
-                                        '반복',
-                                        style: kAppointmentTextStyle,
-                                      ),
-                                      RepeatAppointment(),
-                                    ],
-                                  ),
-                                  Visibility(
-                                    visible:
-                                        Provider.of<PersonalAppointmentUpdate>(
-                                                    defaultContext)
-                                                .repeatNo
-                                            ? false
-                                            : true,
-                                    child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Text(
-                                          '반복 횟수',
-                                          style: kAppointmentTextStyle,
+                            onPressed: () {
+                              showDialog(
+                                context: defaultContext,
+                                builder: (context) {
+                                  return AlertDialog(
+                                    insetPadding:
+                                        EdgeInsets.only(left: 10.0, right: 10.0),
+                                    shape: kRoundedRectangleBorder,
+                                    title: Text(
+                                      '정말 일정을 삭제하시겠습니까?',
+                                      style: kAppointmentDateTextStyle,
+                                    ),
+                                    actions: <Widget>[
+                                      TextButton(
+                                        onPressed: () {
+                                          Navigator.of(context).pop();
+                                        },
+                                        child: Text(
+                                          '취소',
+                                          style: kAppointmentTextButtonStyle,
                                         ),
-                                        RepeatTimes(Provider.of<
-                                                    PersonalAppointmentUpdate>(
-                                                defaultContext)
-                                            .repeatString),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Visibility(
-                        visible: _editAppointment ? false : true,
-                        // _editAppointment이 false 일때 보여야함
-                        child: ElevatedButton(
-                          style: kElevationButtonDeletionStyle.copyWith(
-                              backgroundColor:
-                                  MaterialStatePropertyAll(Colors.blueAccent)),
-                          child: Text(
-                            '수정',
-                            style: kAppointmentTextButtonStyle.copyWith(
-                                color: Colors.white),
-                          ),
-                          onPressed: () {
-                            setState(() {
-                              if (widget.oldMeeting.recurrenceRule == '') {
-                                // 단일 일정인 경우,
-                                _editAppointment = !_editAppointment;
-                              } else {
-                                // 반복 일정인 경우
-                                showDialog(
-                                    context: defaultContext,
-                                    builder: (context) {
-                                      return AlertDialog(
-                                        insetPadding: EdgeInsets.only(
-                                            left: 10.0, right: 10.0),
-                                        shape: kRoundedRectangleBorder,
-                                        actionsAlignment:
-                                            MainAxisAlignment.spaceEvenly,
-                                        actions: <Widget>[
-                                          Column(
-                                            children: [
-                                              TextButton(
-                                                onPressed: () {
-                                                  _onlyThisAppointment = true;
-                                                  _editAppointment =
-                                                      !_editAppointment;
-                                                  Navigator.pop(context);
-                                                },
-                                                child: Text(
-                                                  '이 일정만',
-                                                  style:
-                                                      kAppointmentTextButtonStyle,
-                                                ),
-                                              ),
-                                              Divider(
-                                                thickness: 1.0,
-                                              ),
-                                              TextButton(
-                                                onPressed: () {
-                                                  _onlyThisAppointment = false;
-                                                  _editAppointment =
-                                                      !_editAppointment;
-                                                  Navigator.pop(context);
-                                                },
-                                                child: Text(
-                                                  '전체 일정 수정',
-                                                  style:
-                                                      kAppointmentTextButtonStyle,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ],
-                                      );
-                                    });
-                              }
-                            });
-                          },
-                        ),
-                      ), // 수정
-                      Visibility(
-                        visible: _editAppointment ? true : false,
-                        //_editAppointment이 true 일때 보여야함
-                        child: ElevatedButton(
-                          style: kElevationButtonDeletionStyle,
-                          child: Text(
-                            '삭제',
-                            style: kAppointmentTextButtonStyle.copyWith(
-                                color: Colors.white),
-                          ),
-                          onPressed: () {
-                            showDialog(
-                              context: defaultContext,
-                              builder: (context) {
-                                return AlertDialog(
-                                  insetPadding:
-                                      EdgeInsets.only(left: 10.0, right: 10.0),
-                                  shape: kRoundedRectangleBorder,
-                                  title: Text(
-                                    '정말 일정을 삭제하시겠습니까?',
-                                    style: kAppointmentDateTextStyle,
-                                  ),
-                                  actions: <Widget>[
-                                    TextButton(
-                                      onPressed: () {
-                                        Navigator.of(context).pop();
-                                      },
-                                      child: Text(
-                                        '취소',
-                                        style: kAppointmentTextButtonStyle,
                                       ),
-                                    ),
-                                    TextButton(
-                                      onPressed: () async {
+                                      TextButton(
+                                        onPressed: () async {
 
-                                        await toggleLoading(true, defaultContext);
+                                          await toggleLoading(true, defaultContext);
 
-                                        if (widget.oldMeeting.recurrenceRule ==
-                                            '') {
-                                          // 일반 일정 삭제
-                                          await Provider.of<
-                                                      PersonalAppointmentUpdate>(
-                                                  defaultContext,
-                                                  listen: false)
-                                              .removeMeeting(widget.oldMeeting);
-
-                                          db
-                                              .collection("Appointments")
-                                              .doc(oldmeetingAppointments?.id)
-                                              .delete()
-                                              .then(
-                                                (doc) =>
-                                                    print("Document deleted"),
-                                                onError: (e) => print(
-                                                    "Error updating document $e"),
-                                              );
-                                        } else {
-                                          // 반복 일정 삭제
-                                          if (_onlyThisAppointment != true) {
-                                            // 전체 일정 삭제
+                                          if (widget.oldMeeting.recurrenceRule ==
+                                              '') {
+                                            // 일반 일정 삭제
                                             await Provider.of<
                                                         PersonalAppointmentUpdate>(
-                                                defaultContext,
+                                                    defaultContext,
                                                     listen: false)
-                                                .removeMeeting(
-                                                    widget.oldMeeting);
+                                                .removeMeeting(widget.oldMeeting);
 
                                             db
                                                 .collection("Appointments")
@@ -999,134 +979,156 @@ class _EditAppointmentState extends State<EditAppointment> {
                                                       "Error updating document $e"),
                                                 );
                                           } else {
-                                            final _newMeeting = Appointment(
-                                              startTime: Provider.of<
+                                            // 반복 일정 삭제
+                                            if (_onlyThisAppointment != true) {
+                                              // 전체 일정 삭제
+                                              await Provider.of<
                                                           PersonalAppointmentUpdate>(
                                                   defaultContext,
                                                       listen: false)
-                                                  .fromDate,
-                                              endTime: Provider.of<
+                                                  .removeMeeting(
+                                                      widget.oldMeeting);
+
+                                              db
+                                                  .collection("Appointments")
+                                                  .doc(oldmeetingAppointments?.id)
+                                                  .delete()
+                                                  .then(
+                                                    (doc) =>
+                                                        print("Document deleted"),
+                                                    onError: (e) => print(
+                                                        "Error updating document $e"),
+                                                  );
+                                            } else {
+                                              final _newMeeting = Appointment(
+                                                startTime: Provider.of<
+                                                            PersonalAppointmentUpdate>(
+                                                    defaultContext,
+                                                        listen: false)
+                                                    .fromDate,
+                                                endTime: Provider.of<
+                                                            PersonalAppointmentUpdate>(
+                                                    defaultContext,
+                                                        listen: false)
+                                                    .toDate,
+                                                subject:
+                                                    _eventNametextController.text,
+                                                // color: Provider.of<
+                                                //             PersonalAppointmentUpdate>(
+                                                //         defaultContext,
+                                                //         listen: false)
+                                                //     .color,
+                                                //Provider.of<AppointmentUpdate>(context, listen: false).isLesson,
+                                                isAllDay: Provider.of<
+                                                            PersonalAppointmentUpdate>(
+                                                    defaultContext,
+                                                        listen: false)
+                                                    .isAllDay,
+                                                notes: _memoTextController.text,
+                                                recurrenceRule: Provider.of<
+                                                            PersonalAppointmentUpdate>(
+                                                    defaultContext,
+                                                        listen: false)
+                                                    .recurrenceRule,
+                                              );
+
+                                              await Provider.of<
                                                           PersonalAppointmentUpdate>(
                                                   defaultContext,
                                                       listen: false)
-                                                  .toDate,
-                                              subject:
-                                                  _eventNametextController.text,
-                                              // color: Provider.of<
-                                              //             PersonalAppointmentUpdate>(
-                                              //         defaultContext,
-                                              //         listen: false)
-                                              //     .color,
-                                              //Provider.of<AppointmentUpdate>(context, listen: false).isLesson,
-                                              isAllDay: Provider.of<
-                                                          PersonalAppointmentUpdate>(
-                                                  defaultContext,
-                                                      listen: false)
-                                                  .isAllDay,
-                                              notes: _memoTextController.text,
-                                              recurrenceRule: Provider.of<
-                                                          PersonalAppointmentUpdate>(
-                                                  defaultContext,
-                                                      listen: false)
-                                                  .recurrenceRule,
-                                            );
+                                                  .addRecurrenceExceptionDates(
+                                                      widget.oldMeeting,
+                                                      _newMeeting,
+                                                      _onlyThisAppointment,
+                                                      true); // true 는 isDeletion으로 true 이면 삭제를 의미
 
-                                            await Provider.of<
-                                                        PersonalAppointmentUpdate>(
-                                                defaultContext,
-                                                    listen: false)
-                                                .addRecurrenceExceptionDates(
-                                                    widget.oldMeeting,
-                                                    _newMeeting,
-                                                    _onlyThisAppointment,
-                                                    true); // true 는 isDeletion으로 true 이면 삭제를 의미
+                                              final docRef = db
+                                                  .collection("Appointments")
+                                                  .withConverter(
+                                                    fromFirestore:
+                                                        CustomAppointment
+                                                            .fromFirestore,
+                                                    toFirestore: (CustomAppointment
+                                                                customAppointment,
+                                                            options) =>
+                                                        customAppointment
+                                                            .toFirestore(),
+                                                  )
+                                                  .doc(
+                                                      oldmeetingAppointments?.id);
 
-                                            final docRef = db
-                                                .collection("Appointments")
-                                                .withConverter(
-                                                  fromFirestore:
-                                                      CustomAppointment
-                                                          .fromFirestore,
-                                                  toFirestore: (CustomAppointment
-                                                              customAppointment,
-                                                          options) =>
-                                                      customAppointment
-                                                          .toFirestore(),
-                                                )
-                                                .doc(
-                                                    oldmeetingAppointments?.id);
+                                              final newCustomAppointment =
+                                                  CustomAppointment(
+                                                      appointments: [_newMeeting],
+                                                      pingpongCourtName:
+                                                      chosenCourtName,
+                                                      pingpongCourtAddress:
+                                                          chosenCourtRoadAddress,
+                                                      userUid: Provider.of<
+                                                                  LoginStatusUpdate>(
+                                                          defaultContext,
+                                                              listen: false)
+                                                          .currentUser
+                                                          .uid);
 
-                                            final newCustomAppointment =
-                                                CustomAppointment(
-                                                    appointments: [_newMeeting],
-                                                    pingpongCourtName:
-                                                    chosenCourtName,
-                                                    pingpongCourtAddress:
-                                                        chosenCourtRoadAddress,
-                                                    userUid: Provider.of<
-                                                                LoginStatusUpdate>(
-                                                        defaultContext,
-                                                            listen: false)
-                                                        .currentUser
-                                                        .uid);
-
-                                            await docRef
-                                                .set(newCustomAppointment);
+                                              await docRef
+                                                  .set(newCustomAppointment);
+                                            }
                                           }
-                                        }
 
-                                        await Provider.of<
-                                                    PersonalAppointmentUpdate>(
-                                            defaultContext,
-                                                listen: false)
-                                            .personalDaywiseDurationsCalculate(
-                                                false,
-                                                true,
-                                            chosenCourtName,
-                                                chosenCourtRoadAddress);
-                                        await Provider.of<
-                                                    PersonalAppointmentUpdate>(
-                                            defaultContext,
-                                                listen: false)
-                                            .personalCountHours(
-                                                false,
-                                                true,
-                                            chosenCourtName,
-                                            chosenCourtRoadAddress);
+                                          await Provider.of<
+                                                      PersonalAppointmentUpdate>(
+                                              defaultContext,
+                                                  listen: false)
+                                              .personalDaywiseDurationsCalculate(
+                                                  false,
+                                                  true,
+                                              chosenCourtName,
+                                                  chosenCourtRoadAddress);
+                                          await Provider.of<
+                                                      PersonalAppointmentUpdate>(
+                                              defaultContext,
+                                                  listen: false)
+                                              .personalCountHours(
+                                                  false,
+                                                  true,
+                                              chosenCourtName,
+                                              chosenCourtRoadAddress);
 
-                                        await Provider.of<
-                                                    PersonalAppointmentUpdate>(
-                                            defaultContext,
-                                                listen: false)
-                                            .clear();
+                                          await Provider.of<
+                                                      PersonalAppointmentUpdate>(
+                                              defaultContext,
+                                                  listen: false)
+                                              .clear();
 
-                                        //await LoadData().refreshData(defaultContext);
-                                        await refreshData(context);
+                                          //await LoadData().refreshData(defaultContext);
+                                          await refreshData(context);
 
-                                        await toggleLoading(false, defaultContext);
+                                          await toggleLoading(false, defaultContext);
 
-                                        Navigator.of(context).pop();
-                                        print('취소 완료');
-                                        Navigator.of(widget.context).pop();
-                                        print('showBottom 창 내리기 완료');
-                                      },
-                                      child: Text(
-                                        '확인',
-                                        style: kAppointmentTextButtonStyle
-                                            .copyWith(color: Colors.red),
+                                          Navigator.of(context).pop();
+                                          print('취소 완료');
+                                          Navigator.of(widget.context).pop();
+                                          print('showBottom 창 내리기 완료');
+                                        },
+                                        child: Text(
+                                          '확인',
+                                          style: kAppointmentTextButtonStyle
+                                              .copyWith(color: Colors.red),
+                                        ),
                                       ),
-                                    ),
-                                  ],
-                                );
-                              },
-                            );
-                          },
-                        ),
-                      ), // 삭제
-                    ],
+                                    ],
+                                  );
+                                },
+                              );
+                            },
+                          ),
+                        ), // 삭제
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
