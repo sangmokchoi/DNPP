@@ -2,7 +2,7 @@ import 'package:dnpp/constants.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../viewModel/personalAppointmentUpdate.dart';
+import '../../viewModel/appointmentUpdate.dart';
 
 
 class RepeatTimes extends StatelessWidget {
@@ -24,8 +24,6 @@ class RepeatTimes extends StatelessWidget {
             context: context,
             builder: (BuildContext context) {
               return AlertDialog(
-                insetPadding: EdgeInsets.only(left: 10.0, right: 10.0),
-                shape: kRoundedRectangleBorder,
                 title: Text(
                   '반복 횟수',
                 ),
@@ -47,10 +45,10 @@ class RepeatTimes extends StatelessWidget {
                               print('selectedButtons.length == 0');
                               print(selectedButtons);
                             }
-                            await Provider.of<PersonalAppointmentUpdate>(context,
+                            await Provider.of<AppointmentUpdate>(context,
                                     listen: false)
                                 .updateRecurrenceRules(repeatString, n);
-                            await Provider.of<PersonalAppointmentUpdate>(context,
+                            await Provider.of<AppointmentUpdate>(context,
                                 listen: false)
                                 .updateRepeat(repeatString);
 
@@ -91,7 +89,7 @@ class RepeatTimes extends StatelessWidget {
             });
       },
       child: Text(
-        '${Provider.of<PersonalAppointmentUpdate>(context, listen: false).repeatTimes} 회',
+        '${Provider.of<AppointmentUpdate>(context, listen: false).repeatTimes} 회',
         style: kAppointmentTextButtonStyle,
       ),
     );

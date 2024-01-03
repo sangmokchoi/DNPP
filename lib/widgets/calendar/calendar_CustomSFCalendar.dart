@@ -1,12 +1,8 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:syncfusion_flutter_calendar/calendar.dart';
-import '../../constants.dart';
 import '../../dataSource/SFcalendar_dataSource.dart';
-import '../../models/customAppointment.dart';
-import '../../viewModel/loginStatusUpdate.dart';
-import '../../viewModel/personalAppointmentUpdate.dart';
+import '../../viewModel/appointmentUpdate.dart';
 
 class CustomSFCalendar extends StatelessWidget {
   CustomSFCalendar({required this.calendarTapped, required this.context});
@@ -15,29 +11,19 @@ class CustomSFCalendar extends StatelessWidget {
   final BuildContext context;
 
   List<Appointment> _getDataSource() =>
-      Provider.of<PersonalAppointmentUpdate>(context, listen: false).defaultMeetings;
-
-  FirebaseFirestore db = FirebaseFirestore.instance;
-
+      Provider.of<AppointmentUpdate>(context, listen: false).meetings;
 
   @override
   Widget build(BuildContext context) {
-    // final docRef = db.collection("Appointments").where("userUid",
-    //     isEqualTo: Provider.of<LoginStatusUpdate>(context, listen: false)
-    //         .currentUser
-    //         .uid).withConverter(
-    //   fromFirestore: CustomAppointment.fromFirestore,
-    //   toFirestore: (CustomAppointment customAppointment, _) => customAppointment.toFirestore(),
-    // );
-
-
     return SfCalendar(
       view: CalendarView.month,
+
       viewHeaderStyle: const ViewHeaderStyle(
         dayTextStyle: TextStyle(
           fontSize: 14,
         ),
       ),
+
       headerHeight: 35,
       headerStyle: const CalendarHeaderStyle(
           textAlign: TextAlign.left,
@@ -46,11 +32,12 @@ class CustomSFCalendar extends StatelessWidget {
             fontStyle: FontStyle.normal,
             fontWeight: FontWeight.w500,
           )),
-      controller: Provider.of<PersonalAppointmentUpdate>(context).calendarController,
+      controller: Provider.of<AppointmentUpdate>(context).calendarController,
       initialDisplayDate: DateTime.now(),
       initialSelectedDate: DateTime.now(),
       onTap: calendarTapped,
       dataSource: SFCalendarDataSource(_getDataSource()),
+
       timeSlotViewSettings: const TimeSlotViewSettings(
         timeTextStyle: TextStyle(
           fontWeight: FontWeight.w500,
@@ -65,8 +52,7 @@ class CustomSFCalendar extends StatelessWidget {
         timeIntervalHeight: 70,
       ),
 
-      scheduleViewSettings: ScheduleViewSettings(
-        hideEmptyScheduleWeek: true,
+      scheduleViewSettings: const ScheduleViewSettings(
         appointmentItemHeight: 60,
         appointmentTextStyle: TextStyle(
           fontSize: 16,
@@ -96,38 +82,14 @@ class CustomSFCalendar extends StatelessWidget {
         monthHeaderSettings: MonthHeaderSettings(
           monthFormat: 'MMMM, yyyy',
           height: 70,
-          textAlign: TextAlign.left,
-          backgroundColor: Colors.lightBlueAccent,
+          textAlign: TextAlign.start,
           monthTextStyle: TextStyle(
             fontSize: 25,
           ),
         ),
       ),
 
-      // monthCellBuilder:
-      //     (BuildContext buildContext, MonthCellDetails details) {
-      //   final Color defaultColor = Colors.transparent;
-      //   return Container(
-      //     decoration: BoxDecoration(
-      //         color: defaultColor,
-      //         border: Border.all(color: Colors.grey, width: 0.1),
-      //
-      //     ),
-      //     child: Align(
-      //       alignment: Alignment.topLeft,
-      //       child: Padding(
-      //         padding: const EdgeInsets.all(5.0),
-      //         child: Text(
-      //           details.date.day.toString(),
-      //           style: TextStyle(color: Colors.black),
-      //         ),
-      //       ),
-      //     ),
-      //   );
-      // },
-
-      monthViewSettings: MonthViewSettings(
-        showTrailingAndLeadingDates: true,
+      monthViewSettings: const MonthViewSettings(
         dayFormat: 'EEE',
         showAgenda: true,
         appointmentDisplayCount: 5,
@@ -135,21 +97,20 @@ class CustomSFCalendar extends StatelessWidget {
         agendaItemHeight: 60,
         agendaViewHeight: 170,
         monthCellStyle: MonthCellStyle(
-          trailingDatesBackgroundColor: kMainColor.withOpacity(0.15),
-          leadingDatesBackgroundColor: kMainColor.withOpacity(0.15),
+          trailingDatesBackgroundColor: Colors.black12,
+          leadingDatesBackgroundColor: Colors.black12,
           textStyle: TextStyle(
-            fontSize: 15,
+            fontSize: 16,
           ),
           trailingDatesTextStyle: TextStyle(
             fontStyle: FontStyle.normal,
-            fontSize: 14,
+            fontSize: 16,
           ),
           leadingDatesTextStyle: TextStyle(
             fontStyle: FontStyle.normal,
-            fontSize: 14,
+            fontSize: 16,
           ),
         ),
-
         agendaStyle: AgendaStyle(
           backgroundColor: Colors.white54,
           appointmentTextStyle: TextStyle(
@@ -172,10 +133,7 @@ class CustomSFCalendar extends StatelessWidget {
       headerDateFormat: 'MMM yyy',
       appointmentTimeTextFormat: 'HH:mm',
       appointmentTextStyle: TextStyle(
-          fontSize: 14,
-          color: Colors.white,
-          fontWeight: FontWeight.normal
-      ),
+          fontSize: 14, color: Colors.white, fontWeight: FontWeight.normal),
       onViewChanged: (ViewChangedDetails details) {
         List dates = details.visibleDates;
       },

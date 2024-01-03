@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../constants.dart';
-import '../../viewModel/personalAppointmentUpdate.dart';
+import '../../viewModel/appointmentUpdate.dart';
 
 class RepeatAppointment extends StatelessWidget {
 
@@ -17,14 +17,12 @@ class RepeatAppointment extends StatelessWidget {
             context: context,
             builder: (BuildContext context) {
               return AlertDialog(
-                insetPadding: EdgeInsets.only(left: 10.0, right: 10.0),
-                shape: kRoundedRectangleBorder,
                 title: Text(
                   '반복',
                 ),
                 content: Container(
                   height: 200,
-                  child: Consumer<PersonalAppointmentUpdate>(
+                  child: Consumer<AppointmentUpdate>(
                     builder: (context, taskData, child) {
                       return Scrollbar(
                         thumbVisibility: true,
@@ -35,10 +33,10 @@ class RepeatAppointment extends StatelessWidget {
                                 children: [
                                   Text('반복 안 함'),
                                   Checkbox(
-                                    value: Provider.of<PersonalAppointmentUpdate>(context, listen: false).repeatNo,
+                                    value: Provider.of<AppointmentUpdate>(context, listen: false).repeatNo,
                                     onChanged: (value) {
-                                      Provider.of<PersonalAppointmentUpdate>(context, listen: false).updateRepeat('반복 안 함');
-                                      Provider.of<PersonalAppointmentUpdate>(context, listen: false).updateRecurrenceRules('반복 안 함', 0);
+                                      Provider.of<AppointmentUpdate>(context, listen: false).updateRepeat('반복 안 함');
+                                      Provider.of<AppointmentUpdate>(context, listen: false).updateRecurrenceRules('반복 안 함', 0);
                                     },
                                   ),
                                 ],
@@ -47,10 +45,10 @@ class RepeatAppointment extends StatelessWidget {
                                 children: [
                                   Text('매일'),
                                   Checkbox(
-                                    value: Provider.of<PersonalAppointmentUpdate>(context, listen: false).repeatEveryDay,
+                                    value: Provider.of<AppointmentUpdate>(context, listen: false).repeatEveryDay,
                                     onChanged: (value) {
-                                      Provider.of<PersonalAppointmentUpdate>(context, listen: false).updateRepeat('매일');
-                                      Provider.of<PersonalAppointmentUpdate>(context, listen: false).updateRecurrenceRules('매일', 1);
+                                      Provider.of<AppointmentUpdate>(context, listen: false).updateRepeat('매일');
+                                      Provider.of<AppointmentUpdate>(context, listen: false).updateRecurrenceRules('매일', 1);
                                     },
                                   ),
                                 ],
@@ -59,10 +57,10 @@ class RepeatAppointment extends StatelessWidget {
                                 children: [
                                   Text('매주'),
                                   Checkbox(
-                                    value: Provider.of<PersonalAppointmentUpdate>(context, listen: false).repeatEveryWeek,
+                                    value: Provider.of<AppointmentUpdate>(context, listen: false).repeatEveryWeek,
                                     onChanged: (value) {
-                                      Provider.of<PersonalAppointmentUpdate>(context, listen: false).updateRepeat('매주');
-                                      Provider.of<PersonalAppointmentUpdate>(context, listen: false).updateRecurrenceRules('매주', 1);
+                                      Provider.of<AppointmentUpdate>(context, listen: false).updateRepeat('매주');
+                                      Provider.of<AppointmentUpdate>(context, listen: false).updateRecurrenceRules('매주', 1);
                                     },
                                   ),
                                 ],
@@ -71,10 +69,10 @@ class RepeatAppointment extends StatelessWidget {
                                 children: [
                                   Text('매월'),
                                   Checkbox(
-                                    value: Provider.of<PersonalAppointmentUpdate>(context, listen: false).repeatEveryMonth,
+                                    value: Provider.of<AppointmentUpdate>(context, listen: false).repeatEveryMonth,
                                     onChanged: (value) {
-                                      Provider.of<PersonalAppointmentUpdate>(context, listen: false).updateRepeat('매월');
-                                      Provider.of<PersonalAppointmentUpdate>(context, listen: false).updateRecurrenceRules('매월', 1);
+                                      Provider.of<AppointmentUpdate>(context, listen: false).updateRepeat('매월');
+                                      Provider.of<AppointmentUpdate>(context, listen: false).updateRecurrenceRules('매월', 1);
                                     },
                                   ),
                                 ],
@@ -83,10 +81,10 @@ class RepeatAppointment extends StatelessWidget {
                                 children: [
                                   Text('매년'),
                                   Checkbox(
-                                    value: Provider.of<PersonalAppointmentUpdate>(context, listen: false).repeatEveryYear,
+                                    value: Provider.of<AppointmentUpdate>(context, listen: false).repeatEveryYear,
                                     onChanged: (value) {
-                                      Provider.of<PersonalAppointmentUpdate>(context, listen: false).updateRepeat('매년');
-                                      Provider.of<PersonalAppointmentUpdate>(context, listen: false).updateRecurrenceRules('매년', 1);
+                                      Provider.of<AppointmentUpdate>(context, listen: false).updateRepeat('매년');
+                                      Provider.of<AppointmentUpdate>(context, listen: false).updateRecurrenceRules('매년', 1);
                                     },
                                   ),
                                 ],
@@ -114,7 +112,7 @@ class RepeatAppointment extends StatelessWidget {
             });
       },
       child: Text(
-        Provider.of<PersonalAppointmentUpdate>(context, listen: false)
+        Provider.of<AppointmentUpdate>(context, listen: false)
             .repeatString,
         style: kAppointmentTextButtonStyle,
       ),
