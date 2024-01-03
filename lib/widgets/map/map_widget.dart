@@ -1,15 +1,9 @@
-
 import 'package:flutter_naver_map/flutter_naver_map.dart';
 import '../../viewModel/mapWidgetUpdate.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 class MapWidget extends StatefulWidget {
-
-  MapWidget(this.nLatLng);
-
-  NLatLng nLatLng;
-
   @override
   State<MapWidget> createState() => _MapWidgetState();
 }
@@ -23,20 +17,18 @@ class _MapWidgetState extends State<MapWidget> {
   Widget build(BuildContext context) {
     return Expanded(
       child: NaverMap(
-        options: NaverMapViewOptions(
+        options: const NaverMapViewOptions(
           initialCameraPosition: NCameraPosition(
-            target: widget.nLatLng, //NLatLng(37.5666, 126.979),
-            zoom: 10,
+            target: NLatLng(37.5666, 126.979),
+            zoom: 5,
             bearing: 0,
             tilt: 0,
           ),
         ),
         onMapReady: (controller) {
-          Provider.of<MapWidgetUpdate>(context, listen: false).naverController =
+          Provider.of<MapWidgetUpdate>(context, listen: false).controller =
               controller;
-          setState(() {
-            // Provider.of<MapWidgetUpdate>(context, listen: false).cameraMove(widget.nLatLng);
-          });
+          setState(() {});
         },
         onMapTapped: (point, latLng) {
           print(latLng);

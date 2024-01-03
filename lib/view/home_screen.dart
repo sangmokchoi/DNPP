@@ -7,14 +7,11 @@ import 'package:flutter/cupertino.dart';
 import 'package:persistent_bottom_nav_bar/persistent_tab_view.dart';
 import 'package:provider/provider.dart';
 
-import '../models/search.dart';
-import '../viewModel/personalAppointmentUpdate.dart';
+import '../viewModel/appointmentUpdate.dart';
 import 'map_screen.dart';
 import 'calendar_screen.dart';
 
 import 'package:firebase_storage/firebase_storage.dart';
-
-GlobalKey<_HomeScreenState> homePageKey = GlobalKey<_HomeScreenState>();
 
 class HomeScreen extends StatefulWidget {
   static String id = '/';
@@ -32,14 +29,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
   List<Widget> _buildScreens() {
     return [
+      ProfileScreen(),
       MainScreen(),
-      //ProfileScreen(),
-      CalendarScreen(),
-      //SignupScreen(),
       CalendarScreen(),
       SignupScreen(),
       SettingScreen(),
-      //MapScreen()
+      MapScreen()
     ];
   }
 
@@ -52,20 +47,26 @@ class _HomeScreenState extends State<HomeScreen> {
         inactiveColorPrimary: CupertinoColors.systemGrey,
       ),
       PersistentBottomNavBarItem(
+        icon: Icon(CupertinoIcons.settings),
+        title: ("홈 스크린"),
+        activeColorPrimary: CupertinoColors.activeBlue,
+        inactiveColorPrimary: CupertinoColors.systemGrey,
+      ),
+      PersistentBottomNavBarItem(
         icon: Icon(CupertinoIcons.chart_bar_circle),
         title: ("캘린더"),
         activeColorPrimary: CupertinoColors.activeBlue,
         inactiveColorPrimary: CupertinoColors.systemGrey,
       ),
       PersistentBottomNavBarItem(
-        icon: Icon(CupertinoIcons.settings),
-        title: ("설정"),
+        icon: Icon(CupertinoIcons.chat_bubble_2),
+        title: ("채팅"),
         activeColorPrimary: CupertinoColors.activeBlue,
         inactiveColorPrimary: CupertinoColors.systemGrey,
       ),
       PersistentBottomNavBarItem(
-        icon: Icon(CupertinoIcons.chat_bubble_2),
-        title: ("매칭"),
+        icon: Icon(CupertinoIcons.ellipsis),
+        title: ("더보기"),
         activeColorPrimary: CupertinoColors.activeBlue,
         inactiveColorPrimary: CupertinoColors.systemGrey,
       ),
@@ -103,60 +104,37 @@ class _HomeScreenState extends State<HomeScreen> {
     _hideNavBar = false;
   }
 
-  void onItemSelected(int index) {
-    _controller.jumpToTab(index);
-    // 추가로 수행해야 할 로직이 있다면 여기에 추가
-    print('onItemSelected pressed');
-  }
-
   @override
   Widget build(BuildContext context) {
     return SafeArea(
       child: PersistentTabView(
-        key: homePageKey,
         context,
         controller: _controller,
         onItemSelected: (int) {
           setState(() {
-
+            print('int: $int');
             switch (int) {
               case 0:
-              // WidgetsBinding.instance?.addPostFrameCallback((_) {
-              //   try {
-              //     Provider.of<AppointmentUpdate>(context, listen: false)
-              //         .daywiseDurationsCalculate(false);
-              //     Provider.of<AppointmentUpdate>(context, listen: false)
-              //         .countHours(true);
-              //     Provider.of<AppointmentUpdate>(context, listen: false).updateRecentDays(0);
-              //     setState(() {});
-              //   } catch (e) {
-              //     print(e);
-              //   }
-              //
-              // });
                 return print('$int');
               case 1:
-                // WidgetsBinding.instance?.addPostFrameCallback((_) {
-                //   try {
-                //     Provider.of<AppointmentUpdate>(context, listen: false)
-                //         .daywiseDurationsCalculate(true);
-                //     Provider.of<AppointmentUpdate>(context, listen: false)
-                //         .countHours(true);
-                //     Provider.of<AppointmentUpdate>(context, listen: false).updateRecentDays(0);
-                //     setState(() {});
-                //   } catch (e) {
-                //     print(e);
-                //   }
-                //
-                // });
+                WidgetsBinding.instance?.addPostFrameCallback((_) {
+                  try {
+                    Provider.of<AppointmentUpdate>(context, listen: false)
+                        .daywiseDurationsCalculate(true);
+                    Provider.of<AppointmentUpdate>(context, listen: false)
+                        .countHours(true);
+                    Provider.of<AppointmentUpdate>(context, listen: false).updateRecentDays(0);
+                    setState(() {});
+                  } catch (e) {
+                    print(e);
+                  }
+                });
                 return print('$int');
               case 2:
                 return print('$int');
               case 3:
                 return print('$int');
               case 4:
-                return print('$int');
-              case 5:
                 return print('$int');
               default:
                 return print('$int');
