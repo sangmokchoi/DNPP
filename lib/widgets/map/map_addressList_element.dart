@@ -25,7 +25,7 @@ class AddressListElement extends StatelessWidget {
             roadAddress,
             style: TextStyle(
               fontSize: 20.0,
-              color: Colors.black,
+              //color: Colors.black,
               fontWeight: FontWeight.bold,
             ),
           ),

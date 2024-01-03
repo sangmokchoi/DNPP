@@ -1,5 +1,6 @@
 //import 'dart:js';
 
+import 'package:dnpp/constants.dart';
 import 'package:dnpp/view/calendar_screen.dart';
 import 'package:dnpp/view/main_screen.dart';
 import 'package:dnpp/view/map_screen.dart';
@@ -7,11 +8,14 @@ import 'package:dnpp/view/profile_screen.dart';
 import 'package:dnpp/view/map_screen.dart';
 import 'package:dnpp/view/setting_screen.dart';
 import 'package:dnpp/view/signup_screen.dart';
-import 'package:dnpp/viewModel/appointmentUpdate.dart';
+import 'package:dnpp/viewModel/courtAppointmentUpdate.dart';
+import 'package:dnpp/viewModel/personalAppointmentUpdate.dart';
 import 'package:dnpp/viewModel/loginStatusUpdate.dart';
 import 'package:dnpp/viewModel/mapWidgetUpdate.dart';
 import 'package:dnpp/viewModel/profileUpdate.dart';
+import 'package:dnpp/viewModel/sharedPreference.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:animated_splash_screen/animated_splash_screen.dart';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -47,16 +51,34 @@ void main() async {
 
 class HomePage extends StatelessWidget {
 
-  // This widget is the root of your application.
+  static final ValueNotifier<ThemeMode> themeNotifier = ValueNotifier(ThemeMode.light);
+
   @override
   Widget build(final BuildContext context) {
+
+    Brightness brightness = MediaQuery.of(context).platformBrightness;
+
+    // 라이트 모드와 다크 모드에 따라 테마 설정
+    ThemeData theme = brightness == Brightness.light
+        ? ThemeData(
+      primaryColor: kMainColor, // 라이트 모드의 primaryColor 설정
+      secondaryHeaderColor: Colors.grey,
+    )
+        : ThemeData.dark().copyWith(
+      primaryColor: kMainColor, // 다크 모드의 primaryColor 설정
+      secondaryHeaderColor: Colors.grey,
+    );
+
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(
-            create: (context) => MapWidgetUpdate(),
+          create: (context) => MapWidgetUpdate(),
         ),
         ChangeNotifierProvider(
-          create: (context) => AppointmentUpdate(),
+          create: (context) => PersonalAppointmentUpdate(),
+        ),
+        ChangeNotifierProvider(
+          create: (context) => CourtAppointmentUpdate(),
         ),
         ChangeNotifierProvider(
           create: (context) => ProfileUpdate(),
@@ -64,28 +86,45 @@ class HomePage extends StatelessWidget {
         ChangeNotifierProvider(
           create: (context) => LoginStatusUpdate(),
         ),
+        ChangeNotifierProvider(
+          create: (context) => SharedPreference(),
+        ),
       ],
       child: GestureDetector(
-        onTap: (){
+        onTap: () {
           FocusManager.instance.primaryFocus?.unfocus();
         },
         child: MaterialApp(
-          title: "Persistent Bottom Navigation Bar example project",
-          theme: ThemeData(
-            primarySwatch: Colors.blue,
-            secondaryHeaderColor: Colors.grey,
+          home: AnimatedSplashScreen(
+            backgroundColor: kMainColor, //Theme.of(context).primaryColor,
+            splash: Container(
+              decoration: BoxDecoration(
+                image: DecorationImage(
+                  image: AssetImage('images/핑퐁플러스 로고.png'),
+                  //fit: BoxFit.cover,
+                ),
+              ),
+            ),
+            nextScreen: HomeScreen(),
+            splashTransition: SplashTransition.fadeTransition,
           ),
-          initialRoute: HomeScreen.id,
-          routes: {
-            // When navigating to the "/" route, build the FirstScreen widget.
-            HomeScreen.id: (final context) => HomeScreen(), // '/'
-            SignupScreen.id: (final context) => SignupScreen(), // '/SignupScreenID'
-            ProfileScreen.id: (final context) => ProfileScreen(),// '/ProfileScreenID'
-            MainScreen.id: (final context) => MainScreen(), //MainScreenID
-            MapScreen.id: (final context) => MapScreen(), //MapScreenID
-            CalendarScreen.id: (final context) => CalendarScreen(),
-            SettingScreen.id: (final context) => SettingScreen(),//StatisticsScreenID
-          },
+          // theme: ThemeData(
+          //   primaryColor: kMainColor,//Colors.blueAccent,
+          //   //primarySwatch: Colors.blue,
+          //   secondaryHeaderColor: Colors.grey,
+          // ),
+          theme: theme,
+          //initialRoute: HomeScreen.id,
+          // routes: {
+          //   // When navigating to the "/" route, build the FirstScreen widget.
+          //   HomeScreen.id: (context) => HomeScreen(), // '/'
+          //   SignupScreen.id: (context) => SignupScreen(), // '/SignupScreenID'
+          //   ProfileScreen.id: (context) => ProfileScreen(),// '/ProfileScreenID'
+          //   MainScreen.id: (context) => MainScreen(), //MainScreenID
+          //   MapScreen.id: (context) => MapScreen(), //MapScreenID
+          //   CalendarScreen.id: (context) => CalendarScreen(),
+          //   SettingScreen.id: (context) => SettingScreen(),//StatisticsScreenID
+          // },
           localizationsDelegates: [
             GlobalMaterialLocalizations.delegate,
             GlobalWidgetsLocalizations.delegate,
@@ -100,4 +139,3 @@ class HomePage extends StatelessWidget {
     );
   }
 }
-

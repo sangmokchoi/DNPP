@@ -1,4 +1,5 @@
 import 'package:dnpp/view/main_screen.dart';
+import 'package:dnpp/view/matching_screen.dart';
 import 'package:dnpp/view/profile_screen.dart';
 import 'package:dnpp/view/setting_screen.dart';
 import 'package:dnpp/view/signup_screen.dart';
@@ -7,11 +8,14 @@ import 'package:flutter/cupertino.dart';
 import 'package:persistent_bottom_nav_bar/persistent_tab_view.dart';
 import 'package:provider/provider.dart';
 
-import '../viewModel/appointmentUpdate.dart';
+import '../models/search.dart';
+import '../viewModel/personalAppointmentUpdate.dart';
 import 'map_screen.dart';
 import 'calendar_screen.dart';
 
 import 'package:firebase_storage/firebase_storage.dart';
+
+GlobalKey<_HomeScreenState> homePageKey = GlobalKey<_HomeScreenState>();
 
 class HomeScreen extends StatefulWidget {
   static String id = '/';
@@ -29,12 +33,13 @@ class _HomeScreenState extends State<HomeScreen> {
 
   List<Widget> _buildScreens() {
     return [
-      ProfileScreen(),
       MainScreen(),
+      //ProfileScreen(),
+      //SignupScreen(),
       CalendarScreen(),
-      SignupScreen(),
+      MatchingScreen(),
       SettingScreen(),
-      MapScreen()
+      //MapScreen()
     ];
   }
 
@@ -47,26 +52,20 @@ class _HomeScreenState extends State<HomeScreen> {
         inactiveColorPrimary: CupertinoColors.systemGrey,
       ),
       PersistentBottomNavBarItem(
-        icon: Icon(CupertinoIcons.settings),
-        title: ("홈 스크린"),
-        activeColorPrimary: CupertinoColors.activeBlue,
-        inactiveColorPrimary: CupertinoColors.systemGrey,
-      ),
-      PersistentBottomNavBarItem(
         icon: Icon(CupertinoIcons.chart_bar_circle),
         title: ("캘린더"),
         activeColorPrimary: CupertinoColors.activeBlue,
         inactiveColorPrimary: CupertinoColors.systemGrey,
       ),
+      // PersistentBottomNavBarItem(
+      //   icon: Icon(CupertinoIcons.settings),
+      //   title: ("설정"),
+      //   activeColorPrimary: CupertinoColors.activeBlue,
+      //   inactiveColorPrimary: CupertinoColors.systemGrey,
+      // ),
       PersistentBottomNavBarItem(
         icon: Icon(CupertinoIcons.chat_bubble_2),
-        title: ("채팅"),
-        activeColorPrimary: CupertinoColors.activeBlue,
-        inactiveColorPrimary: CupertinoColors.systemGrey,
-      ),
-      PersistentBottomNavBarItem(
-        icon: Icon(CupertinoIcons.ellipsis),
-        title: ("더보기"),
+        title: ("매칭"),
         activeColorPrimary: CupertinoColors.activeBlue,
         inactiveColorPrimary: CupertinoColors.systemGrey,
       ),
@@ -104,40 +103,77 @@ class _HomeScreenState extends State<HomeScreen> {
     _hideNavBar = false;
   }
 
+  void onItemSelected(int index) {
+    _controller.jumpToTab(index);
+    // 추가로 수행해야 할 로직이 있다면 여기에 추가
+    print('onItemSelected pressed');
+  }
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
       child: PersistentTabView(
+        key: homePageKey,
         context,
         controller: _controller,
         onItemSelected: (int) {
           setState(() {
-            print('int: $int');
+
             switch (int) {
               case 0:
-                return print('$int');
-              case 1:
-                WidgetsBinding.instance?.addPostFrameCallback((_) {
-                  try {
-                    Provider.of<AppointmentUpdate>(context, listen: false)
-                        .daywiseDurationsCalculate(true);
-                    Provider.of<AppointmentUpdate>(context, listen: false)
-                        .countHours(true);
-                    Provider.of<AppointmentUpdate>(context, listen: false).updateRecentDays(0);
-                    setState(() {});
-                  } catch (e) {
-                    print(e);
-                  }
+              // WidgetsBinding.instance?.addPostFrameCallback((_) {
+              //   try {
+              //     Provider.of<AppointmentUpdate>(context, listen: false)
+              //         .daywiseDurationsCalculate(false);
+              //     Provider.of<AppointmentUpdate>(context, listen: false)
+              //         .countHours(true);
+              //     Provider.of<AppointmentUpdate>(context, listen: false).updateRecentDays(0);
+              //     setState(() {});
+              //   } catch (e) {
+              //     print(e);
+              //   }
+              //
+              // });
+                return setState(() {
+                  print('$int');
                 });
-                return print('$int');
+              case 1:
+                // WidgetsBinding.instance?.addPostFrameCallback((_) {
+                //   try {
+                //     Provider.of<AppointmentUpdate>(context, listen: false)
+                //         .daywiseDurationsCalculate(true);
+                //     Provider.of<AppointmentUpdate>(context, listen: false)
+                //         .countHours(true);
+                //     Provider.of<AppointmentUpdate>(context, listen: false).updateRecentDays(0);
+                //     setState(() {});
+                //   } catch (e) {
+                //     print(e);
+                //   }
+                //
+                // });
+                return setState(() {
+                  print('$int');
+                });
               case 2:
-                return print('$int');
+                return setState(() {
+                  print('$int');
+                });
               case 3:
-                return print('$int');
+                return setState(() {
+                  print('$int');
+                });
               case 4:
-                return print('$int');
+                return setState(() {
+                  print('$int');
+                });
+              case 5:
+                return setState(() {
+                  print('$int');
+                });
               default:
-                return print('$int');
+                return setState(() {
+                  print('$int');
+                });
             }
           }); // This is required to update the nav bar if Android back button is pressed
         },
