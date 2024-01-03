@@ -1,48 +1,35 @@
+//import 'dart:js_interop';
+
+import 'dart:io';
+
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_naver_map/flutter_naver_map.dart';
+import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-class PPListElement extends StatelessWidget {
-  PPListElement({
-    required this.title,
-    required this.link,
-    required this.description,
-    required this.telephone,
-    required this.address,
-    required this.roadAddress,
-    required this.mapx,
-    required this.mapy,
-  });
+import '../../constants.dart';
+import '../../models/pingpongList.dart';
+import '../../viewModel/mapWidgetUpdate.dart';
+import '../../viewModel/profileUpdate.dart';
 
-  final String title;
-  final String link;
-  final String description;
-  final String telephone;
-  final String address;
-  final String roadAddress;
-  final double mapx;
-  final double mapy;
+class PingpongListElement extends StatelessWidget {
+  PingpongListElement(this._element);
+
+  PingpongList _element;
 
   void doubleToString() {
-    String mapxString = mapx.toStringAsFixed(7); // 7자리로 고정된 소수점 형식
-    String mapyString = mapy.toStringAsFixed(7);
+    String mapxString = _element.mapx.toStringAsFixed(7); // 7자리로 고정된 소수점 형식
+    String mapyString = _element.mapy.toStringAsFixed(7);
   }
 
   @override
   Widget build(BuildContext context) {
     return ListTile(
       onTap: () async {
-        //print(title);
-        final encodedTitle = Uri.encodeComponent(title);
-        final url =
-            'nmap://search?query=$encodedTitle&appname=com.simonwork.dnpp.dnpp';
-
-        final Uri _url = Uri.parse(url);
-
-        if (await launchUrl(_url)) {
-          print('Could launch $url');
-        } else {
-          print('Could not launch $url');
-        }
+        final latlng = NLatLng(_element.mapy, _element.mapx);
+        Provider.of<MapWidgetUpdate>(context, listen: false)
+            .cameraMove(latlng, 15.0);
       },
       title: Padding(
         padding:
@@ -56,79 +43,178 @@ class PPListElement extends StatelessWidget {
               children: [
                 Flexible(
                   flex: 3,
-                  child: Padding(
-                    padding: EdgeInsets.only(right: 5.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          title,
-                          style: TextStyle(
-                              fontSize: 20.0,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black45),
-                        ),
-                        Text(address,
-                            style: TextStyle(
-                                fontSize: 14.0, color: Colors.black45),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis),
-                        Text(roadAddress,
-                            style: TextStyle(
-                                fontSize: 14.0, color: Colors.black45),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis),
-                      ],
-                    ),
+                  child: Text(
+                    _element.title,
+                    style: kMapPingponglistElementTitleTextStyle,
                   ),
                 ),
                 Flexible(
                   flex: 1,
                   child: TextButton(
-                      style: TextButton.styleFrom(
-                        backgroundColor: Colors.blueGrey,
-                        textStyle: TextStyle(fontSize: 15),
-                      ),
-                      onPressed: () {
-                        print('팔로우 완료');
-                      },
-                      child: Text(
-                        '팔로우',
-                        style: TextStyle(
-                          color: Colors.white,
-                        ),
-                      )),
+                    style: TextButton.styleFrom(
+                      backgroundColor:
+                          Provider.of<ProfileUpdate>(context, listen: false)
+                                  .pingpongList
+                                  .contains(_element)
+                              ? Colors.blueGrey
+                              : kMainColor,
+                      textStyle: TextStyle(fontSize: 15),
+                    ),
+                    onPressed: () {
+                      if (!Provider.of<ProfileUpdate>(context, listen: false)
+                          .pingpongList
+                          .contains(_element)) {
+                        if (Provider.of<ProfileUpdate>(context, listen: false)
+                                .pingpongList
+                                .length <
+                            5) {
+                          Provider.of<ProfileUpdate>(context, listen: false)
+                              .addPingpongList(_element);
+                        } else {
+                          print('활동 탁구장 등록은 총 5개까지만 가능합니다');
+
+                          showDialog(
+                            context: context,
+                            builder: (context) {
+                              return AlertDialog(
+                                insetPadding:
+                                    EdgeInsets.only(left: 10.0, right: 10.0),
+                                shape: kRoundedRectangleBorder,
+                                title: Text("알림"),
+                                content: Text("활동 탁구장 등록은 총 5개까지만 가능합니다"),
+                                actions: [
+                                  TextButton(
+                                    style: TextButton.styleFrom(
+                                      textStyle: Theme.of(context)
+                                          .textTheme
+                                          .labelLarge,
+                                    ),
+                                    child: const Text("확인"),
+                                    onPressed: () async {
+                                      Navigator.pop(context);
+                                    },
+                                  ),
+                                ],
+                              );
+                            },
+                          );
+                        }
+                      } else {
+                        print('이미 선택된 탁구장입니다.');
+
+                        showDialog(
+                          context: context,
+                          builder: (context) {
+                            return AlertDialog(
+                              insetPadding:
+                                  EdgeInsets.only(left: 10.0, right: 10.0),
+                              shape: kRoundedRectangleBorder,
+                              title: Text("이미 선택된 탁구장입니다"),
+                              content: Text("다른 탁구장을 선택해주세요"),
+                              actions: [
+                                TextButton(
+                                  style: TextButton.styleFrom(
+                                    textStyle:
+                                        Theme.of(context).textTheme.labelLarge,
+                                  ),
+                                  child: const Text("확인"),
+                                  onPressed: () async {
+                                    Navigator.pop(context);
+                                  },
+                                ),
+                              ],
+                            );
+                          },
+                        );
+                      }
+                    },
+                    child: Provider.of<ProfileUpdate>(context, listen: false)
+                            .pingpongList
+                            .contains(_element)
+                        ? Text(
+                            '해제',
+                            style: TextStyle(
+                              color: Colors.white,
+                            ),
+                          )
+                        : Text(
+                            '팔로우',
+                            style: TextStyle(
+                              color: Colors.white,
+                            ),
+                          ),
+                  ),
                 ),
               ],
             ),
-            Text(
-              description,
-              style: TextStyle(fontSize: 15.0, color: Colors.black45),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Flexible(
+                  flex: 4,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 2.0),
+                        child: Text(_element.address,
+                            style: kMapPingponglistElementAddressTextStyle,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 2.0),
+                        child: Text(_element.roadAddress,
+                            style: kMapPingponglistElementAddressTextStyle,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis),
+                      ),
+                    ],
+                  ),
+                ),
+                Flexible(
+                  flex: 1,
+                  child: IconButton(
+                    style: TextButton.styleFrom(
+                      backgroundColor: Colors.blueGrey,
+                      textStyle: TextStyle(fontSize: 15),
+                    ),
+                    onPressed: () async {
+                      print('더보기 완료');
+                      final encodedTitle = Uri.encodeComponent(_element.title);
+                      final url =
+                          'nmap://search?query=$encodedTitle&appname=com.simonwork.dnpp.dnpp';
+
+                      final Uri _url = Uri.parse(url);
+
+                      if (await launchUrl(_url)) {
+                        print('Could launch $url');
+                      } else {
+                        print('Could not launch $url');
+                      }
+                    },
+                    icon: Icon(Icons.more_vert),
+                  ),
+                ),
+              ],
             ),
-            Text(
-              telephone,
-              style: TextStyle(fontSize: 15.0, color: Colors.black45),
-            ),
-            Text(
-              link,
-              style: TextStyle(fontSize: 14.0, color: Colors.black45),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-            // Text(
-            //   mapx.toString(),
-            //   style: TextStyle(
-            //       fontSize: 16.0,
-            //       color: Colors.black45
-            //   ),
-            // ),
-            // Text(
-            //   mapy.toString(),
-            //   style: TextStyle(
-            //       fontSize: 16.0,
-            //       color: Colors.black45
-            //   ),
-            // ),
+            if (_element.description.isNotEmpty)
+              Text(
+                _element.description,
+                style: kMapPingponglistElementEtcTextStyle,
+              ),
+            if (_element.telephone.isNotEmpty)
+              Text(
+                _element.telephone,
+                style: kMapPingponglistElementEtcTextStyle,
+              ),
+            if (_element.link.isNotEmpty)
+              Text(
+                _element.link,
+                style: kMapPingponglistElementEtcTextStyle,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
             Divider(thickness: 2.0),
           ],
         ),
