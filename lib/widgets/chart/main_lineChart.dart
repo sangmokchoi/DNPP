@@ -5,64 +5,80 @@ import 'package:flutter/material.dart';
 
 import '../../constants.dart';
 import '../../viewModel/courtAppointmentUpdate.dart';
+import '../../viewModel/othersPersonalAppointmentUpdate.dart';
 import '../../viewModel/personalAppointmentUpdate.dart';
 
 class MainLineChart extends StatelessWidget {
-  MainLineChart({required this.isCourt});
+  MainLineChart({required this.isCourt, required this.isMine});
 
   //final int index; //0이면 나의 훈련시간
   final bool isCourt;
+  bool isMine;
 
   @override
   Widget build(BuildContext context) {
-    return Stack(children: [
-      FutureBuilder(
-        future: Future.delayed(Duration(milliseconds: 0)),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.done) {
-            if (isCourt) {
+    print('MainLineChart isMine: $isMine');
+    return Padding(
+      padding: const EdgeInsets.only(top: 4.0, bottom: 4.0, left: 5.0, right: 5.0),
+      child: Container(
+        height: 100,
+        child: Align(
+          alignment: Alignment.bottomCenter,
+          child: Stack(children: [
+            FutureBuilder(
+              future: Future.delayed(Duration(milliseconds: 0)),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.done) {
+                  if (isCourt) {
 
-              if (Provider.of<CourtAppointmentUpdate>(context, listen: false)
-                  .courtHourlyCounts //personalHourlyCounts
-                  .isEmpty) {
-                return Center(
-                  child: Text(
-                    '완료된 일정이 없습니다',
-                    //style: TextStyle(color: Colors.black),
-                  ),
-                );
-              }
+                    if (Provider.of<CourtAppointmentUpdate>(context, listen: false)
+                        .courtHourlyCounts //personalHourlyCounts
+                        .isEmpty) {
+                      return Center(
+                        child: Text(
+                          '완료된 일정이 없습니다',
+                          //style: TextStyle(color: Colors.black),
+                        ),
+                      );
+                    }
 
-              else {
-                return LineChart(mainLineChartDataCourt(context));
-              }
+                    else {
+                      return LineChart(mainLineChartDataCourt(context));
+                    }
 
-            } else {
+                  } else {
 
-              if (Provider.of<PersonalAppointmentUpdate>(context, listen: false)
-                  .personalHourlyCounts
-                  .isEmpty) {
-                return Center(
-                  child: Text(
-                    '완료된 개인 일정이 없습니다',
-                    //style: TextStyle(color: Colors.black),
-                  ),
-                );
-              } else {
-                return LineChart(mainLineChartDataPersonal(context));
-              }
-            }
+                    if (Provider.of<PersonalAppointmentUpdate>(context, listen: false)
+                        .personalHourlyCounts
+                        .isEmpty) {
+                      return Center(
+                        child: Text(
+                          '완료된 개인 일정이 없습니다',
+                          //style: TextStyle(color: Colors.black),
+                        ),
+                      );
+                    } else {
+                      if (isMine == true) { // 유저 본인의 개인 일정인 경우
+                        return LineChart(mainLineChartDataPersonal(context));
+                      } else { // 다른 유저의 개인 일정인 경우
+                        return LineChart(mainLineChartDataPersonal(context));
+                      }
+                    }
+                  }
 
-          } else {
-            // 로딩 상태 등을 표시하거나 다른 처리를 할 수 있습니다.
-            return const Center(
-                child: CircularProgressIndicator(
-                  color: Colors.grey,
-                ));
-          }
-        },
+                } else {
+                  // 로딩 상태 등을 표시하거나 다른 처리를 할 수 있습니다.
+                  return const Center(
+                      child: CircularProgressIndicator(
+                        color: Colors.grey,
+                      ));
+                }
+              },
+            ),
+          ]),
+        ),
       ),
-    ]);
+    );
   }
 
   LineChartData mainLineChartDataCourt(BuildContext context) {
@@ -182,9 +198,14 @@ class MainLineChart extends StatelessWidget {
       minX: 0,
       maxX: 23,
       minY: 0,
-      maxY: Provider.of<PersonalAppointmentUpdate>(context, listen: false)
+      maxY: isMine ?
+        Provider.of<PersonalAppointmentUpdate>(context, listen: false)
           .calculateAverageY() *
-          1.5,
+          1.5 :
+      Provider.of<OthersPersonalAppointmentUpdate>(context, listen: false)
+          .calculateAverageY() *
+          1.5
+      ,
       lineBarsData: [
         LineChartBarData(
           spots: showingGroupsPersonal(context),
@@ -224,9 +245,14 @@ class MainLineChart extends StatelessWidget {
         (i) {
           return FlSpot(
               i.toDouble(),
+              isMine ?
               Provider.of<PersonalAppointmentUpdate>(context, listen: false)
                       .personalHourlyCounts[i] ??
-                  0.0);
+                  0.0 :
+              Provider.of<OthersPersonalAppointmentUpdate>(context, listen: false)
+                  .personalHourlyCounts[i] ??
+                  0.0
+          );
         },
       );
 

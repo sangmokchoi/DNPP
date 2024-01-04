@@ -108,18 +108,18 @@ class ProfileUpdate with ChangeNotifier {
   }
 
   Future<void> updateUserProfile(UserProfile newProfile) async {
-    await updateUserProfileUpdated(true);
+    //await updateUserProfileUpdated(true);
     userProfile = newProfile;
     notifyListeners();
-    print('updateUserProfile userProfile: ${userProfile}');
+    print('updateUserProfile userProfile: ${userProfile.uid}');
     print('updateUserProfile done');
   }
 
   Future<void> updateUserProfileUpdated(bool value) async {
     userProfileUpdated = value;
     notifyListeners();
-    print('userProfileUpdated: ${userProfileUpdated}');
-    print('userProfileUpdated done');
+    print('updateUserProfileUpdated userProfileUpdated: ${userProfileUpdated}');
+    print('updateUserProfileUpdated userProfileUpdated done');
   }
 
   Future<void> resetUserProfile() async {

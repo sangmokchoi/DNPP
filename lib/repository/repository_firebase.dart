@@ -182,7 +182,7 @@ class FirebaseRepository {
       'email': user!.kakaoAccount!.email!,
       //'photoURL': user!.kakaoAccount!.profile!.profileImageUrl!,
     });
-    print('token: ${token}');
+    //print('token: ${token}');
     print('새로 만든 로그인 함수 거의 완료');
     final credential = await FirebaseAuth.instance.signInWithCustomToken(token);
     //await linkWithCredential(credential);

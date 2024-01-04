@@ -168,49 +168,24 @@ class _LoginButtonState extends State<LoginButton> {
           // });
           break;
       }
-    } finally {
+
       // 비동기 작업이 끝나면 다이얼로그를 닫습니다.
       print('Provider.of<ProfileUpdate>(context, listen: false).userProfile.uid: ${Provider.of<ProfileUpdate>(context, listen: false).userProfile.uid}');
 
       //if (Provider.of<ProfileUpdate>(context, listen: false).userProfile.uid != 'uid') {
-        print('if (Provider.of<LoginStatusUpdate>(context, listen: false).isLoggedIn) {');
-        await LoadData().fetchUserData(context);
+      print('if (Provider.of<LoginStatusUpdate>(context, listen: false).isLoggedIn) {');
+      await LoadData().fetchUserData(context);
       //}
-
+      print('LoadData 에서 fetchUserData 함수 완료');
       //setState(() {
-        Navigator.of(dialogContext).pop();
-        print('Navigator.of(dialogContext).pop(); 끝');
-        print('Provider.of<ProfileUpdate>(context, listen: false).userProfileUpdated: ${Provider.of<ProfileUpdate>(context, listen: false).userProfileUpdated}');
+      Navigator.of(dialogContext).pop();
+      print('Navigator.of(dialogContext).pop(); 끝');
+      //print('Provider.of<ProfileUpdate>(context, listen: false).userProfileUpdated: ${Provider.of<ProfileUpdate>(context, listen: false).userProfileUpdated}');
 
-        if (Provider.of<ProfileUpdate>(context, listen: false).userProfileUpdated == false) { // userprofile이 업데이트 되지 않았다면, 회원가입을 시도하는 것으로 간주
-          await _showAgreementDialog(context);
-        } else {
-          Navigator.pop(context);
-          print('Navigator.pop(context); 끝');
-        }
       //});
 
-      // if (Provider.of<LoginStatusUpdate>(context, listen: false)
-      //     .isUserDataExists) {
-      //
-      //   print('유저정보가 서버에 존재하는 경우');
-      //   await Provider.of<LoginStatusUpdate>(context, listen: false)
-      //       .updateIsAgreementChecked(true);
-      //   await Provider.of<LoginStatusUpdate>(context, listen: false).trueIsLoggedIn();
-      //
-      //   Navigator.pop(context);
-      //
-      // } else {
-      //   print('유저정보가 서버에 존재하지 않는 경우');
-      //
-      //   await prefs.setBool('isUserTried', true);
-      //   // 프로필 사진 가져올지 문의
-      //   await Provider.of<LoginStatusUpdate>(context, listen: false).falseIsLoggedIn();
-      //
-      //   _showAgreementDialog(context);
-      // }
-
-
+    } finally {
+      print('CircularProgressWorking finally 출력');
     }
   }
 
@@ -422,7 +397,9 @@ class _LoginButtonState extends State<LoginButton> {
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.all(Radius.circular(30.0)),
               ),
-              child: Image.asset('${widget._buttonTitle}')),
+              child: Image.asset('${widget._buttonTitle}',
+              fit: BoxFit.fill,),
+          ),
         );
       },
     );

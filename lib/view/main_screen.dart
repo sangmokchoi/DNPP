@@ -24,6 +24,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../models/userProfile.dart';
 import '../repository/repository_loadData.dart';
 import '../viewModel/loginStatusUpdate.dart';
+import '../viewModel/othersPersonalAppointmentUpdate.dart';
 import '../viewModel/profileUpdate.dart';
 import '../widgets/chart/main_barChart.dart';
 
@@ -58,7 +59,7 @@ class _MainScreenState extends State<MainScreen> {
 
   int _indexPersonal = -1;
   int _indexCourt = -1;
-  bool isMyTime = false;
+  bool isPersonal = false;
 
   Map<String?, Uint8List?> imageMap = {};
   Map<String?, String?> urlMap = {};
@@ -151,10 +152,17 @@ class _MainScreenState extends State<MainScreen> {
 
         await Provider.of<PersonalAppointmentUpdate>(context, listen: false)
             .personalDaywiseDurationsCalculate(
-                false, isMyTime, _courtTitle, _courtRoadAddress);
+                false, isPersonal, _courtTitle, _courtRoadAddress);
         await Provider.of<PersonalAppointmentUpdate>(context, listen: false)
             .personalCountHours(
-                false, isMyTime, _courtTitle, _courtRoadAddress);
+                false, isPersonal, _courtTitle, _courtRoadAddress);
+        await Provider.of<OthersPersonalAppointmentUpdate>(context, listen: false)
+            .personalDaywiseDurationsCalculate(
+            false, isPersonal, _courtTitle, _courtRoadAddress);
+        await Provider.of<OthersPersonalAppointmentUpdate>(context, listen: false)
+            .personalCountHours(
+            false, isPersonal, _courtTitle, _courtRoadAddress);
+
         await Provider.of<CourtAppointmentUpdate>(context, listen: false)
             .courtDaywiseDurationsCalculate(
                 false, false, _courtTitle, _courtRoadAddress);
@@ -266,6 +274,12 @@ class _MainScreenState extends State<MainScreen> {
           // if (Provider.of<LoginStatusUpdate>(context, listen: false).isLogInButtonClicked) { // 유저가 로그인 버튼을 눌렀을 떄를 인
           //   _showAgreementDialog(context);
           // }
+          if (Provider.of<ProfileUpdate>(context, listen: false).userProfileUpdated == false) { // userprofile이 업데이트 되지 않았다면, 회원가입을 시도하는 것으로 간주
+            await _showAgreementDialog(context);
+          } else {
+            Navigator.pop(context);
+            print('Navigator.pop(context); 끝');
+          }
         }
 
         // 로그인 버튼 클릭 여부 초기화
@@ -294,12 +308,12 @@ class _MainScreenState extends State<MainScreen> {
 
         if (_currentPersonal != 0) {
           _indexPersonal = _currentPersonal - 1;
-          isMyTime = false;
-          print('isMyTime: $isMyTime');
+          isPersonal = false;
+          print('isMyTime: $isPersonal');
         } else {
           _indexPersonal = _currentPersonal;
-          isMyTime = true;
-          print('isMyTime: $isMyTime');
+          isPersonal = true;
+          print('isMyTime: $isPersonal');
         }
         print('_currentPersonal index: $_indexPersonal');
 
@@ -316,10 +330,10 @@ class _MainScreenState extends State<MainScreen> {
 
         await Provider.of<PersonalAppointmentUpdate>(context, listen: false)
             .personalDaywiseDurationsCalculate(
-                false, isMyTime, _courtTitle, _courtRoadAddress);
+                false, isPersonal, _courtTitle, _courtRoadAddress);
         await Provider.of<PersonalAppointmentUpdate>(context, listen: false)
             .personalCountHours(
-                false, isMyTime, _courtTitle, _courtRoadAddress);
+                false, isPersonal, _courtTitle, _courtRoadAddress);
 
         // Provider.of<AppointmentUpdate>(context, listen: false)
         //     .updateRecentDays(0);
