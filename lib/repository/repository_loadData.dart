@@ -1,5 +1,3 @@
-
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
@@ -11,6 +9,7 @@ import '../models/pingpongList.dart';
 import '../models/userProfile.dart';
 import '../viewModel/courtAppointmentUpdate.dart';
 import '../viewModel/loginStatusUpdate.dart';
+import '../viewModel/othersPersonalAppointmentUpdate.dart';
 import '../viewModel/personalAppointmentUpdate.dart';
 import '../viewModel/profileUpdate.dart';
 
@@ -29,6 +28,7 @@ class LoadData {
     try {
       docRef.get().then(
             (DocumentSnapshot<Map<String, dynamic>> doc) async {
+
           if (doc.exists) {
             final data = doc.data() as Map<String, dynamic>;
 
@@ -67,10 +67,16 @@ class LoadData {
             await Provider.of<ProfileUpdate>(context, listen: false)
                 .updateUserProfile(_userProfile);
 
+            await Provider.of<ProfileUpdate>(context, listen: false).updateUserProfileUpdated(true);
+            print('여기서 updateUserProfileUpdated true로 설정했는데?');
+
             await fetchCurrentUserAppointmentData(context);
             print('await fetchCurrentUserAppointmentData(); completed');
 
-            await fetchAppointmentData(context);
+            await fetchOtherUsersAppointmentData(context);
+            print('await fetchOtherUsersAppointmentData(); completed');
+
+            await fetchAppointmentDataForCalculatingByCourt(context);
             print('await fetchAppointmentData(); completed');
 
           } else {
@@ -85,6 +91,7 @@ class LoadData {
       print('fetchUserData 에러: $e');
     } finally {
       print('fetchUserData 함수 완료');
+
     }
   }
 
@@ -176,22 +183,24 @@ class LoadData {
     // }
   }
 
-  Future<void> fetchOtherUsersAppointmentData(BuildContext context, String roadAddress) async {
-    print('fetchCurrentUserAppointmentData 시작');
-    // 해당 함수는 유저가 로그인한 상태일 때 실행되어야 함
+  Future<void> fetchOtherUsersAppointmentData(BuildContext context) async {
+    print('fetchOtherUsersAppointmentData 시작');
 
     try {
       db
           .collection("Appointments")
-          .where("userUid", isNotEqualTo: Provider.of<LoginStatusUpdate>(context, listen: false).currentUser.uid)
-          .where("pingpongCourtAddress", isEqualTo: roadAddress)
+          // .where("userUid",
+          // isNotEqualTo: Provider.of<LoginStatusUpdate>(context, listen: false)
+          //     .currentUser
+          //     .uid)
           .get()
           .then(
             (querySnapshot) {
           print("Successfully completed");
 
           for (var docSnapshot in querySnapshot.docs) {
-
+            //final data = docSnapshot.data();
+            //print("Document ID: ${docSnapshot.id}");
             final data = docSnapshot.data() as Map<String, dynamic>;
 
             List<Appointment>? _appointment =
@@ -219,23 +228,23 @@ class LoadData {
             // //Provider.of<AppointmentUpdate>(context, listen: false).meetings.add(_appointment?.first);
 
             if (_appointment != null || _appointment.isNotEmpty) {
-              Provider.of<PersonalAppointmentUpdate>(context, listen: false)
-                  .addOthersCustomMeeting(_customAppointment);
-              Provider.of<PersonalAppointmentUpdate>(context, listen: false)
+              Provider.of<OthersPersonalAppointmentUpdate>(context, listen: false)
+                  .addCustomMeeting(_customAppointment);
+              Provider.of<OthersPersonalAppointmentUpdate>(context, listen: false)
                   .addMeeting(_appointment.first);
             }
           }
 
-          Provider.of<PersonalAppointmentUpdate>(context, listen: false)
+          Provider.of<OthersPersonalAppointmentUpdate>(context, listen: false)
               .personalDaywiseDurationsCalculate(
               true, true, 'title', 'roadAddress');
-          Provider.of<PersonalAppointmentUpdate>(context, listen: false)
+          Provider.of<OthersPersonalAppointmentUpdate>(context, listen: false)
               .personalCountHours(true, true, 'title', 'roadAddress');
           // Provider.of<AppointmentUpdate>(context, listen: false)
           //     .updateRecentDays(0);
           //setState(() {});
         },
-        onError: (e) => print("fetchCurrentUserAppointmentData Error completing: $e"),
+        onError: (e) => print("fetchOtherUsersAppointmentData Error completing: $e"),
       );
     } catch (e) {
       print(e);
@@ -261,7 +270,7 @@ class LoadData {
     // }
   }
 
-  Future<void> fetchAppointmentData(BuildContext context) async {
+  Future<void> fetchAppointmentDataForCalculatingByCourt(BuildContext context) async {
     print('fetchAppointmentData 시작');
 
     final pingpongCourt = Provider.of<ProfileUpdate>(context, listen: false)
@@ -378,6 +387,4 @@ class LoadData {
   //     print(e);
   //   }
   // }
-
-
 }

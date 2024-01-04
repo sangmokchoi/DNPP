@@ -9,6 +9,7 @@ import 'package:dnpp/view/map_screen.dart';
 import 'package:dnpp/view/setting_screen.dart';
 import 'package:dnpp/view/signup_screen.dart';
 import 'package:dnpp/viewModel/courtAppointmentUpdate.dart';
+import 'package:dnpp/viewModel/othersPersonalAppointmentUpdate.dart';
 import 'package:dnpp/viewModel/personalAppointmentUpdate.dart';
 import 'package:dnpp/viewModel/loginStatusUpdate.dart';
 import 'package:dnpp/viewModel/mapWidgetUpdate.dart';
@@ -76,6 +77,9 @@ class HomePage extends StatelessWidget {
         ),
         ChangeNotifierProvider(
           create: (context) => PersonalAppointmentUpdate(),
+        ),
+        ChangeNotifierProvider(
+          create: (context) => OthersPersonalAppointmentUpdate(),
         ),
         ChangeNotifierProvider(
           create: (context) => CourtAppointmentUpdate(),

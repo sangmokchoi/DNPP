@@ -42,7 +42,7 @@ class MainPersonalChartPageView extends StatelessWidget {
                     titleText: '나의 훈련 시간',
                     backgroundColor:
                         kMainColor,
-                      isCourt: false // isCourt: false 이면 개인화된 차트 제공
+                      isCourt: false, isMine: true, // isCourt: false 이면 개인화된 차트 제공, isMine: false이면 다른 유저의 내용 보여줌
                   ),
                 );
               } else if (index + 1 ==
@@ -65,7 +65,7 @@ class MainPersonalChartPageView extends StatelessWidget {
                     //ChartBasicList[index].text,
                     backgroundColor:
                         Colors.lightBlue,
-                      isCourt: false, // isCourt: false 이면 개인화된 차트 제공
+                      isCourt: false, isMine: true, // isCourt: false 이면 개인화된 차트 제공, isMine: false이면 다른 유저의 내용 보여줌
                   ),
                 );
               } else {
@@ -81,7 +81,7 @@ class MainPersonalChartPageView extends StatelessWidget {
                     //ChartBasicList[index].text,
                     backgroundColor:
                         Colors.lightBlue,
-                    isCourt: false, // isCourt: false 이면 개인화된 차트 제공
+                    isCourt: false, isMine: true, // isCourt: false 이면 개인화된 차트 제공, isMine: false이면 다른 유저의 내용 보여줌
                   ),
                 );
               }
