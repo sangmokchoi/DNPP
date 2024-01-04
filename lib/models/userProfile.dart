@@ -6,6 +6,7 @@ import 'package:dnpp/models/pingpongList.dart';
 class UserProfile {
   UserProfile(
       {required this.uid,
+        required this.email,
       required this.nickName,
       required this.photoUrl,
       required this.gender,
@@ -18,6 +19,7 @@ class UserProfile {
       required this.racket});
 
   String uid;
+  String email;
   String nickName;
   String photoUrl;
   String gender;
@@ -61,6 +63,7 @@ class UserProfile {
     final data = snapshot.data();
     return UserProfile(
       uid: data?['uid'],
+      email: data?['email'],
       nickName: data?['nickName'],
       photoUrl: data?['photoUrl'],
       gender: data?['gender'],
@@ -89,6 +92,7 @@ class UserProfile {
   Map<String, dynamic> toFirestore() {
     return {
       if (uid != null) "uid": uid,
+      if (email != null) "email": email,
       if (nickName != null) "nickName": nickName,
       if (photoUrl != null) "photoUrl": photoUrl,
       if (gender != null) "gender": gender,
@@ -113,5 +117,10 @@ class UserProfile {
       if (rubber != null) "rubber": rubber,
       if (racket != null) "racket": racket,
     };
+  }
+
+  CollectionReference<Map<String, dynamic>> pingpongCourtCollection() {
+    // 유저의 pingpongCourt 서브컬렉션을 참조합니다.
+    return FirebaseFirestore.instance.collection('UserData/$uid/pingpongCourt');
   }
 }

@@ -139,21 +139,43 @@ class _CalendarScreenState extends State<CalendarScreen> {
         print('222');
 
         final appointmentDetails = calendarTapDetails.appointments?.first;
-        print("appointmentDetails: $appointmentDetails");
+        print("appointmentDetails: ${appointmentDetails}");
+
+        print("appointmentDetails recurrenceRule: ${appointmentDetails.recurrenceRule}");
 
         //print(appointmentDetails); // color 가 MaterialAccentColor(primary value: Color(0xff448aff)
         // 이면, 일반 일정이고, 다른 색상이면 공유되는 일정으로 표시해야함
 
         //Appointment? existingAppointment = meetings.firstWhere((element) => element.id == oldMeeting.id);
 
-        if (appointmentDetails.recurrenceRule != '' ||
-            appointmentDetails.recurrenceRule != null) {
-          print('appointmentDetails.recurrenceRule != ' ', 반복 일정 O'); // 반복 일정 O
+    // class CalendarAppointment {
+    // /// Constructor to creates an appointment data for [SfCalendar].
+    // CalendarAppointment({
+    // this.startTimeZone,
+    // this.endTimeZone,
+    // this.recurrenceRule,
+    // this.isAllDay = false,
+    // this.notes,
+    // this.location,
+    // this.resourceIds,
+    // this.recurrenceId,
+    // this.id,
+    // required this.startTime,
+    // required this.endTime,
+    // this.subject = '',
+    // this.color = Colors.lightBlue,
+    // this.isSpanned = false,
+    // this.recurrenceExceptionDates,
+    // })  : actualStartTime = startTime,
+    // actualEndTime = endTime;
+
+        if (appointmentDetails.recurrenceRule != null) {
+          print('appointmentDetails.recurrenceRule != null, 반복 일정 O'); // 반복 일정 O
 
           await updateProvider(appointmentDetails);
           openModalBottomSheet(context, appointmentDetails);
         } else {
-          print('appointmentDetails.recurrenceRule == ' ', 반복 일정 X'); // 반복 일정 X
+          print('appointmentDetails.recurrenceRule == null, 반복 일정 X'); // 반복 일정 X
           await updateProvider(appointmentDetails);
           openModalBottomSheet(context, appointmentDetails);
         }
@@ -366,13 +388,20 @@ class _CalendarScreenState extends State<CalendarScreen> {
         appBar: AppBar(
           centerTitle: false,
           titleTextStyle: kAppbarTextStyle,
-          title: Text('Calendar'),
+          title: Text(
+              'Calendar',
+            style: Theme.of(context).brightness == Brightness.light ?
+            TextStyle(color: Colors.black) :
+            TextStyle(color: Colors.white),
+          ),
           backgroundColor: Colors.transparent,
           elevation: 0.0,
         ),
         floatingActionButton: Padding(
           padding: const EdgeInsets.only(bottom: 12.0, right: 2.0),
           child: FloatingActionButton(
+            backgroundColor: Theme.of(context).primaryColor,
+            foregroundColor: Colors.white,
             child: Icon(Icons.edit_calendar),
             onPressed: () {
               if (Provider.of<LoginStatusUpdate>(context, listen: false)

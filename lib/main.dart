@@ -9,6 +9,7 @@ import 'package:dnpp/view/map_screen.dart';
 import 'package:dnpp/view/setting_screen.dart';
 import 'package:dnpp/view/signup_screen.dart';
 import 'package:dnpp/viewModel/courtAppointmentUpdate.dart';
+import 'package:dnpp/viewModel/othersPersonalAppointmentUpdate.dart';
 import 'package:dnpp/viewModel/personalAppointmentUpdate.dart';
 import 'package:dnpp/viewModel/loginStatusUpdate.dart';
 import 'package:dnpp/viewModel/mapWidgetUpdate.dart';
@@ -50,9 +51,25 @@ void main() async {
 }
 
 class HomePage extends StatelessWidget {
-  // This widget is the root of your application.
+
+  static final ValueNotifier<ThemeMode> themeNotifier = ValueNotifier(ThemeMode.light);
+
   @override
   Widget build(final BuildContext context) {
+
+    Brightness brightness = MediaQuery.of(context).platformBrightness;
+
+    // 라이트 모드와 다크 모드에 따라 테마 설정
+    ThemeData theme = brightness == Brightness.light
+        ? ThemeData(
+      primaryColor: kMainColor, // 라이트 모드의 primaryColor 설정
+      secondaryHeaderColor: Colors.grey,
+    )
+        : ThemeData.dark().copyWith(
+      primaryColor: kMainColor, // 다크 모드의 primaryColor 설정
+      secondaryHeaderColor: Colors.grey,
+    );
+
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(
@@ -60,6 +77,9 @@ class HomePage extends StatelessWidget {
         ),
         ChangeNotifierProvider(
           create: (context) => PersonalAppointmentUpdate(),
+        ),
+        ChangeNotifierProvider(
+          create: (context) => OthersPersonalAppointmentUpdate(),
         ),
         ChangeNotifierProvider(
           create: (context) => CourtAppointmentUpdate(),
@@ -92,11 +112,12 @@ class HomePage extends StatelessWidget {
             nextScreen: HomeScreen(),
             splashTransition: SplashTransition.fadeTransition,
           ),
-          theme: ThemeData(
-            primaryColor: kMainColor,//Colors.blueAccent,
-            //primarySwatch: Colors.blue,
-            secondaryHeaderColor: Colors.grey,
-          ),
+          // theme: ThemeData(
+          //   primaryColor: kMainColor,//Colors.blueAccent,
+          //   //primarySwatch: Colors.blue,
+          //   secondaryHeaderColor: Colors.grey,
+          // ),
+          theme: theme,
           //initialRoute: HomeScreen.id,
           // routes: {
           //   // When navigating to the "/" route, build the FirstScreen widget.

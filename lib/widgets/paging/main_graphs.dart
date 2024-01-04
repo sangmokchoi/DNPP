@@ -10,18 +10,15 @@ class GraphsWidget extends StatelessWidget {
   GraphsWidget({
     //required this.index, // index 가 0 이면, 나의 훈련 시간을 나타냄
     required this.isCourt,
+    required this.isMine,
     required this.titleText,
     required this.backgroundColor,
   });
 
   //final int index;
   final bool isCourt;
+  final bool isMine; // 유저 본인의 데이터인지, 다른 유저의 데이터인지
   final String titleText;
-
-  // Provider
-  // .of<CourtAppointmentUpdate>(context, listen: false)
-  // .pingpongCourtNameList[index],
-
   final Color backgroundColor;
 
   @override
@@ -32,19 +29,7 @@ class GraphsWidget extends StatelessWidget {
         children: [
           Stack(
             children: [
-              Container(
-                height: 250,
-                decoration: BoxDecoration(
-                    borderRadius: BorderRadius.all(
-                      Radius.circular(20),
-                    ),
-                    color: backgroundColor),
-                child: Padding(
-                  padding:
-                  const EdgeInsets.fromLTRB(5.0, 45.0, 5.0, 10.0),
-                  child: MainBarChart(isCourt: isCourt),
-                ),
-              ),
+              MainBarChart(isCourt: isCourt, backgroundColor: backgroundColor, isMine: isMine),
               Positioned(
                 top: 10, // 조절 가능한 값
                 left: 15, // 조절 가능한 값
@@ -96,23 +81,12 @@ class GraphsWidget extends StatelessWidget {
                           color: Colors.white,
                         ),
                     ),
-
                   ],
                 ),
               ),
             ],
           ),
-          Padding(
-            padding: const EdgeInsets.only(
-                top: 4.0, bottom: 4.0, left: 5.0, right: 5.0),
-            child: Container(
-              height: 100,
-              child: Align(
-                  alignment: Alignment.bottomCenter,
-                  child: MainLineChart(isCourt: isCourt,),
-              ),
-            ),
-          ),
+          MainLineChart(isCourt: isCourt, isMine: isMine),
         ],
       ),
     );

@@ -14,6 +14,7 @@ class LoginStatusUpdate with ChangeNotifier {
   String providerId = '';
   bool isAgreementChecked = false;
   bool isLoggedIn = false;
+  bool isLogInButtonClicked = false;
   bool isUserDataExists = false;
 
   Future<void> updateIsAgreementChecked(bool value) async {
@@ -34,6 +35,12 @@ class LoginStatusUpdate with ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> updateIsLogInButtonClicked(bool value) async {
+    isLogInButtonClicked = value;
+    print('isLogInButtonClicked: $isLogInButtonClicked');
+    notifyListeners();
+  }
+
   Future<void> trueIsLoggedIn() async {
     isLoggedIn = true;
     print('isLoggedIn: $isLoggedIn');
@@ -47,14 +54,12 @@ class LoginStatusUpdate with ChangeNotifier {
   }
 
   Future<void> updateProviderId(String newProviderId) async {
-
     providerId = newProviderId;
     print('updateProviderId 완료');
     notifyListeners();
   }
 
   Future<void> updateCurrentUser(User newUser) async {
-
     currentUser = newUser;
     print('updatecurrentUser 완료');
     print('currentUser: $currentUser');

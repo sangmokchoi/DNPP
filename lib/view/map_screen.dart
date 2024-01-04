@@ -245,8 +245,7 @@ class _MapScreenState extends State<MapScreen> {
                 size: 24.0, // 아이콘 크기 설정
               ),
               titleTextStyle: kAppbarTextStyle,
-              title: Text('지도 검색'),
-              backgroundColor: Colors.white,
+              //backgroundColor: Colors.white,
               elevation: 0.0,
               leading: IconButton(
                 icon: Icon(Icons.arrow_back),
@@ -319,9 +318,9 @@ class _MapScreenState extends State<MapScreen> {
                                             return AlertDialog(
                                               insetPadding: EdgeInsets.only(left: 10.0, right: 10.0),
                                               shape: kRoundedRectangleBorder,
-                                              title: Text("선택할 탁구장을 삭제할까요?"),
+                                              title: Text("선택한 탁구장을 삭제할까요?"),
                                               content: Text(
-                                                  "삭제를 원한다면 확인 버튼을 클릭해주세요"),
+                                                  "삭제 시 해당 탁구장으로 등록한 일정도 함께 사라집니다"),
                                               actions: [
                                                 TextButton(
                                                   style: TextButton.styleFrom(
@@ -379,53 +378,51 @@ class _MapScreenState extends State<MapScreen> {
                         ),
                 ),
                 // 등록한 탁구장 리스트
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 5.0, horizontal: 10.0),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: TextFormField(
-                            controller: _textFormFieldController,
-                            decoration: InputDecoration(
-                              labelText: '탁구장 검색',
-                              hintText: '주소 또는 탁구장 이름을 입력해주세요',
-                              suffixIcon: IconButton(
-                                icon: Icon(Icons.clear),
-                                onPressed: clearTextField,
-                              ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                      vertical: 10.0, horizontal: 20.0),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: TextFormField(
+                          controller: _textFormFieldController,
+                          decoration: InputDecoration(
+                            labelText: '탁구장 검색',
+                            hintText: '주소 또는 탁구장 이름을 입력해주세요',
+                            suffixIcon: IconButton(
+                              icon: Icon(Icons.clear),
+                              onPressed: clearTextField,
                             ),
                           ),
                         ),
-                        IconButton(
-                          icon: Icon(Icons.search),
-                          onPressed: () async {
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.search),
+                        onPressed: () async {
 
-                            Search search = Search();
+                          Search search = Search();
 
-                            toggleLoading(true);
+                          toggleLoading(true);
 
-                            try {
-                              var searchResult = await search.fetchSearchData(
-                                  _textFormFieldController.text);
+                          try {
+                            var searchResult = await search.fetchSearchData(
+                                _textFormFieldController.text);
 
-                              await updatePPLocation(searchResult);
-                              // 성공적으로 데이터를 받아온 후 로딩 바 닫기
-                              toggleLoading(false);
+                            await updatePPLocation(searchResult);
+                            // 성공적으로 데이터를 받아온 후 로딩 바 닫기
+                            toggleLoading(false);
 
-                              // 나머지 작업 수행
-                            } catch (error) {
-                              toggleLoading(false);
-                            }
-                          },
-                        ),
-                      ],
-                    ),
+                            // 나머지 작업 수행
+                          } catch (error) {
+                            toggleLoading(false);
+                          }
+                        },
+                      ),
+                    ],
                   ),
                 ),
                 //,
-                MapWidget(nLatLng),
+                MapWidget(nLatLng: nLatLng),
 
                 if (Provider.of<MapWidgetUpdate>(context, listen: false)
                     .pPListElements
@@ -452,7 +449,7 @@ class _MapScreenState extends State<MapScreen> {
                           )
                         : Container(
                             height: 150.0,
-                            color: Colors.black,
+                            //color: Colors.black,
                             child: Text('검색 결과가 없습니다'),
                           ),
                   ),

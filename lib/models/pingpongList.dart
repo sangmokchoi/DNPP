@@ -45,7 +45,7 @@ class PingpongList {
       if (description != null) "description": description,
       if (telephone != null) "telephone": telephone,
       if (address != null) "address": address,
-      if (roadAddress != null) "playStyle": roadAddress,
+      if (roadAddress != null) "roadAddress": roadAddress,
       if (mapx != null) "mapx": mapx,
       if (mapy != null) "mapy": mapy,
     };
