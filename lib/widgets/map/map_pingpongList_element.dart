@@ -45,10 +45,7 @@ class PingpongListElement extends StatelessWidget {
                   flex: 3,
                   child: Text(
                     _element.title,
-                    style: TextStyle(
-                        fontSize: 20.0,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black45),
+                    style: kMapPingponglistElementTitleTextStyle,
                   ),
                 ),
                 Flexible(
@@ -74,7 +71,7 @@ class PingpongListElement extends StatelessWidget {
                           Provider.of<ProfileUpdate>(context, listen: false)
                               .addPingpongList(_element);
                         } else {
-                          print('활동 탁구장 등록은 총 5개까지만 가능합니다.');
+                          print('활동 탁구장 등록은 총 5개까지만 가능합니다');
 
                           showDialog(
                             context: context,
@@ -161,16 +158,14 @@ class PingpongListElement extends StatelessWidget {
                       Padding(
                         padding: const EdgeInsets.symmetric(vertical: 2.0),
                         child: Text(_element.address,
-                            style: TextStyle(
-                                fontSize: 12.0, color: Colors.black45),
+                            style: kMapPingponglistElementAddressTextStyle,
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis),
                       ),
                       Padding(
                         padding: const EdgeInsets.symmetric(vertical: 2.0),
                         child: Text(_element.roadAddress,
-                            style: TextStyle(
-                                fontSize: 12.0, color: Colors.black45),
+                            style: kMapPingponglistElementAddressTextStyle,
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis),
                       ),
@@ -206,17 +201,17 @@ class PingpongListElement extends StatelessWidget {
             if (_element.description.isNotEmpty)
               Text(
                 _element.description,
-                style: TextStyle(fontSize: 14.0, color: Colors.black45),
+                style: kMapPingponglistElementEtcTextStyle,
               ),
             if (_element.telephone.isNotEmpty)
               Text(
                 _element.telephone,
-                style: TextStyle(fontSize: 14.0, color: Colors.black45),
+                style: kMapPingponglistElementEtcTextStyle,
               ),
             if (_element.link.isNotEmpty)
               Text(
                 _element.link,
-                style: TextStyle(fontSize: 14.0, color: Colors.black45),
+                style: kMapPingponglistElementEtcTextStyle,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),

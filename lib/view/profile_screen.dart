@@ -14,6 +14,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:persistent_bottom_nav_bar/persistent_tab_view.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -63,6 +64,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   UserProfile newProfile = UserProfile(
       uid: '',
+      email: '',
       nickName: '',
       photoUrl:
           'https://firebasestorage.googleapis.com/v0/b/dnpp-402403.appspot.com/o/main_images%2FSimonwork_profile.png?alt=media&token=0222c22b-8380-4398-955e-44a3d6da23a2',
@@ -79,15 +81,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _nickNameTextFormFieldController.addListener(() {});
     _locationTextFormFieldController.addListener(() {});
 
+    _currentUser =
+        Provider.of<LoginStatusUpdate>(context, listen: false).currentUser;
+
     UserProfile? currentUserProfile =
         Provider.of<ProfileUpdate>(context, listen: false).userProfile;
-
-    if (currentUserProfile.uid != 'uid') {
+//userProfileUpdated
+    //if (currentUserProfile.uid != 'uid') {
+    if (Provider.of<ProfileUpdate>(context, listen: false).userProfileUpdated != false) {
       newProfile = currentUserProfile;
       print('userProfile이 서버에 등록된 경우');
-      print('newProfile: ${newProfile.photoUrl}');
+      print('newProfile.email: ${newProfile.email}');
 
       _nickNameTextFormFieldController.text = newProfile.nickName;
+      newProfile.email = _currentUser.email ?? '';
 
       await Provider.of<ProfileUpdate>(context, listen: false)
           .initializeGenderIsSelected(newProfile.gender);
@@ -95,11 +102,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
       _currentAgeRangeSliderValue =
           await Provider.of<ProfileUpdate>(context, listen: false)
               .initializeAgeRange(newProfile.ageRange);
+      print('profile screen initialize() _currentAgeRangeSliderValue: ${_currentAgeRangeSliderValue}');
+
+      print('newProfile.playedYears: ${newProfile.playedYears}');
 
       _currentPlayedYearsSliderValue =
           await Provider.of<ProfileUpdate>(context, listen: false)
               .initializePlayedYears(newProfile.playedYears);
-
+      print('profile screen initialize() _currentPlayedYearsSliderValue: ${_currentPlayedYearsSliderValue}');
+      print('_currentPlayedYearsSliderValue: ${_currentPlayedYearsSliderValue}');
       //pickedLocationList = newProfile.pingpongCourt;
 
       pickedLocationList = newProfile.address ?? [];
@@ -116,6 +127,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
           .initializeRacketIsSelected(newProfile.racket);
       print('_image: ${_image}');
       print('userPhotoUrl: ${userPhotoUrl}');
+      print('newProfile.photoUrl: ${newProfile.photoUrl}');
+
+      userPhotoUrl = newProfile.photoUrl;
 
     } else {
       // 여기서 newProfile을 미선언하거나 기본값으로 초기화할 수 있습니다.
@@ -123,22 +137,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
       //_image = XFile(Provider.of<ProfileUpdate>(context, listen: false).imageUrl);
       _nickNameTextFormFieldController.text =
-          Provider.of<ProfileUpdate>(context, listen: false).name;
+          Provider.of<ProfileUpdate>(context, listen: false).userProfile.nickName;
 
-      if (Provider.of<ProfileUpdate>(context, listen: false).isGetImageUrl) {
-        userPhotoUrl =
-            Provider
-                .of<ProfileUpdate>(context, listen: false)
-                .imageUrl;
-        newProfile.photoUrl =
-            Provider
-                .of<ProfileUpdate>(context, listen: false)
-                .imageUrl;
+      print('if 문 이전 isGetImageUrl: ${Provider.of<ProfileUpdate>(context, listen: false).isGetImageUrl}');
+
+
+      if (Provider.of<ProfileUpdate>(context, listen: false).isGetImageUrl == true) {
+        userPhotoUrl = Provider.of<ProfileUpdate>(context, listen: false).userProfile.photoUrl;
+        newProfile.photoUrl = Provider.of<ProfileUpdate>(context, listen: false).userProfile.photoUrl;
       }
+
+      print('if 문 이후 isGetImageUrl: ${Provider.of<ProfileUpdate>(context, listen: false).isGetImageUrl}');
+
+      //newProfile.email = _currentUser.email ?? '';
 
       print('_image: ${_image}');
       print('userPhotoUrl: ${userPhotoUrl}');
-
+//(_image != null) || (userPhotoUrl != '')
     }
 
     setState(() {});
@@ -147,6 +162,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   void initState() {
     initialize();
+    // WidgetsBinding.instance?.addPostFrameCallback((_) {
+    // });
     super.initState();
   }
 
@@ -187,7 +204,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         Positioned(
           child: Padding(
             padding: const EdgeInsets.all(10.0),
-            child: (_image != null) || (userPhotoUrl != '')
+            child: (userPhotoUrl != '') //(_image != null) || (userPhotoUrl != '')
                 ? Container(
                     width: 80,
                     height: 80,
@@ -314,11 +331,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   bool isEditing = false;
 
+  late User _currentUser;
+
   @override
   Widget build(BuildContext context) {
-    final User _currentUser =
-        Provider.of<LoginStatusUpdate>(context, listen: false).currentUser;
-
     return SafeArea(
       child: Scaffold(
         body: SingleChildScrollView(
@@ -336,8 +352,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     Container(
                       width: 50.0,
                       child: TextButton(
-                        onPressed: () {
-                          Navigator.pop(context);
+                        onPressed: () async {
+                          // 첫 회원 가입 시에 뒤로를 클릭하게 되면, userprofile을 초기화 해야 함
+                          if (!Provider.of<LoginStatusUpdate>(context, listen: false).isLoggedIn) {
+                          await Provider.of<ProfileUpdate>(context, listen: false).resetUserProfile();
+                          }
+                          setState(() {
+                            Navigator.pop(context);
+                          });
                         },
                         child: Text(
                           '뒤로',
@@ -455,7 +477,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       child: TextFormField(
                         controller: _nickNameTextFormFieldController,
                         decoration: const InputDecoration(
-                          labelText: '닉네임',
+                          labelText: '닉네임 (필수)',
                           // enabledBorder: const OutlineInputBorder(
                           //   borderSide: BorderSide(color: Colors.red, width: 1.0),
                           //   borderRadius: BorderRadius.all(Radius.circular(4.0)),
@@ -689,7 +711,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                                     left: 10.0, right: 10.0),
                                                 shape: kRoundedRectangleBorder,
                                                 title: Text(
-                                                  "선택할 지역을 삭제할까요?",
+                                                  "선택한 지역을 삭제할까요?",
                                                   textAlign: TextAlign.center,
                                                 ),
                                                 content: Text(
@@ -1141,7 +1163,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                                     left: 10.0, right: 10.0),
                                                 shape: kRoundedRectangleBorder,
                                                 title: Text(
-                                                  "선택할 탁구장을 삭제할까요?",
+                                                  "선택한 탁구장을 삭제할까요?",
                                                   textAlign: TextAlign.center,
                                                 ),
                                                 content: Text(
@@ -1445,40 +1467,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         constraints: BoxConstraints.tightFor(width: 100.0),
                         child: ElevatedButton(
                           onPressed: () async {
-                            showDialog(
+
+                            if (newProfile.nickName.isEmpty && _nickNameTextFormFieldController
+                                .text.isEmpty) {
+                              showDialog(
                               context: context,
                               builder: (context) {
-                                return AlertDialog(
-                                  insetPadding:
-                                      EdgeInsets.only(left: 10.0, right: 10.0),
-                                  shape: kRoundedRectangleBorder,
-                                  title: Text(
-                                    "프로필 저장",
-                                    textAlign: TextAlign.center,
-                                  ),
-                                  content: Text(
-                                    "위 내용을 토대로 프로필을 저장합니다",
-                                    textAlign: TextAlign.center,
-                                  ),
+                              return AlertDialog(
+                                insetPadding:
+                                EdgeInsets.only(left: 10.0, right: 10.0),
+                                shape: kRoundedRectangleBorder,
+                                title: Text(
+                                  "알림",
+                                  textAlign: TextAlign.center,
+                                ),
+                                content: Text(
+                                  "닉네임을 입력해주세요",
+                                  textAlign: TextAlign.center,
+                                ),
                                   actions: [
                                     ButtonBar(
-                                      alignment: MainAxisAlignment.spaceBetween,
-                                      mainAxisSize: MainAxisSize.max,
+                                      alignment: MainAxisAlignment.center,
                                       children: [
-                                        Container(
-                                          width: kAlertDialogTextButtonWidth,
-                                          child: TextButton(
-                                            style: kCancelButtonStyle,
-                                            child: Text(
-                                              "취소",
-                                              textAlign: TextAlign.center,
-                                              style: kTextButtonTextStyle,
-                                            ),
-                                            onPressed: () async {
-                                              Navigator.pop(context);
-                                            },
-                                          ),
-                                        ),
                                         Container(
                                           width: kAlertDialogTextButtonWidth,
                                           child: TextButton(
@@ -1489,102 +1499,161 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                               style: kTextButtonTextStyle,
                                             ),
                                             onPressed: () async {
-                                              newProfile.pingpongCourt =
-                                                  Provider.of<ProfileUpdate>(
-                                                          context,
-                                                          listen: false)
-                                                      .pingpongList;
                                               Navigator.pop(context);
-
-                                              toggleLoading(true);
-
-                                              newProfile.uid = _currentUser.uid;
-                                              newProfile.nickName =
-                                                  _nickNameTextFormFieldController
-                                                      .text;
-
-                                              var imageName = _currentUser.uid;
-                                              var storageRef = FirebaseStorage
-                                                  .instance
-                                                  .ref()
-                                                  .child(
-                                                      'profile_photos/$imageName.jpg');
-
-                                              //userPhotoUrl
-                                              if (_image == null && userPhotoUrl == '') {
-                                                final gsReference = FirebaseStorage
-                                                    .instance
-                                                    .refFromURL(
-                                                        "gs://dnpp-402403.appspot.com/profile_photos/empty_profile_160.png");
-                                                final imageUrl =
-                                                    await gsReference
-                                                        .getDownloadURL();
-                                                print('imageUrl: $imageUrl');
-                                                newProfile.photoUrl =
-                                                    imageUrl.toString();
-
-                                              } else if (userPhotoUrl != '') {
-
-                                                print('newProfile.photoUrl : ${newProfile.photoUrl}');
-
-                                              } else if (_image != null) {
-
-                                                String filePath = _image!.path;
-                                                print('filePath: $filePath');
-                                                File file = File(filePath);
-
-                                                var uploadTask =
-                                                storageRef.putFile(file);
-                                                var downloadUrl =
-                                                await (await uploadTask)
-                                                    .ref
-                                                    .getDownloadURL();
-                                                print(
-                                                    'downloadUrl: $downloadUrl');
-                                                newProfile.photoUrl =
-                                                    downloadUrl.toString();
-                                              }
-
-                                              final docRef = db
-                                                  .collection("UserData")
-                                                  .withConverter(
-                                                    fromFirestore: UserProfile
-                                                        .fromFirestore,
-                                                    toFirestore:
-                                                        (UserProfile newProfile,
-                                                                options) =>
-                                                            newProfile
-                                                                .toFirestore(),
-                                                  )
-                                                  .doc(_currentUser.uid);
-
-                                              await docRef.set(newProfile);
-
-                                              toggleLoading(false);
-
-                                              setState(() {
-                                                isEditing = false;
-                                              });
-
-                                              _viewVerticalScrollController
-                                                  .animateTo(
-                                                0.0,
-                                                duration:
-                                                    Duration(milliseconds: 500),
-                                                curve: Curves.easeInOut,
-                                              );
-
-                                              // Navigator.pushNamed(
-                                              //     context, HomeScreen.id);
                                             },
                                           ),
                                         ),
                                       ],
                                     ),
-                                  ],
-                                );
-                              },
-                            );
+                                  ]
+                              );
+                              });
+                            } else {
+                              showDialog(
+                                context: context,
+                                builder: (context) {
+                                  return AlertDialog(
+                                    insetPadding:
+                                    EdgeInsets.only(left: 10.0, right: 10.0),
+                                    shape: kRoundedRectangleBorder,
+                                    title: Text(
+                                      "프로필 저장",
+                                      textAlign: TextAlign.center,
+                                    ),
+                                    content: Text(
+                                      "위 내용을 토대로 프로필을 저장합니다",
+                                      textAlign: TextAlign.center,
+                                    ),
+                                    actions: [
+                                      ButtonBar(
+                                        alignment: MainAxisAlignment
+                                            .center,
+                                        mainAxisSize: MainAxisSize.max,
+                                        children: [
+                                          Container(
+                                            width: kAlertDialogTextButtonWidth,
+                                            child: TextButton(
+                                              style: kCancelButtonStyle,
+                                              child: Text(
+                                                "취소",
+                                                textAlign: TextAlign.center,
+                                                style: kTextButtonTextStyle,
+                                              ),
+                                              onPressed: () async {
+                                                Navigator.pop(context);
+                                              },
+                                            ),
+                                          ),
+                                          Container(
+                                            width: kAlertDialogTextButtonWidth,
+                                            child: TextButton(
+                                              style: kConfirmButtonStyle,
+                                              child: Text(
+                                                "확인",
+                                                textAlign: TextAlign.center,
+                                                style: kTextButtonTextStyle,
+                                              ),
+                                              onPressed: () async {
+                                                newProfile.pingpongCourt =
+                                                    Provider
+                                                        .of<ProfileUpdate>(
+                                                        context,
+                                                        listen: false)
+                                                        .pingpongList;
+                                                Navigator.pop(context);
+
+                                                toggleLoading(true);
+
+                                                newProfile.uid =
+                                                    _currentUser.uid;
+                                                newProfile.nickName =
+                                                    _nickNameTextFormFieldController
+                                                        .text;
+
+                                                var imageName = _currentUser
+                                                    .uid;
+                                                var storageRef = FirebaseStorage
+                                                    .instance
+                                                    .ref()
+                                                    .child(
+                                                    'profile_photos/$imageName.jpg');
+
+                                                //userPhotoUrl
+                                                if (_image == null &&
+                                                    userPhotoUrl == '') {
+                                                  final gsReference = FirebaseStorage
+                                                      .instance
+                                                      .refFromURL(
+                                                      "gs://dnpp-402403.appspot.com/profile_photos/empty_profile_160.png");
+                                                  final imageUrl =
+                                                  await gsReference
+                                                      .getDownloadURL();
+                                                  print('imageUrl: $imageUrl');
+                                                  newProfile.photoUrl =
+                                                      imageUrl.toString();
+                                                } else if (userPhotoUrl != '') {
+                                                  print(
+                                                      'newProfile.photoUrl : ${newProfile
+                                                          .photoUrl}');
+                                                } else if (_image != null) {
+                                                  String filePath = _image!
+                                                      .path;
+                                                  print('filePath: $filePath');
+                                                  File file = File(filePath);
+
+                                                  var uploadTask =
+                                                  storageRef.putFile(file);
+                                                  var downloadUrl =
+                                                  await (await uploadTask)
+                                                      .ref
+                                                      .getDownloadURL();
+                                                  print(
+                                                      'downloadUrl: $downloadUrl');
+                                                  newProfile.photoUrl =
+                                                      downloadUrl.toString();
+                                                }
+
+                                                final docRef = db
+                                                    .collection("UserData")
+                                                    .withConverter(
+                                                  fromFirestore: UserProfile
+                                                      .fromFirestore,
+                                                  toFirestore:
+                                                      (UserProfile newProfile,
+                                                      options) =>
+                                                      newProfile
+                                                          .toFirestore(),
+                                                )
+                                                    .doc(_currentUser.uid);
+
+                                                await docRef.set(newProfile);
+
+                                                toggleLoading(false);
+
+                                                setState(() {
+                                                  isEditing = false;
+                                                });
+
+                                                _viewVerticalScrollController
+                                                    .animateTo(
+                                                  0.0,
+                                                  duration:
+                                                  Duration(milliseconds: 250),
+                                                  curve: Curves.easeInOut,
+                                                );
+
+                                                await Provider.of<LoginStatusUpdate>(context, listen: false).trueIsLoggedIn();
+                                                print('profile screen 저장 버튼 클릭');
+                                                },
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  );
+                                },
+                              );
+                            }
                           },
                           child: Text(
                             '저장',

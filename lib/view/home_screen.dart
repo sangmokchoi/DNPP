@@ -1,4 +1,5 @@
 import 'package:dnpp/view/main_screen.dart';
+import 'package:dnpp/view/matching_screen.dart';
 import 'package:dnpp/view/profile_screen.dart';
 import 'package:dnpp/view/setting_screen.dart';
 import 'package:dnpp/view/signup_screen.dart';
@@ -34,10 +35,9 @@ class _HomeScreenState extends State<HomeScreen> {
     return [
       MainScreen(),
       //ProfileScreen(),
-      CalendarScreen(),
       //SignupScreen(),
       CalendarScreen(),
-      SignupScreen(),
+      MatchingScreen(),
       SettingScreen(),
       //MapScreen()
     ];
@@ -57,12 +57,12 @@ class _HomeScreenState extends State<HomeScreen> {
         activeColorPrimary: CupertinoColors.activeBlue,
         inactiveColorPrimary: CupertinoColors.systemGrey,
       ),
-      PersistentBottomNavBarItem(
-        icon: Icon(CupertinoIcons.settings),
-        title: ("설정"),
-        activeColorPrimary: CupertinoColors.activeBlue,
-        inactiveColorPrimary: CupertinoColors.systemGrey,
-      ),
+      // PersistentBottomNavBarItem(
+      //   icon: Icon(CupertinoIcons.settings),
+      //   title: ("설정"),
+      //   activeColorPrimary: CupertinoColors.activeBlue,
+      //   inactiveColorPrimary: CupertinoColors.systemGrey,
+      // ),
       PersistentBottomNavBarItem(
         icon: Icon(CupertinoIcons.chat_bubble_2),
         title: ("매칭"),
@@ -134,7 +134,9 @@ class _HomeScreenState extends State<HomeScreen> {
               //   }
               //
               // });
-                return print('$int');
+                return setState(() {
+                  print('$int');
+                });
               case 1:
                 // WidgetsBinding.instance?.addPostFrameCallback((_) {
                 //   try {
@@ -149,17 +151,29 @@ class _HomeScreenState extends State<HomeScreen> {
                 //   }
                 //
                 // });
-                return print('$int');
+                return setState(() {
+                  print('$int');
+                });
               case 2:
-                return print('$int');
+                return setState(() {
+                  print('$int');
+                });
               case 3:
-                return print('$int');
+                return setState(() {
+                  print('$int');
+                });
               case 4:
-                return print('$int');
+                return setState(() {
+                  print('$int');
+                });
               case 5:
-                return print('$int');
+                return setState(() {
+                  print('$int');
+                });
               default:
-                return print('$int');
+                return setState(() {
+                  print('$int');
+                });
             }
           }); // This is required to update the nav bar if Android back button is pressed
         },

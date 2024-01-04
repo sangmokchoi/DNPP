@@ -20,21 +20,23 @@ class ProfileUpdate with ChangeNotifier {
   ScrollController horizontalScrollController = ScrollController();
 
   bool isGetImageUrl = false;
+  bool userProfileUpdated = false;
 
-  String name = '';
-  String id = '';
-  String email = '';
-  String imageUrl = '';
+  // String name = '';
+  // String id = '';
+  // String email = '';
+  // String imageUrl = '';
 
   //late UserProfile userProfile;
   UserProfile userProfile = UserProfile(
       uid: 'uid',
+      email: 'email',
       nickName: '사용자',
       photoUrl: 'https://firebasestorage.googleapis.com/v0/b/dnpp-402403.appspot.com/o/profile_photos%2Fempty_profile_160.png?alt=media&token=4fc4c247-c9b0-473e-b38f-ee6b78967536',
       gender: '밝히지 않음',
-      ageRange: '20대',
-      playedYears: 'playedYears',
-      address: ['address'],
+      ageRange: '10대 이하',
+      playedYears: '3개월 이하',
+      address: [],
       pingpongCourt: [],
       playStyle: '공격',
       rubber: '미정',
@@ -45,32 +47,38 @@ class ProfileUpdate with ChangeNotifier {
   }
 
   Future updateIsGetImageUrl(bool value) async {
+
     isGetImageUrl = value;
     print('isGetImageUrl: $isGetImageUrl');
     notifyListeners();
   }
 
   Future updateName(String value) async {
-    name = value;
-    print('name: $name');
+
+    userProfile.nickName = value;
+    //name = value;
+    print('userProfile.nickName: ${userProfile.nickName}');
     notifyListeners();
   }
 
   Future updateId(String value) async {
-    id = value;
-    print('id: $id');
+
+    userProfile.uid = value;
+    print('userProfile.uid: ${userProfile.uid}');
     notifyListeners();
   }
 
   Future updateEmail(String value) async {
-    email = value;
-    print('email: $email');
+    userProfile.email = value;
+    //email = value;
+    print('userProfile.email: ${userProfile.email}');
     notifyListeners();
   }
 
   Future updateImageUrl(String value) async {
-    imageUrl = value;
-    print('imageUrl: $imageUrl');
+    userProfile.photoUrl = value;
+    //imageUrl = value;
+    print('userProfile.photoUrl: ${userProfile.photoUrl}');
     notifyListeners();
   }
 
@@ -100,9 +108,37 @@ class ProfileUpdate with ChangeNotifier {
   }
 
   Future<void> updateUserProfile(UserProfile newProfile) async {
+    //await updateUserProfileUpdated(true);
     userProfile = newProfile;
     notifyListeners();
+    print('updateUserProfile userProfile: ${userProfile.uid}');
     print('updateUserProfile done');
+  }
+
+  Future<void> updateUserProfileUpdated(bool value) async {
+    userProfileUpdated = value;
+    notifyListeners();
+    print('updateUserProfileUpdated userProfileUpdated: ${userProfileUpdated}');
+    print('updateUserProfileUpdated userProfileUpdated done');
+  }
+
+  Future<void> resetUserProfile() async {
+    userProfile = UserProfile(
+      uid: 'uid',
+      email: 'email',
+      nickName: '사용자',
+      photoUrl: 'https://firebasestorage.googleapis.com/v0/b/dnpp-402403.appspot.com/o/profile_photos%2Fempty_profile_160.png?alt=media&token=4fc4c247-c9b0-473e-b38f-ee6b78967536',
+      gender: '밝히지 않음',
+      ageRange: '20대',
+      playedYears: 'playedYears',
+      address: ['address'],
+      pingpongCourt: [],
+      playStyle: '공격',
+      rubber: '미정',
+      racket: '미정',
+    );
+    notifyListeners();
+    print('resetUserProfile done');
   }
 
   void updateGenderIsSelected(int index) {
@@ -136,11 +172,13 @@ class ProfileUpdate with ChangeNotifier {
 
   Future<double> initializeAgeRange(String ageRange) async {
     int extractedIndex = UserProfile.ageRangeList.indexOf(ageRange);
+    print('initializeAgeRange extractedIndex: ${extractedIndex}');
     return extractedIndex.toDouble();
   }
 
   Future<double> initializePlayedYears(String playedYears) async {
     int extractedIndex = UserProfile.playedYearsList.indexOf(playedYears);
+    print('initializePlayedYears extractedIndex: ${extractedIndex}');
     return extractedIndex.toDouble();
   }
 

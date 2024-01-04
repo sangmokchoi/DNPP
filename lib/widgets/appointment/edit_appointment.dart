@@ -30,7 +30,7 @@ class EditAppointment extends StatefulWidget {
       required this.oldMeeting});
 
   final String userCourt;
-  final Appointment oldMeeting;
+  final dynamic oldMeeting;
   final BuildContext context;
 
   @override
@@ -699,92 +699,94 @@ class _EditAppointmentState extends State<EditAppointment> {
                                   //     .pingpongCourt![0]
                                   //     .roadAddress
                                   //
-                                  DropdownButton(
-                                    value: Provider.of<ProfileUpdate>(defaultContext,
-                                                    listen: false)
-                                                .userProfile
-                                                .pingpongCourt
-                                                ?.map((element) =>
-                                                    element.roadAddress)
-                                                ?.contains(
-                                                    chosenCourtRoadAddress) ??
-                                            false
-                                        ? chosenCourtRoadAddress
-                                        : chosenCourtRoadAddress,//null,
-                                    //iscourtAddressNotEmpty ? √ : '없음',
-                                    items: Provider.of<ProfileUpdate>(defaultContext,
-                                                    listen: false)
-                                                .userProfile
-                                                .pingpongCourt
-                                                !.map((element) =>
-                                                    element.roadAddress ==
-                                                    chosenCourtRoadAddress).isNotEmpty
-                                        ? Provider.of<ProfileUpdate>(defaultContext,
-                                                listen: false)
-                                            .userProfile
-                                            .pingpongCourt
-                                            ?.map((element) => DropdownMenuItem(
-                                                  value: element.roadAddress,
-                                                  child: Column(
-                                                    crossAxisAlignment:
-                                                        CrossAxisAlignment.start,
-                                                    children: [
-                                                      Text(
-                                                        element.title,
-                                                        style:
-                                                            kAppointmentTextButtonStyle,
-                                                      ),
-                                                      Text(
-                                                        element.roadAddress,
-                                                        style:
-                                                            kAppointmentTextButtonStyle
-                                                                .copyWith(
-                                                          fontSize: 10.0,
+                                  DropdownButtonHideUnderline(
+                                    child: DropdownButton(
+                                      value: Provider.of<ProfileUpdate>(defaultContext,
+                                                      listen: false)
+                                                  .userProfile
+                                                  .pingpongCourt
+                                                  ?.map((element) =>
+                                                      element.roadAddress)
+                                                  ?.contains(
+                                                      chosenCourtRoadAddress) ??
+                                              false
+                                          ? chosenCourtRoadAddress
+                                          : null,
+                                      //iscourtAddressNotEmpty ? √ : '없음',
+                                      items: Provider.of<ProfileUpdate>(defaultContext,
+                                                      listen: false)
+                                                  .userProfile
+                                                  .pingpongCourt
+                                                  !.map((element) =>
+                                                      element.roadAddress ==
+                                                      chosenCourtRoadAddress).isNotEmpty
+                                          ? Provider.of<ProfileUpdate>(defaultContext,
+                                                  listen: false)
+                                              .userProfile
+                                              .pingpongCourt
+                                              ?.map((element) => DropdownMenuItem(
+                                                    value: element.roadAddress,
+                                                    child: Column(
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment.start,
+                                                      children: [
+                                                        Text(
+                                                          element.title,
+                                                          style:
+                                                              kAppointmentTextButtonStyle,
                                                         ),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ))
-                                            .toList()
-                                        : [
-                                            DropdownMenuItem(
-                                              value: chosenCourtRoadAddress,
-                                              child: Column(
-                                                crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                                children: [
-                                                  Text(
-                                                    chosenCourtName,
-                                                    style:
-                                                    kAppointmentTextButtonStyle,
-                                                  ),
-                                                  Text(
-                                                    chosenCourtRoadAddress,
-                                                    style:
-                                                    kAppointmentTextButtonStyle
-                                                        .copyWith(
-                                                      fontSize: 10.0,
+                                                        Text(
+                                                          element.roadAddress,
+                                                          style:
+                                                              kAppointmentTextButtonStyle
+                                                                  .copyWith(
+                                                            fontSize: 10.0,
+                                                          ),
+                                                        ),
+                                                      ],
                                                     ),
-                                                  ),
-                                                ],
+                                                  ))
+                                              .toList()
+                                          : [
+                                              DropdownMenuItem(
+                                                value: chosenCourtRoadAddress,
+                                                child: Column(
+                                                  crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                                  children: [
+                                                    Text(
+                                                      chosenCourtName,
+                                                      style:
+                                                      kAppointmentTextButtonStyle,
+                                                    ),
+                                                    Text(
+                                                      chosenCourtRoadAddress,
+                                                      style:
+                                                      kAppointmentTextButtonStyle
+                                                          .copyWith(
+                                                        fontSize: 10.0,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
                                               ),
-                                            ),
-                                          ],
-                                    onChanged: (value) {
-                                      setState(() {
-                                        chosenCourtRoadAddress =
-                                            value.toString(); // 사용자가 선택한 값을 저장
+                                            ],
+                                      onChanged: (value) {
+                                        setState(() {
+                                          chosenCourtRoadAddress =
+                                              value.toString(); // 사용자가 선택한 값을 저장
 
-                                        // foundCourt = Provider.of<ProfileUpdate>(
-                                        //         defaultContext,
-                                        //         listen: false)
-                                        //     .userProfile
-                                        //     .pingpongCourt
-                                        //     ?.firstWhere((element) =>
-                                        //         element.roadAddress ==
-                                        //         chosenCourtRoadAddress);
-                                      });
-                                    },
+                                          // foundCourt = Provider.of<ProfileUpdate>(
+                                          //         defaultContext,
+                                          //         listen: false)
+                                          //     .userProfile
+                                          //     .pingpongCourt
+                                          //     ?.firstWhere((element) =>
+                                          //         element.roadAddress ==
+                                          //         chosenCourtRoadAddress);
+                                        });
+                                      },
+                                    ),
                                   ),
                                 ],
                               ),

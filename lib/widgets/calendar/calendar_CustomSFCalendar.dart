@@ -56,7 +56,6 @@ class CustomSFCalendar extends StatelessWidget {
           fontWeight: FontWeight.w500,
           fontStyle: FontStyle.normal,
           fontSize: 16,
-          color: Colors.black54,
         ),
         timeFormat: 'a h:mm',
         timeRulerSize: 65,
@@ -151,21 +150,21 @@ class CustomSFCalendar extends StatelessWidget {
         ),
 
         agendaStyle: AgendaStyle(
-          backgroundColor: Colors.white54,
+          //backgroundColor: Colors.white,
           appointmentTextStyle: TextStyle(
               fontSize: 18,
               fontStyle: FontStyle.normal,
-              color: Colors.white), //Color(0xFF0ffcc00)),
+          ), //Color(0xFF0ffcc00)),
           dateTextStyle: TextStyle(
               fontStyle: FontStyle.normal,
               fontSize: 18,
               fontWeight: FontWeight.w300,
-              color: Colors.black),
+          ),
           dayTextStyle: TextStyle(
               fontStyle: FontStyle.normal,
               fontSize: 25,
               fontWeight: FontWeight.w700,
-              color: Colors.black),
+          ),
         ),
       ),
 
