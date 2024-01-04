@@ -1,20 +1,24 @@
 import 'package:flutter/material.dart';
 
 const kNaverMapApiKey = '7evubnn4j6';
+
 const kAppbarTextStyle =
-    TextStyle(color: Colors.black, fontSize: 20.0, fontWeight: FontWeight.bold);
+    TextStyle(
+        //color: Colors.black,
+        fontSize: 20.0,
+        fontWeight: FontWeight.bold);
 
 const kMainColor = Color(0xFF46ABF6);
 
 const kAppointmentTextStyle = TextStyle(
     // 시간시간, 종료시간
-    color: Colors.black,
+    //color: Colors.black,
     fontSize: 18.0,
     fontWeight: FontWeight.bold);
 
 const kAppointmentDateTextStyle = TextStyle(
     // 2023. 10. 10. (화) 14:30
-    color: Colors.black,
+    //color: Colors.black,
     fontSize: 18.0,
     fontWeight: FontWeight.normal);
 
@@ -36,19 +40,30 @@ const kElevationButtonDeletionStyle = ButtonStyle(
 );
 
 const kProfileTextStyle = TextStyle(
-    color: Colors.black, fontSize: 18.0, fontWeight: FontWeight.normal);
+    //color: Colors.black,
+    fontSize: 18.0,
+    fontWeight: FontWeight.normal);
 
 const kProfileSubTextStyle = TextStyle(
-    color: Colors.grey, fontSize: 15.0, fontWeight: FontWeight.normal);
+    color: Colors.grey,
+    fontSize: 15.0,
+    fontWeight: FontWeight.normal);
 
 const kSettingMenuHeaderTextStyle =
-    TextStyle(color: Colors.black, fontSize: 18.0, fontWeight: FontWeight.bold);
+    TextStyle(
+        //color: Colors.black,
+        fontSize: 18.0,
+        fontWeight: FontWeight.bold);
 
 const kSettingMenuTextStyle = TextStyle(
-    color: Colors.black, fontSize: 18.0, fontWeight: FontWeight.normal);
+    //color: Colors.black,
+    fontSize: 18.0,
+    fontWeight: FontWeight.normal);
 
 const kTextButtonTextStyle = TextStyle(
-    color: Colors.white, fontSize: 18.0, fontWeight: FontWeight.normal);
+    color: Colors.white,
+    fontSize: 18.0,
+    fontWeight: FontWeight.normal);
 
 final kCancelButtonStyle = ButtonStyle(
   backgroundColor: MaterialStateProperty.all(Colors.grey),
@@ -64,4 +79,25 @@ const kRoundedRectangleBorder = RoundedRectangleBorder(
   borderRadius: BorderRadius.all(
     Radius.circular(15),
   ),
+);
+
+const kMapPingponglistElementTitleTextStyle = TextStyle(
+  //color: Colors.white,
+    fontSize: 20.0,
+    fontWeight: FontWeight.bold);
+
+const kMapPingponglistElementAddressTextStyle = TextStyle(
+  //color: Colors.white,
+    fontSize: 12.0,
+    fontWeight: FontWeight.normal);
+
+const kMapPingponglistElementEtcTextStyle = TextStyle(
+    //color: Colors.white,
+    fontSize: 14.0,
+    fontWeight: FontWeight.normal);
+
+const kMatchingScreenTextStyle = TextStyle(
+    fontSize: 20.0,
+    fontWeight: FontWeight.normal
+
 );

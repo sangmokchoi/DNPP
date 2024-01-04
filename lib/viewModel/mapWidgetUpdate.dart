@@ -21,6 +21,12 @@ class MapWidgetUpdate with ChangeNotifier {
   final List<PingpongList> pPListElements = [];
   late NaverMapController naverController;
 
+  Future<void> updateNaverController(NaverMapController controller) async{
+    naverController = controller;
+    notifyListeners();
+  }
+
+
   void updateUI(dynamic addressData) {
     if (addressData == null) {
       return;

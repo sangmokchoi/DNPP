@@ -40,7 +40,7 @@ class MainCourtChartPageView extends StatelessWidget {
                     titleText: Provider.of<ProfileUpdate>(context, listen: false)
                         .userProfile.pingpongCourt![index].title,
                     backgroundColor: Colors.lightBlue,
-                    isCourt: true,
+                    isCourt: true, isMine: false,
                   ),
                 );
               } else {
