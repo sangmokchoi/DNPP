@@ -779,9 +779,12 @@ class PersonalAppointmentUpdate extends ChangeNotifier {
         // }
       }
 
+      print('daywiseDurations: $daywiseDurations');
+
     }
 
     notifyListeners();
+    print('notifyListeners after daywiseDurations: $daywiseDurations');
   }
 
   Future<void> personalCountHours(bool isInitial, bool isMyTime, String title, String roadAddress) async {
@@ -935,6 +938,7 @@ class PersonalAppointmentUpdate extends ChangeNotifier {
           //print('next28daysHourlyCountsByDaysOfWeek[dayOfWeek]: ${next28daysHourlyCountsByDaysOfWeek[dayOfWeek]}');
 
           personalHourlyCounts = next28daysHourlyCounts;
+          print('next28daysHourlyCounts : $next28daysHourlyCounts');
           startTime = startTime.add(Duration(hours: 1));
         }
       }
@@ -942,6 +946,7 @@ class PersonalAppointmentUpdate extends ChangeNotifier {
       //   hourlyCounts = next28daysHourlyCounts;
       // }
 
+      print('personalHourlyCounts : $personalHourlyCounts');
     }
 
     notifyListeners();

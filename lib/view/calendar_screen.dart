@@ -398,10 +398,13 @@ class _CalendarScreenState extends State<CalendarScreen> {
           elevation: 0.0,
         ),
         floatingActionButton: Padding(
-          padding: const EdgeInsets.only(bottom: 12.0, right: 2.0),
+          padding: const EdgeInsets.only(bottom: 15.0, right: 2.0),
           child: FloatingActionButton(
             backgroundColor: Theme.of(context).primaryColor,
             foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(50.0),
+            ),
             child: Icon(Icons.edit_calendar),
             onPressed: () {
               if (Provider.of<LoginStatusUpdate>(context, listen: false)
