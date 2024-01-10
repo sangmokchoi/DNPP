@@ -156,6 +156,7 @@ class _MainScreenState extends State<MainScreen> {
         await Provider.of<PersonalAppointmentUpdate>(context, listen: false)
             .personalCountHours(
                 false, isPersonal, _courtTitle, _courtRoadAddress);
+
         await Provider.of<OthersPersonalAppointmentUpdate>(context, listen: false)
             .personalDaywiseDurationsCalculate(
             false, isPersonal, _courtTitle, _courtRoadAddress);
@@ -576,6 +577,7 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
+
     double width = MediaQuery.of(context).size.width;
     double height = width * 3 / 4;
 
@@ -653,7 +655,7 @@ class _MainScreenState extends State<MainScreen> {
                                   padding: const EdgeInsets.only(
                                       left: 3.0, right: 3.0),
                                   child: Container(
-                                    width: 100.0,
+                                    width: 115.0,
                                     decoration: BoxDecoration(
                                       boxShadow: [
                                         BoxShadow(
@@ -696,11 +698,16 @@ class _MainScreenState extends State<MainScreen> {
                                             : Colors.lightBlue.withOpacity(0.5),
                                         shape: kRoundedRectangleBorder,
                                       ),
-                                      child: Text(Provider.of<
+                                      child: Text(
+                                          Provider.of<
                                                   PersonalAppointmentUpdate>(
                                               context,
                                               listen: false)
-                                          .isSelectedString[index]),
+                                          .isSelectedString[index],
+                                      style: TextStyle(
+                                        //fontWeight: FontWeight.bold,
+                                        fontSize: 15.0,
+                                      ),),
                                     ),
                                   ),
                                 );
@@ -777,7 +784,7 @@ class _MainScreenState extends State<MainScreen> {
                   color: Colors.black.withOpacity(0.5),
                   // Semi-transparent black
                   child: Center(
-                    child: isRefresh ? null : CircularProgressIndicator(),
+                    child: isRefresh ? null : kCustomCircularProgressIndicator,
                   ),
                 ),
               ),

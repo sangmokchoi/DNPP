@@ -14,6 +14,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:persistent_bottom_nav_bar/persistent_tab_view.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
@@ -310,7 +311,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           context: context,
           builder: (context) {
             return Center(
-              child: CircularProgressIndicator(), // 로딩 바 표시
+              child: kCustomCircularProgressIndicator, // 로딩 바 표시
             );
           },
         );
@@ -350,7 +351,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Container(
-                      width: 50.0,
+                      width: 60.0,
                       child: TextButton(
                         onPressed: () async {
                           // 첫 회원 가입 시에 뒤로를 클릭하게 되면, userprofile을 초기화 해야 함
@@ -475,9 +476,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       padding:
                           EdgeInsets.only(left: 25.0, right: 25.0, bottom: 5.0),
                       child: TextFormField(
+                        style: TextStyle(
+                          fontSize: 20.0
+                        ),
                         controller: _nickNameTextFormFieldController,
                         decoration: const InputDecoration(
                           labelText: '닉네임 (필수)',
+                          labelStyle: TextStyle(color: Colors.grey),
+                          focusedBorder: UnderlineInputBorder(
+                            borderSide: BorderSide(color: Colors.grey), // 밑줄 색상
+                          ),
                           // enabledBorder: const OutlineInputBorder(
                           //   borderSide: BorderSide(color: Colors.red, width: 1.0),
                           //   borderRadius: BorderRadius.all(Radius.circular(4.0)),
@@ -504,6 +512,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             children: [
                               ToggleButtons(
                                   borderRadius: BorderRadius.circular(4.0),
+                                  color: kMainColor,
+                                  selectedColor: kMainColor,
                                   isSelected: Provider.of<ProfileUpdate>(
                                           context,
                                           listen: false)
@@ -565,7 +575,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                           SliderTheme(
                             data: SliderThemeData(
+                              activeTrackColor: Colors.blue,      // 활성화된 트랙의 색상
+                              inactiveTrackColor: Colors.blueGrey.withOpacity(0.3),    // 비활성화된 트랙의 색상
                               thumbColor: kMainColor,
+                              showValueIndicator: ShowValueIndicator.never,// 슬라이더의 썸의 색상
                             ),
                             child: Slider(
                               value: _currentAgeRangeSliderValue,
@@ -612,6 +625,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               activeTrackColor: Colors.indigoAccent,
                               inactiveTrackColor:
                                   Colors.indigoAccent.withOpacity(0.3),
+                              showValueIndicator: ShowValueIndicator.never,
                             ),
                             child: Slider(
                               value: _currentPlayedYearsSliderValue,
@@ -677,8 +691,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     alignment: Alignment.centerRight,
                                     children: [
                                       Container(
-                                        margin: EdgeInsets.only(right: 5.0),
-                                        padding: EdgeInsets.all(8.0),
+                                        margin: EdgeInsets.only(right: 7.0),
+                                        padding: EdgeInsets.only(left: 10.0, right: 5.0, top: 5.0, bottom: 5.0),
                                         decoration: BoxDecoration(
                                           border:
                                               Border.all(color: kMainColor),
@@ -699,6 +713,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                         ),
                                       ),
                                       //SizedBox(width: 5.0,),
+
                                       IconButton(
                                         onPressed: () {
                                           print('IconButton 클릭');
@@ -786,12 +801,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                         style: ButtonStyle(
                                           padding: MaterialStateProperty.all(
                                               EdgeInsets.zero),
-                                          backgroundColor:
-                                              MaterialStateProperty.all(
-                                                  Colors.grey),
                                         ),
                                         iconSize: 18.0, // IconButton의 크기 설정
                                       ),
+
                                     ],
                                   );
                                 },
@@ -806,6 +819,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         controller: _locationTextFormFieldController,
                         decoration: InputDecoration(
                           hintText: '예) 신사동, 흥업면',
+                          labelStyle: TextStyle(color: Colors.grey),
+                          focusedBorder: UnderlineInputBorder(
+                            borderSide: BorderSide(color: Colors.grey), // 밑줄 색상
+                          ),
                           suffixIcon: IconButton(
                             icon: Icon(Icons.clear),
                             onPressed: clearTextField,
@@ -1102,7 +1119,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   .isEmpty
                               ? EdgeInsets.zero
                               : EdgeInsets.only(
-                                  left: 15.0,
+                                  left: 25.0,
                                   right: 15.0,
                                   top: 5.0,
                                   bottom: 5.0),
@@ -1126,8 +1143,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     alignment: Alignment.centerRight,
                                     children: [
                                       Container(
-                                        margin: EdgeInsets.only(right: 5.0),
-                                        padding: EdgeInsets.all(8.0),
+                                        margin: EdgeInsets.only(right: 7.0),
+                                        padding: EdgeInsets.only(left: 10.0, right: 5.0, top: 5.0, bottom: 5.0),
                                         decoration: BoxDecoration(
                                           border:
                                               Border.all(color: kMainColor),
@@ -1237,9 +1254,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                         style: ButtonStyle(
                                           padding: MaterialStateProperty.all(
                                               EdgeInsets.zero),
-                                          backgroundColor:
-                                              MaterialStateProperty.all(
-                                                  Colors.grey),
                                         ),
                                         iconSize: 18.0, // IconButton의 크기 설정
                                       ),
@@ -1263,6 +1277,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             children: [
                               ToggleButtons(
                                   borderRadius: BorderRadius.circular(4.0),
+                                  color: kMainColor,
+                                  selectedColor: kMainColor,
                                   isSelected: Provider.of<ProfileUpdate>(
                                           context,
                                           listen: false)
@@ -1317,6 +1333,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             children: [
                               ToggleButtons(
                                   borderRadius: BorderRadius.circular(4.0),
+                                  color: kMainColor,
+                                  selectedColor: kMainColor,
                                   isSelected: Provider.of<ProfileUpdate>(
                                           context,
                                           listen: false)
@@ -1381,6 +1399,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             children: [
                               ToggleButtons(
                                   borderRadius: BorderRadius.circular(4.0),
+                                  color: kMainColor,
+                                  selectedColor: kMainColor,
                                   isSelected: Provider.of<ProfileUpdate>(
                                           context,
                                           listen: false)
@@ -1519,10 +1539,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     title: Text(
                                       "프로필 저장",
                                       textAlign: TextAlign.center,
+                                      style: kAlertDialogTitleTextStyle,
                                     ),
                                     content: Text(
                                       "위 내용을 토대로 프로필을 저장합니다",
                                       textAlign: TextAlign.center,
+                                      style: kAlertDialogContentTextStyle,
                                     ),
                                     actions: [
                                       ButtonBar(
