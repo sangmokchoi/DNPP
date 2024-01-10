@@ -54,10 +54,10 @@ class GraphsWidget extends StatelessWidget {
                             return AlertDialog(
                               insetPadding: EdgeInsets.only(left: 10.0, right: 10.0),
                               shape: kRoundedRectangleBorder,
-                              title: Text('도움말'),
+                              title: Text('도움말', style: kAlertDialogTitleTextStyle,),
                               content: Text('설정한 기간 동안 등록한 일정의 시간을 총합하여 나타냅니다\n'
                                   '요일을 클릭하면, 해당 요일에 등록된 일정들의 시간을 총합하여 나타냅니다\n'
-                                  '요일을 재클릭하면, 전체 기간의 일정들의 시간을 보여줍니다\n'),
+                                  '요일을 재클릭하면, 전체 기간의 일정들의 시간을 보여줍니다\n', style: kAlertDialogContentTextStyle,),
                               actions: [
                                 Center(
                                   child: Container(

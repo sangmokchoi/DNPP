@@ -17,7 +17,7 @@ class MainLineChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    print('MainLineChart isMine: $isMine');
+    //print('MainLineChart isMine: $isMine');
     return Padding(
       padding: const EdgeInsets.only(top: 4.0, bottom: 4.0, left: 5.0, right: 5.0),
       child: Container(
