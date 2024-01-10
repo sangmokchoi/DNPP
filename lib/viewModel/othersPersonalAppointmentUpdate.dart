@@ -21,9 +21,40 @@ class OthersPersonalAppointmentUpdate extends ChangeNotifier {
   }
 
   List<CustomAppointment> customAppointmentMeetings = <CustomAppointment>[];
-  List<CustomAppointment> customOthersAppointmentMeetings = <CustomAppointment>[];
+  List<CustomAppointment> OthersCustomAppointmentMeetings = <CustomAppointment>[];
+  List<String> extractCustomAppointmentsUserUids = [];
+
   List<Appointment> newMeetings = [];
   List<Appointment> defaultMeetings = <Appointment>[];
+
+  List<CustomAppointment> extractCustomAppointmentsByCourtAndHour(
+      List<CustomAppointment> customAppointmentMeetings,
+      String title,
+      String roadAddress,
+      Map<int, Map<int, double>> last28DaysHourlyCountsByDaysOfWeek,
+      ) {
+    return customAppointmentMeetings
+        .where((customAppointment) =>
+        customAppointment.pingpongCourtName == title &&
+        customAppointment.pingpongCourtAddress == roadAddress)
+
+        .where((customAppointment) =>
+        customAppointment.appointments.any((appointment) {
+          // startTime에서 hour 추출
+          int startDayOfWeek = customAppointment.appointments[0].startTime.weekday;
+          int startHour = customAppointment.appointments[0].startTime.hour;
+          print('extractCustomAppointmentsByCourtAndHour startDayOfWeek: $startDayOfWeek');
+          print('extractCustomAppointmentsByCourtAndHour startHour: $startHour');
+          //last28DaysHourlyCountsByDaysOfWeek: {5: {17: 3.0, 20: 1.0}, 3: {17: 9.0, 16: 1.0, 20: 1.0}, 6: {0: 1.0}, 4: {17: 1.0, 0: 1.0}, 2: {15: 1.0}}
+          // 시간대 별 구하는 것 뿐만 아니라 요일별로 구해야함
+
+          // last28DaysHourlyCountsByDaysOfWeek의 int값과 동일한 경우만 선택
+          // last28DaysHourlyCountsByDaysOfWeek의 요일별로 동일한 시간대를 가지는 경우만 선택
+          return last28DaysHourlyCountsByDaysOfWeek.containsKey(startDayOfWeek) &&
+              last28DaysHourlyCountsByDaysOfWeek[startDayOfWeek]!.containsKey(startHour);
+        }))
+        .toList();
+  }
 
   List<Appointment> extractAppointmentsByCourt(
       List<CustomAppointment> customAppointmentMeetings,
@@ -31,7 +62,7 @@ class OthersPersonalAppointmentUpdate extends ChangeNotifier {
       String roadAddress) {
     return customAppointmentMeetings
         .where((customAppointment) =>
-    customAppointment.pingpongCourtName == title &&
+        customAppointment.pingpongCourtName == title &&
         customAppointment.pingpongCourtAddress == roadAddress)
         .map((customAppointment) => customAppointment.appointments)
         .expand((appointments) => appointments)
@@ -62,7 +93,7 @@ class OthersPersonalAppointmentUpdate extends ChangeNotifier {
   Color color = Color.fromRGBO(33, 150, 243, 1.0);
 
 //Color(0xFF2196F3);
-  Color d = kMainColor;
+  //Color d = kMainColor;
   bool isOpened = false;
   bool isAllDay = false;
 
@@ -637,6 +668,8 @@ class OthersPersonalAppointmentUpdate extends ChangeNotifier {
   Future<void> personalDaywiseDurationsCalculate(
       bool isInitial, bool isPersonal, String title, String roadAddress) async {
     print('others personalDaywiseDurationsCalculate 시작');
+    print(title);
+    print(roadAddress);
 
     if (isPersonal != true) {
 
@@ -688,10 +721,50 @@ class OthersPersonalAppointmentUpdate extends ChangeNotifier {
         daywiseDurations = last28DaysDurations;
 
       }
+
+      // print('last28DaysHourlyCountsByDaysOfWeek: $last28DaysHourlyCountsByDaysOfWeek');
+      //
+      // var extractCustomA0 =
+      // extractCustomAppointmentsByCourtAndHour0(customAppointmentMeetings, title, roadAddress, last28DaysHourlyCountsByDaysOfWeek);
+      //
+      // print('extractCustomA0: $extractCustomA0');
+
     }
+
+
+    extractCustomAppointments(title, roadAddress);
+
+    notifyListeners();
+
+  }
+
+  Future<void> extractCustomAppointments(String title, String roadAddress) async {
+    var extractedResult =
+    extractCustomAppointmentsByCourtAndHour(customAppointmentMeetings, title, roadAddress, last28DaysHourlyCountsByDaysOfWeek);
+
+    OthersCustomAppointmentMeetings = extractedResult;
+    print('extractCustomA: $extractedResult');
+
+    // extractedResult.forEach((customAppointment) {
+    //   print('extractCustomA userUid: ${customAppointment.userUid}');
+    // });
+    extractCustomAppointmentsUserUids = extractedResult.map((customAppointment) => customAppointment.userUid).toList();
+
+//     Set<String> uniqueUserUids = Set<String>();
+//
+// // 이미 있는 userUid를 추가하면서 중복 체크
+//     extractCustomAppointmentsUserUids.forEach((userUid) {
+//       if (!uniqueUserUids.contains(userUid)) {
+//         uniqueUserUids.add(userUid);
+//       }
+//     });
+//
+// // uniqueUserUids를 리스트로 변환
+//     extractCustomAppointmentsUserUids = uniqueUserUids.toList();
 
     notifyListeners();
   }
+
 
   Future<void> personalCountHours(bool isInitial, bool isMyTime, String title, String roadAddress) async {
 
@@ -741,7 +814,7 @@ class OthersPersonalAppointmentUpdate extends ChangeNotifier {
                   (value) => value + 1,
               ifAbsent: () => 1.0, // 여기를 1로 해서 double 타입으로 변경
             );
-          print('others last28DaysHourlyCountsByDaysOfWeek[dayOfWeek]: ${last28DaysHourlyCountsByDaysOfWeek[dayOfWeek]}');
+          //print('others last28DaysHourlyCountsByDaysOfWeek[dayOfWeek]: ${last28DaysHourlyCountsByDaysOfWeek[dayOfWeek]}');
 
           personalHourlyCounts = last28DaysHourlyCounts;
           startTime = startTime.add(Duration(hours: 1));

@@ -86,7 +86,7 @@ class _MapScreenState extends State<MapScreen> {
           useRootNavigator: false,
           builder: (context) {
             return Center(
-              child: CircularProgressIndicator(), // 로딩 바 표시
+              child: kCustomCircularProgressIndicator, // 로딩 바 표시
             );
           },
         );
@@ -287,8 +287,8 @@ class _MapScreenState extends State<MapScreen> {
                                 alignment: Alignment.centerRight,
                                 children: [
                                   Container(
-                                    margin: EdgeInsets.only(right: 5.0),
-                                    padding: EdgeInsets.all(8.0),
+                                    margin: EdgeInsets.only(right: 7.0),
+                                    padding: EdgeInsets.only(left: 10.0, right: 5.0, top: 5.0, bottom: 5.0),
                                     decoration: BoxDecoration(
                                       border: Border.all(color: kMainColor),
                                       borderRadius: BorderRadius.circular(20.0),
@@ -365,9 +365,6 @@ class _MapScreenState extends State<MapScreen> {
                                     style: ButtonStyle(
                                       padding: MaterialStateProperty.all(
                                           EdgeInsets.zero),
-                                      backgroundColor:
-                                          MaterialStateProperty.all(
-                                              Colors.grey),
                                     ),
                                     iconSize: 18.0, // IconButton의 크기 설정
                                   ),
@@ -387,6 +384,10 @@ class _MapScreenState extends State<MapScreen> {
                         child: TextFormField(
                           controller: _textFormFieldController,
                           decoration: InputDecoration(
+                            labelStyle: TextStyle(color: Colors.grey),
+                            focusedBorder: UnderlineInputBorder(
+                              borderSide: BorderSide(color: Colors.grey), // 밑줄 색상
+                            ),
                             labelText: '탁구장 검색',
                             hintText: '주소 또는 탁구장 이름을 입력해주세요',
                             suffixIcon: IconButton(
