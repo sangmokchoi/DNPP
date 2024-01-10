@@ -14,7 +14,6 @@ import '../viewModel/personalAppointmentUpdate.dart';
 import '../viewModel/profileUpdate.dart';
 
 class LoadData {
-
   FirebaseFirestore db = FirebaseFirestore.instance;
 
   Future<void> fetchUserData(BuildContext context) async {
@@ -27,8 +26,7 @@ class LoadData {
 
     try {
       docRef.get().then(
-            (DocumentSnapshot<Map<String, dynamic>> doc) async {
-
+        (DocumentSnapshot<Map<String, dynamic>> doc) async {
           if (doc.exists) {
             final data = doc.data() as Map<String, dynamic>;
 
@@ -41,8 +39,8 @@ class LoadData {
               ageRange: data['ageRange'] ?? '',
               playedYears: data['playedYears'] ?? '',
               address: (data['address'] as List<dynamic>?)
-                  ?.map<String>((dynamic item) => item.toString())
-                  .toList() ??
+                      ?.map<String>((dynamic item) => item.toString())
+                      .toList() ??
                   [],
               pingpongCourt: (data['pingpongCourt'] as List<dynamic>?)
                   ?.map<PingpongList>((dynamic item) {
@@ -62,12 +60,14 @@ class LoadData {
               racket: data['racket'] ?? '',
             );
 
-            print('_userProfile.pingpongCourt?.length: ${_userProfile.pingpongCourt?.length}');
+            print(
+                '_userProfile.pingpongCourt?.length: ${_userProfile.pingpongCourt?.length}');
 
             await Provider.of<ProfileUpdate>(context, listen: false)
                 .updateUserProfile(_userProfile);
 
-            await Provider.of<ProfileUpdate>(context, listen: false).updateUserProfileUpdated(true);
+            await Provider.of<ProfileUpdate>(context, listen: false)
+                .updateUserProfileUpdated(true);
             print('여기서 updateUserProfileUpdated true로 설정했는데?');
 
             await fetchCurrentUserAppointmentData(context);
@@ -78,11 +78,10 @@ class LoadData {
 
             await fetchAppointmentDataForCalculatingByCourt(context);
             print('await fetchAppointmentData(); completed');
-
           } else {
             print('Document does not exist');
-            await Provider.of<ProfileUpdate>(context, listen: false).updateUserProfileUpdated(false);
-
+            await Provider.of<ProfileUpdate>(context, listen: false)
+                .updateUserProfileUpdated(false);
           }
         },
         onError: (e) => print("Error getting document: $e"),
@@ -91,7 +90,6 @@ class LoadData {
       print('fetchUserData 에러: $e');
     } finally {
       print('fetchUserData 함수 완료');
-
     }
   }
 
@@ -103,12 +101,12 @@ class LoadData {
       db
           .collection("Appointments")
           .where("userUid",
-          isEqualTo: Provider.of<LoginStatusUpdate>(context, listen: false)
-              .currentUser
-              .uid)
+              isEqualTo: Provider.of<LoginStatusUpdate>(context, listen: false)
+                  .currentUser
+                  .uid)
           .get()
           .then(
-            (querySnapshot) {
+        (querySnapshot) {
           print("Successfully completed");
 
           for (var docSnapshot in querySnapshot.docs) {
@@ -117,8 +115,8 @@ class LoadData {
             final data = docSnapshot.data() as Map<String, dynamic>;
 
             List<Appointment>? _appointment =
-            (data['appointments'] as List<dynamic>?)
-                ?.map<Appointment>((dynamic item) {
+                (data['appointments'] as List<dynamic>?)
+                    ?.map<Appointment>((dynamic item) {
               return Appointment(
                 startTime: (item['startTime'] as Timestamp).toDate(),
                 endTime: (item['endTime'] as Timestamp).toDate(),
@@ -150,14 +148,15 @@ class LoadData {
 
           Provider.of<PersonalAppointmentUpdate>(context, listen: false)
               .personalDaywiseDurationsCalculate(
-              true, true, 'title', 'roadAddress');
+                  true, true, 'title', 'roadAddress');
           Provider.of<PersonalAppointmentUpdate>(context, listen: false)
               .personalCountHours(true, true, 'title', 'roadAddress');
           // Provider.of<AppointmentUpdate>(context, listen: false)
           //     .updateRecentDays(0);
           //setState(() {});
         },
-        onError: (e) => print("fetchCurrentUserAppointmentData Error completing: $e"),
+        onError: (e) =>
+            print("fetchCurrentUserAppointmentData Error completing: $e"),
       );
     } catch (e) {
       print(e);
@@ -195,7 +194,7 @@ class LoadData {
           //     .uid)
           .get()
           .then(
-            (querySnapshot) {
+        (querySnapshot) {
           print("Successfully completed");
 
           for (var docSnapshot in querySnapshot.docs) {
@@ -204,8 +203,8 @@ class LoadData {
             final data = docSnapshot.data() as Map<String, dynamic>;
 
             List<Appointment>? _appointment =
-            (data['appointments'] as List<dynamic>?)
-                ?.map<Appointment>((dynamic item) {
+                (data['appointments'] as List<dynamic>?)
+                    ?.map<Appointment>((dynamic item) {
               return Appointment(
                 startTime: (item['startTime'] as Timestamp).toDate(),
                 endTime: (item['endTime'] as Timestamp).toDate(),
@@ -228,23 +227,26 @@ class LoadData {
             // //Provider.of<AppointmentUpdate>(context, listen: false).meetings.add(_appointment?.first);
 
             if (_appointment != null || _appointment.isNotEmpty) {
-              Provider.of<OthersPersonalAppointmentUpdate>(context, listen: false)
+              Provider.of<OthersPersonalAppointmentUpdate>(context,
+                      listen: false)
                   .addCustomMeeting(_customAppointment);
-              Provider.of<OthersPersonalAppointmentUpdate>(context, listen: false)
+              Provider.of<OthersPersonalAppointmentUpdate>(context,
+                      listen: false)
                   .addMeeting(_appointment.first);
             }
           }
 
           Provider.of<OthersPersonalAppointmentUpdate>(context, listen: false)
               .personalDaywiseDurationsCalculate(
-              true, true, 'title', 'roadAddress');
+                  true, true, 'title', 'roadAddress');
           Provider.of<OthersPersonalAppointmentUpdate>(context, listen: false)
               .personalCountHours(true, true, 'title', 'roadAddress');
           // Provider.of<AppointmentUpdate>(context, listen: false)
           //     .updateRecentDays(0);
           //setState(() {});
         },
-        onError: (e) => print("fetchOtherUsersAppointmentData Error completing: $e"),
+        onError: (e) =>
+            print("fetchOtherUsersAppointmentData Error completing: $e"),
       );
     } catch (e) {
       print(e);
@@ -270,7 +272,8 @@ class LoadData {
     // }
   }
 
-  Future<void> fetchAppointmentDataForCalculatingByCourt(BuildContext context) async {
+  Future<void> fetchAppointmentDataForCalculatingByCourt(
+      BuildContext context) async {
     print('fetchAppointmentData 시작');
 
     final pingpongCourt = Provider.of<ProfileUpdate>(context, listen: false)
@@ -304,8 +307,8 @@ class LoadData {
                 .addPingpongCourtAddressList(pingpongCourtAddress);
 
             List<Appointment>? _appointment =
-            (data['appointments'] as List<dynamic>?)
-                ?.map<Appointment>((dynamic item) {
+                (data['appointments'] as List<dynamic>?)
+                    ?.map<Appointment>((dynamic item) {
               return Appointment(
                 startTime: (item['startTime'] as Timestamp).toDate(),
                 endTime: (item['endTime'] as Timestamp).toDate(),
@@ -336,24 +339,34 @@ class LoadData {
 
         Provider.of<CourtAppointmentUpdate>(context, listen: false)
             .courtDaywiseDurationsCalculate(
-            true,
-            false,
-            Provider.of<CourtAppointmentUpdate>(context, listen: false)
-                .pingpongCourtNameList
-                .first,
-            Provider.of<CourtAppointmentUpdate>(context, listen: false)
-                .pingpongCourtAddressList
-                .first);
+                true,
+                false,
+                Provider.of<CourtAppointmentUpdate>(context, listen: false)
+                    .pingpongCourtNameList
+                    .first,
+                Provider.of<CourtAppointmentUpdate>(context, listen: false)
+                    .pingpongCourtAddressList
+                    .first);
         Provider.of<CourtAppointmentUpdate>(context, listen: false)
             .courtCountHours(
-            true,
-            false,
-            Provider.of<CourtAppointmentUpdate>(context, listen: false)
-                .pingpongCourtNameList
-                .first,
-            Provider.of<CourtAppointmentUpdate>(context, listen: false)
-                .pingpongCourtAddressList
-                .first);
+                true,
+                false,
+                Provider.of<CourtAppointmentUpdate>(context, listen: false)
+                    .pingpongCourtNameList
+                    .first,
+                Provider.of<CourtAppointmentUpdate>(context, listen: false)
+                    .pingpongCourtAddressList
+                    .first);
+
+        Provider.of<OthersPersonalAppointmentUpdate>(context, listen: false)
+            .extractCustomAppointments(
+                Provider.of<CourtAppointmentUpdate>(context, listen: false)
+                    .pingpongCourtNameList
+                    .first,
+                Provider.of<CourtAppointmentUpdate>(context, listen: false)
+                    .pingpongCourtAddressList
+                    .first);
+        // 여기서 탁구장별 유저 본인과 비슷한 시간대 찾음
 
         //setState(() {});
       } catch (e) {
@@ -362,29 +375,29 @@ class LoadData {
     }
   }
 
-  // Future<void> refreshData(BuildContext context) async {
-  //
-  //   try {
-  //
-  //     await Future.delayed(Duration(seconds: 1));
-  //     await Provider.of<PersonalAppointmentUpdate>(context, listen: false)
-  //         .resetMeetings();
-  //     await Provider.of<PersonalAppointmentUpdate>(context, listen: false)
-  //         .resetDaywiseDurations();
-  //     await Provider.of<PersonalAppointmentUpdate>(context, listen: false)
-  //         .resetHourlyCounts();
-  //
-  //     await Provider.of<CourtAppointmentUpdate>(context, listen: false)
-  //         .resetMeetings();
-  //     await Provider.of<CourtAppointmentUpdate>(context, listen: false)
-  //         .resetDaywiseDurations();
-  //     await Provider.of<CourtAppointmentUpdate>(context, listen: false)
-  //         .resetHourlyCounts();
-  //
-  //     await fetchUserData(context);
-  //     //setState(() {});
-  //   } catch (e) {
-  //     print(e);
-  //   }
-  // }
+// Future<void> refreshData(BuildContext context) async {
+//
+//   try {
+//
+//     await Future.delayed(Duration(seconds: 1));
+//     await Provider.of<PersonalAppointmentUpdate>(context, listen: false)
+//         .resetMeetings();
+//     await Provider.of<PersonalAppointmentUpdate>(context, listen: false)
+//         .resetDaywiseDurations();
+//     await Provider.of<PersonalAppointmentUpdate>(context, listen: false)
+//         .resetHourlyCounts();
+//
+//     await Provider.of<CourtAppointmentUpdate>(context, listen: false)
+//         .resetMeetings();
+//     await Provider.of<CourtAppointmentUpdate>(context, listen: false)
+//         .resetDaywiseDurations();
+//     await Provider.of<CourtAppointmentUpdate>(context, listen: false)
+//         .resetHourlyCounts();
+//
+//     await fetchUserData(context);
+//     //setState(() {});
+//   } catch (e) {
+//     print(e);
+//   }
+// }
 }

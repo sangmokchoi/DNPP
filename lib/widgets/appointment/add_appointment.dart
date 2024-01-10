@@ -51,7 +51,7 @@ class _AddAppointmentState extends State<AddAppointment> {
           context: context,
           builder: (context) {
             return Center(
-              child: CircularProgressIndicator(), // 로딩 바 표시
+              child: kCustomCircularProgressIndicator, // 로딩 바 표시
             );
           },
         );
@@ -477,11 +477,11 @@ class _AddAppointmentState extends State<AddAppointment> {
                                               children: [
                                                 Text(
                                                   element.title,
-                                                  style: kAppointmentTextButtonStyle,
+                                                  style: kAppointmentCourtTextButtonStyle,
                                                 ),
                                                 Text(
                                                   element.roadAddress,
-                                                  style: kAppointmentTextButtonStyle
+                                                  style: kAppointmentCourtTextButtonStyle
                                                       .copyWith(
                                                     fontSize: 10.0,
                                                   ),

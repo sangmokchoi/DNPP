@@ -180,6 +180,7 @@ class _LoginButtonState extends State<LoginButton> {
       //setState(() {
       Navigator.of(dialogContext).pop();
       print('Navigator.of(dialogContext).pop(); 끝');
+      Navigator.pop(context);
       //print('Provider.of<ProfileUpdate>(context, listen: false).userProfileUpdated: ${Provider.of<ProfileUpdate>(context, listen: false).userProfileUpdated}');
 
       //});
@@ -385,7 +386,7 @@ class _LoginButtonState extends State<LoginButton> {
               builder: (context) {
                 dialogContext = context;
                 return Center(
-                  child: CircularProgressIndicator(),
+                  child: kCustomCircularProgressIndicator,
                 );
               },
             );
@@ -395,10 +396,11 @@ class _LoginButtonState extends State<LoginButton> {
               width: 60.0,
               height: 60.0,
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.all(Radius.circular(30.0)),
+                borderRadius: BorderRadius.all(Radius.circular(0.0)),
               ),
               child: Image.asset('${widget._buttonTitle}',
-              fit: BoxFit.fill,),
+              fit: BoxFit.cover,
+              ),
           ),
         );
       },

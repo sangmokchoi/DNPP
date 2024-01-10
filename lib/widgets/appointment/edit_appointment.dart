@@ -733,12 +733,12 @@ class _EditAppointmentState extends State<EditAppointment> {
                                                         Text(
                                                           element.title,
                                                           style:
-                                                              kAppointmentTextButtonStyle,
+                                                              kAppointmentCourtTextButtonStyle,
                                                         ),
                                                         Text(
                                                           element.roadAddress,
                                                           style:
-                                                              kAppointmentTextButtonStyle
+                                                              kAppointmentCourtTextButtonStyle
                                                                   .copyWith(
                                                             fontSize: 10.0,
                                                           ),
@@ -942,9 +942,11 @@ class _EditAppointmentState extends State<EditAppointment> {
                                     insetPadding:
                                         EdgeInsets.only(left: 10.0, right: 10.0),
                                     shape: kRoundedRectangleBorder,
-                                    title: Text(
-                                      '정말 일정을 삭제하시겠습니까?',
-                                      style: kAppointmentDateTextStyle,
+                                    title: Center(
+                                      child: Text(
+                                        '정말 일정을 삭제하시겠습니까?',
+                                        style: kAppointmentDateTextStyle,
+                                      ),
                                     ),
                                     actions: <Widget>[
                                       TextButton(

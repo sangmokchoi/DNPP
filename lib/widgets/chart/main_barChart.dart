@@ -28,7 +28,7 @@ class MainBarChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    print('MainBarChart isMine: $isMine');
+    //print('MainBarChart isMine: $isMine');
     buildcontext = context;
     return Container(
       height: 250,
@@ -233,7 +233,7 @@ class MainBarChart extends StatelessWidget {
       axisSide: meta.axisSide,
       space: 5,
       child: ConstrainedBox(
-        constraints: BoxConstraints.tightFor(width: 35.0),
+        constraints: BoxConstraints.tightFor(width: 40.0),
         child: SelectableButton(
           onPressed: () async {
             //isSelected = !isSelected;
@@ -331,7 +331,7 @@ class MainBarChart extends StatelessWidget {
           },
           style: ButtonStyle(
             shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-              kRoundedRectangleBorder,
+              kRoundedRectangleBorder.copyWith(borderRadius: BorderRadius.circular(30)),
             ),
             backgroundColor: MaterialStateProperty.resolveWith<Color?>(
                   (Set<MaterialState> states) {
@@ -341,6 +341,12 @@ class MainBarChart extends StatelessWidget {
                 }
                 return null;
               },
+            ),
+            textStyle: MaterialStateProperty.all<TextStyle>(
+              TextStyle(
+                fontSize: 18.0, // Set your desired font size
+                fontWeight: FontWeight.bold, // Set your desired font weight
+              ),
             ),
           ),
           selected: Provider.of<PersonalAppointmentUpdate>(buildcontext,
