@@ -17,7 +17,7 @@ class AddressListElement extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.only(top: 8.0, bottom: 0.0, left: 10.0, right: 10.0),
+      padding: EdgeInsets.only(top: 5.0, bottom: 0.0, left: 10.0, right: 10.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
