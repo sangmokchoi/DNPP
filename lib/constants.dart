@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-const kNaverMapApiKey = '7evubnn4j6';
+//const kNaverMapApiKey = '7evubnn4j6';
 
 const kCustomCircularProgressIndicator = CircularProgressIndicator(
   valueColor: AlwaysStoppedAnimation<Color>(kMainColor),
@@ -117,18 +117,31 @@ const kMapPingponglistElementEtcTextStyle = TextStyle(
     fontSize: 14.0,
     fontWeight: FontWeight.normal);
 
-const kMatchingScreenNicknameTextStyle = TextStyle(
+const kMatchingScreen_FirstNicknameTextStyle = TextStyle(
+    fontSize: 18.0,
+    color: Colors.white,
+    fontWeight: FontWeight.bold
+);
+
+const kMatchingScreen_FirstUserInfoTextStyle = TextStyle(
+    fontSize: 13.0,
+    color: Colors.white,
+    fontWeight: FontWeight.normal
+);
+
+const kMatchingScreen_FirstAddressTextStyle = TextStyle(
+    fontSize: 16.0,
+    color: Colors.white,
+    fontWeight: FontWeight.normal
+);
+
+const kMatchingScreen_SecondNicknameTextStyle = TextStyle(
     fontSize: 18.0,
     fontWeight: FontWeight.bold
 );
 
-const kMatchingScreenUserInfoTextStyle = TextStyle(
+const kMatchingScreen_SecondUserInfoTextStyle = TextStyle(
     fontSize: 14.0,
-    fontWeight: FontWeight.normal
-);
-
-const kMatchingScreenAddressTextStyle = TextStyle(
-    fontSize: 16.0,
     fontWeight: FontWeight.normal
 );
 
@@ -137,3 +150,7 @@ const kProfileScreenTogglebuttonsTextStyle = TextStyle(
     fontWeight: FontWeight.normal
 );
 
+const kMatchingScreenTextHeaderTextStyle = TextStyle(
+    fontSize: 15.0,
+    fontWeight: FontWeight.normal
+);
