@@ -21,6 +21,19 @@ class PingpongList {
   final double mapx;
   final double mapy;
 
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+          other is PingpongList &&
+              runtimeType == other.runtimeType &&
+              title == other.title &&
+              roadAddress == other.roadAddress &&
+              address == other.address;
+
+  @override
+  int get hashCode => title.hashCode ^ roadAddress.hashCode ^ address.hashCode;
+
+
   factory PingpongList.fromFirestore(
       DocumentSnapshot<Map<String, dynamic>> snapshot,
       SnapshotOptions? options,
