@@ -57,15 +57,13 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(final BuildContext context) {
 
-    Brightness brightness = MediaQuery.of(context).platformBrightness;
-
     // 라이트 모드와 다크 모드에 따라 테마 설정
-    ThemeData theme = brightness == Brightness.light
-        ? ThemeData(
+    ThemeData theme = ThemeData(
       primaryColor: kMainColor, // 라이트 모드의 primaryColor 설정
       secondaryHeaderColor: Colors.grey,
-    )
-        : ThemeData.dark().copyWith(
+    );
+
+    ThemeData darkTheme = ThemeData.dark().copyWith(
       primaryColor: kMainColor, // 다크 모드의 primaryColor 설정
       secondaryHeaderColor: Colors.grey,
     );
@@ -118,6 +116,7 @@ class HomePage extends StatelessWidget {
           //   secondaryHeaderColor: Colors.grey,
           // ),
           theme: theme,
+          darkTheme: darkTheme,
           //initialRoute: HomeScreen.id,
           // routes: {
           //   // When navigating to the "/" route, build the FirstScreen widget.

@@ -85,7 +85,6 @@ class _MatchingScreenState extends State<MatchingScreen> {
         .personalCountHours(false, true, 'title', 'roadAddress');
 
     setState(() {
-
       if (number == 0) {
         isShowGraphZero = !isShowGraphZero;
       }
@@ -313,14 +312,14 @@ class _MatchingScreenState extends State<MatchingScreen> {
   }
 
   Future<Stream<QuerySnapshot<Map<String, dynamic>>>>
-  constructSimilarUsersCourtStream(PingpongList pingpongList) async {
+      constructSimilarUsersCourtStream(PingpongList pingpongList) async {
     await Provider.of<OthersPersonalAppointmentUpdate>(context, listen: false)
         .extractCustomAppointments(
-        pingpongList.title, pingpongList.roadAddress);
+            pingpongList.title, pingpongList.roadAddress);
 
-    var userUids = Provider.of<OthersPersonalAppointmentUpdate>(context,
-        listen: false)
-        .extractCustomAppointmentsUserUids;
+    var userUids =
+        Provider.of<OthersPersonalAppointmentUpdate>(context, listen: false)
+            .extractCustomAppointmentsUserUids;
 
     // Check if userUids is not empty before using whereIn
     if (userUids.isNotEmpty) {
@@ -333,7 +332,6 @@ class _MatchingScreenState extends State<MatchingScreen> {
       return Stream.empty();
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -398,7 +396,15 @@ class _MatchingScreenState extends State<MatchingScreen> {
                                         RichText(
                                           text: TextSpan(
                                             text: '나와 비슷한 시간에 나오는 ',
-                                            style: DefaultTextStyle.of(context).style,
+                                            style: Theme.of(context)
+                                                        .brightness ==
+                                                    Brightness.light
+                                                ? kMatchingScreenTextHeaderTextStyle
+                                                    .copyWith(
+                                                        color: Colors.black)
+                                                : kMatchingScreenTextHeaderTextStyle
+                                                    .copyWith(
+                                                        color: Colors.white),
                                             children: [
                                               TextSpan(
                                                 text: chosenCourthood,
@@ -428,73 +434,94 @@ class _MatchingScreenState extends State<MatchingScreen> {
                                         var user = snapshot.data?.docs[index]
                                             .data() as Map<String, dynamic>;
                                         //print('user[pingpongCourt][1].roadAddress: ${user['pingpongCourt'][1]['roadAddress']}');
-                                        return GestureDetector(
-                                          onTap: () async {
-                                            await onTapGraphAppear(user, 0);
-                                          },
-                                          child: Stack(
-                                            children: [
+                                        // 맨 처음 item에 왼쪽에 8.0의 패딩 추가
+                                        EdgeInsets padding =
+                                            EdgeInsets.only(left: 8.0);
+                                        if (index == 0) {
+                                          padding = EdgeInsets.only(left: 8.0);
+                                        }
+                                        // 맨 마지막 item에 오른쪽에 8.0의 패딩 추가
+                                        else if (index == userDocs.length - 1) {
+                                          padding = EdgeInsets.only(right: 8.0);
+                                        }
+
+                                        return Padding(
+                                          padding: padding,
+                                          child: GestureDetector(
+                                            onTap: () async {
+                                              await onTapGraphAppear(user, 0);
+                                            },
+                                            child: Stack(children: [
                                               Padding(
-                                              padding: const EdgeInsets.all(8.0),
-                                              child: Container(
-                                                width: 200,
-                                                decoration: BoxDecoration(
-                                                  color: kMainColor,
-                                                  borderRadius: BorderRadius.all(
-                                                      Radius.circular(20.0)),
-                                                ),
-                                                child: Column(
-                                                  mainAxisAlignment:
-                                                      MainAxisAlignment.center,
-                                                  children: [
-                                                    user['photoUrl'].isNotEmpty
-                                                        ? CircleAvatar(
-                                                            backgroundImage:
-                                                                NetworkImage(user[
-                                                                    'photoUrl']),
-                                                          )
-                                                        : Icon(Icons.person),
-                                                    SizedBox(
-                                                      height: 5.0,
-                                                    ),
-                                                    Text(
-                                                      user['nickName'],
-                                                      style:
-                                                          kMatchingScreenNicknameTextStyle,
-                                                    ),
-                                                    Text(
-                                                      '${user['playStyle']} / ${user['racket']} / ${user['playedYears']} / ${user['rubber']}',
-                                                      style:
-                                                          kMatchingScreenUserInfoTextStyle,
-                                                    ),
-                                                    Text(
-                                                      chosenCourthood,
-                                                      style:
-                                                          kMatchingScreenAddressTextStyle,
-                                                    ),
-                                                  ],
+                                                padding:
+                                                    const EdgeInsets.all(5.0),
+                                                child: Container(
+                                                  width: 200,
+                                                  decoration: BoxDecoration(
+                                                    color: kMainColor,
+                                                    borderRadius:
+                                                        BorderRadius.all(
+                                                            Radius.circular(
+                                                                20.0)),
+                                                  ),
+                                                  child: Column(
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment
+                                                            .center,
+                                                    children: [
+                                                      user['photoUrl']
+                                                              .isNotEmpty
+                                                          ? CircleAvatar(
+                                                              backgroundImage:
+                                                                  NetworkImage(user[
+                                                                      'photoUrl']),
+                                                            )
+                                                          : Icon(Icons.person),
+                                                      SizedBox(
+                                                        height: 5.0,
+                                                      ),
+                                                      Text(
+                                                        user['nickName'],
+                                                        style:
+                                                            kMatchingScreen_FirstNicknameTextStyle,
+                                                      ),
+                                                      Text(
+                                                        '${user['playStyle']} / ${user['racket']} / ${user['playedYears']} / ${user['rubber']}',
+                                                        style:
+                                                            kMatchingScreen_FirstUserInfoTextStyle,
+                                                      ),
+                                                      Text(
+                                                        chosenCourthood,
+                                                        style:
+                                                            kMatchingScreen_FirstAddressTextStyle,
+                                                      ),
+                                                    ],
+                                                  ),
                                                 ),
                                               ),
-                                            ),
                                               Positioned(
                                                 top: 10.0,
                                                 right: 5.0,
                                                 child: IconButton(
                                                   icon: Icon(
-                                                    Icons.arrow_forward_ios_rounded,
+                                                    Icons
+                                                        .arrow_forward_ios_rounded,
                                                     size: 15,
-                                                    color: Theme.of(context).brightness ==
-                                                        Brightness.light
-                                                        ? Colors.black // 다크 모드일 때 텍스트 색상
+                                                    color: Theme.of(context)
+                                                                .brightness ==
+                                                            Brightness.light
+                                                        ? Colors
+                                                            .black // 다크 모드일 때 텍스트 색상
                                                         : Colors.white,
                                                   ),
                                                   onPressed: () {
                                                     // 아이콘 버튼이 눌렸을 때 수행할 동작 추가
-                                                    print('이 유저와 함께 탁구를 쳐보자는 메시지를 보낼까요?');
+                                                    print(
+                                                        '이 유저와 함께 탁구를 쳐보자는 메시지를 보낼까요?');
                                                   },
                                                 ),
                                               ),
-                                            ]
+                                            ]),
                                           ),
                                         );
 
@@ -553,7 +580,6 @@ class _MatchingScreenState extends State<MatchingScreen> {
                                 isMine: false),
                           ),
                         ),
-
                         StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
                             stream: usersCourtStream,
                             builder: (context, snapshot) {
@@ -590,8 +616,16 @@ class _MatchingScreenState extends State<MatchingScreen> {
                                       children: [
                                         RichText(
                                           text: TextSpan(
-                                            text: '같은 ',
-                                            style: DefaultTextStyle.of(context).style,
+                                            text: '나와 같은 ',
+                                            style: Theme.of(context)
+                                                        .brightness ==
+                                                    Brightness.light
+                                                ? kMatchingScreenTextHeaderTextStyle
+                                                    .copyWith(
+                                                        color: Colors.black)
+                                                : kMatchingScreenTextHeaderTextStyle
+                                                    .copyWith(
+                                                        color: Colors.white),
                                             children: [
                                               TextSpan(
                                                 text: chosenCourthood,
@@ -680,73 +714,96 @@ class _MatchingScreenState extends State<MatchingScreen> {
                                         var user = snapshot.data?.docs[index]
                                             .data() as Map<String, dynamic>;
                                         //print('user[pingpongCourt][1].roadAddress: ${user['pingpongCourt'][1]['roadAddress']}');
-                                        return GestureDetector(
-                                          onTap: () async {
-                                            await onTapGraphAppear(user, 1);
-                                          },
-                                          child: Stack(
-                                            children: [
-                                              Padding(
-                                                padding: const EdgeInsets.all(8.0),
-                                                child: Container(
-                                                  width: 200,
-                                                  decoration: BoxDecoration(
-                                                    color: kMainColor,
-                                                    borderRadius: BorderRadius.all(
-                                                        Radius.circular(20.0)),
-                                                  ),
-                                                  child: Column(
-                                                    mainAxisAlignment:
-                                                        MainAxisAlignment.center,
-                                                    children: [
-                                                      user['photoUrl'].isNotEmpty
-                                                          ? CircleAvatar(
-                                                              backgroundImage:
-                                                                  NetworkImage(user[
-                                                                      'photoUrl']),
-                                                            )
-                                                          : Icon(Icons.person),
-                                                      SizedBox(
-                                                        height: 5.0,
-                                                      ),
-                                                      Text(
-                                                        user['nickName'],
-                                                        style:
-                                                            kMatchingScreenNicknameTextStyle,
-                                                      ),
-                                                      Text(
-                                                        '${user['playStyle']} / ${user['racket']} / ${user['playedYears']} / ${user['rubber']}',
-                                                        style:
-                                                            kMatchingScreenUserInfoTextStyle,
-                                                      ),
-                                                      Text(
-                                                        chosenCourthood,
-                                                        style:
-                                                            kMatchingScreenAddressTextStyle,
-                                                      ),
-                                                    ],
+                                        EdgeInsets padding =
+                                            EdgeInsets.only(left: 8.0);
+                                        if (index == 0) {
+                                          padding = EdgeInsets.only(left: 8.0);
+                                        }
+                                        // 맨 마지막 item에 오른쪽에 8.0의 패딩 추가
+                                        else if (index == userDocs.length - 1) {
+                                          padding = EdgeInsets.only(right: 8.0);
+                                        }
+                                        return Padding(
+                                          padding: padding,
+                                          child: GestureDetector(
+                                            onTap: () async {
+                                              await onTapGraphAppear(user, 1);
+                                            },
+                                            child: Stack(
+                                              children: [
+                                                Padding(
+                                                  padding:
+                                                      const EdgeInsets.all(5.0),
+                                                  child: Container(
+                                                    width: 200,
+                                                    decoration: BoxDecoration(
+                                                      color: kMainColor,
+                                                      borderRadius:
+                                                          BorderRadius.all(
+                                                              Radius.circular(
+                                                                  20.0)),
+                                                    ),
+                                                    child: Column(
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment
+                                                              .center,
+                                                      children: [
+                                                        user['photoUrl']
+                                                                .isNotEmpty
+                                                            ? CircleAvatar(
+                                                                backgroundImage:
+                                                                    NetworkImage(
+                                                                        user[
+                                                                            'photoUrl']),
+                                                              )
+                                                            : Icon(
+                                                                Icons.person),
+                                                        SizedBox(
+                                                          height: 5.0,
+                                                        ),
+                                                        Text(
+                                                          user['nickName'],
+                                                          style:
+                                                              kMatchingScreen_FirstNicknameTextStyle,
+                                                        ),
+                                                        Text(
+                                                          '${user['playStyle']} / ${user['racket']} / ${user['playedYears']} / ${user['rubber']}',
+                                                          style:
+                                                              kMatchingScreen_FirstUserInfoTextStyle,
+                                                        ),
+                                                        Text(
+                                                          chosenCourthood,
+                                                          style:
+                                                              kMatchingScreen_FirstAddressTextStyle,
+                                                        ),
+                                                      ],
+                                                    ),
                                                   ),
                                                 ),
-                                              ),
-                                              Positioned(
-                                                top: 10.0,
-                                                right: 5.0,
-                                                child: IconButton(
-                                                  icon: Icon(
-                                                    Icons.arrow_forward_ios_rounded,
-                                                    size: 15,
-                                                    color: Theme.of(context).brightness ==
-                                                        Brightness.light
-                                                        ? Colors.black // 다크 모드일 때 텍스트 색상
-                                                        : Colors.white,
+                                                Positioned(
+                                                  top: 10.0,
+                                                  right: 5.0,
+                                                  child: IconButton(
+                                                    icon: Icon(
+                                                      Icons
+                                                          .arrow_forward_ios_rounded,
+                                                      size: 15,
+                                                      color: Theme.of(context)
+                                                                  .brightness ==
+                                                              Brightness.light
+                                                          ? Colors
+                                                              .black // 다크 모드일 때 텍스트 색상
+                                                          : Colors.white,
+                                                    ),
+                                                    onPressed: () {
+                                                      // 아이콘 버튼이 눌렸을 때 수행할 동작 추가
+                                                      print(
+                                                          '이 유저와 함께 탁구를 쳐보자는 메시지를 보낼까요?');
+                                                    },
                                                   ),
-                                                  onPressed: () {
-                                                    // 아이콘 버튼이 눌렸을 때 수행할 동작 추가
-                                                    print('이 유저와 함께 탁구를 쳐보자는 메시지를 보낼까요?');
-                                                  },
                                                 ),
-                                              ),
-                                            ],
+                                              ],
+                                            ),
                                           ),
                                         );
 
@@ -805,7 +862,6 @@ class _MatchingScreenState extends State<MatchingScreen> {
                                 isMine: false),
                           ),
                         ),
-
                         StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
                           stream: usersNeighborhoodStream,
                           builder: (context, snapshot) {
@@ -843,8 +899,14 @@ class _MatchingScreenState extends State<MatchingScreen> {
                                     children: [
                                       RichText(
                                         text: TextSpan(
-                                          text: '같은 ',
-                                          style: DefaultTextStyle.of(context).style,
+                                          text: '나와 같은 ',
+                                          style: Theme.of(context).brightness ==
+                                                  Brightness.light
+                                              ? kMatchingScreenTextHeaderTextStyle
+                                                  .copyWith(color: Colors.black)
+                                              : kMatchingScreenTextHeaderTextStyle
+                                                  .copyWith(
+                                                      color: Colors.white),
                                           children: [
                                             TextSpan(
                                               text: chosenNeighborhood,
@@ -906,14 +968,14 @@ class _MatchingScreenState extends State<MatchingScreen> {
                                     shrinkWrap: true,
                                     itemCount: snapshot.data?.docs.length,
                                     itemBuilder: (context, index) {
-                                      var user = snapshot.data?.docs[index].data()
-                                          as Map<String, dynamic>;
+                                      var user = snapshot.data?.docs[index]
+                                          .data() as Map<String, dynamic>;
                                       //print('user[pingpongCourt][1].roadAddress: ${user['pingpongCourt'][1]['roadAddress']}');
                                       return GestureDetector(
                                         onTap: () async {
                                           await onTapGraphAppear(user, 2);
                                         },
-                                        child: ListTile (
+                                        child: ListTile(
                                           leading: user['photoUrl'].isNotEmpty
                                               ? CircleAvatar(
                                                   backgroundImage: NetworkImage(
@@ -923,26 +985,30 @@ class _MatchingScreenState extends State<MatchingScreen> {
                                           title: Text(
                                             user['nickName'],
                                             style:
-                                                kMatchingScreenNicknameTextStyle,
+                                                kMatchingScreen_SecondNicknameTextStyle,
                                           ),
                                           subtitle: Text(
                                             '${user['playStyle']} / ${user['racket']} / ${user['playedYears']} / ${user['rubber']}',
                                             style:
-                                                kMatchingScreenUserInfoTextStyle,
+                                                kMatchingScreen_SecondUserInfoTextStyle,
                                           ),
-                                            trailing: IconButton(
-                                              icon: Icon(
-                                                Icons.arrow_forward_ios_rounded,
+                                          trailing: IconButton(
+                                            icon: Icon(
+                                              Icons.arrow_forward_ios_rounded,
                                               size: 15.0,
-                                                color: Theme.of(context).brightness ==
-                                                    Brightness.light
-                                                    ? Colors.black // 다크 모드일 때 텍스트 색상
-                                                    : Colors.white,),
-                                              onPressed: () {
-                                                // 아이콘 버튼이 눌렸을 때 수행할 동작 추가
-                                                print('이 유저와 함께 탁구를 쳐보자는 메시지를 보낼까요?');
-                                              },
+                                              color: Theme.of(context)
+                                                          .brightness ==
+                                                      Brightness.light
+                                                  ? Colors
+                                                      .black // 다크 모드일 때 텍스트 색상
+                                                  : Colors.white,
                                             ),
+                                            onPressed: () {
+                                              // 아이콘 버튼이 눌렸을 때 수행할 동작 추가
+                                              print(
+                                                  '이 유저와 함께 탁구를 쳐보자는 메시지를 보낼까요?');
+                                            },
+                                          ),
                                         ),
                                       );
 
@@ -1037,7 +1103,7 @@ class _MatchingScreenState extends State<MatchingScreen> {
                                             Padding(
                                               padding: const EdgeInsets.only(
                                                   top: 10.0),
-                                              child: Text('같은 탁구장 사람들'),
+                                              child: Text('나와 같은 탁구장 사람들'),
                                             ),
                                             SizedBox(
                                               height: 200,
@@ -1161,7 +1227,7 @@ class _MatchingScreenState extends State<MatchingScreen> {
                                             .isNotEmpty)
                                           Padding(
                                             padding: const EdgeInsets.all(15.0),
-                                            child: Text('같은 동네 사람들'),
+                                            child: Text('나와 같은 동네 사람들'),
                                           ),
                                         ListView.builder(
                                           //scrollDirection: Axis.horizontal,
