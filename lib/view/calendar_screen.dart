@@ -503,7 +503,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
             ),
             Expanded(
               child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 0.0),
+                padding: EdgeInsets.only(bottom: 5.0),
                 child: CustomSFCalendar(
                   calendarTapped: calendarTapped,
                   context: context,
@@ -527,7 +527,7 @@ class SingleChoice extends StatelessWidget {
         borderRadius: BorderRadius.circular(30),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.5),
+            color: Colors.grey.withOpacity(0.3),
             //spreadRadius: 5,
             blurRadius: 5,
             offset: Offset(0, 3), // changes position of shadow
@@ -577,10 +577,10 @@ class SingleChoice extends StatelessWidget {
               (Set<MaterialState> states) {
             if (states.contains(MaterialState.selected)) {
               // If the button is selected (clicked), set text color to black
-              return Colors.lightBlue;
+              return kMainColor;
             }
             // Default text color for unselected state
-            return Colors.blue;
+            return Colors.grey;
           }),
           foregroundColor: MaterialStateProperty.all(Colors.white),
           elevation: MaterialStateProperty.all(8),

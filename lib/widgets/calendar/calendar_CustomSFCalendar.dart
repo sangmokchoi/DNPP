@@ -73,7 +73,7 @@ class CustomSFCalendar extends StatelessWidget {
 
       scheduleViewSettings: ScheduleViewSettings(
         hideEmptyScheduleWeek: true,
-        appointmentItemHeight: 160,
+        appointmentItemHeight: 60,
         appointmentTextStyle: TextStyle(
           fontSize: 16,
         ),
@@ -101,7 +101,7 @@ class CustomSFCalendar extends StatelessWidget {
         ),
         monthHeaderSettings: MonthHeaderSettings(
           monthFormat: 'MMMM, yyyy',
-          height: 90,
+          height: 0,
           textAlign: TextAlign.justify,
           backgroundColor: Colors.lightBlueAccent,
           monthTextStyle: TextStyle(

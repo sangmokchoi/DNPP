@@ -11,6 +11,7 @@ import 'package:flutter/services.dart';
 
 import 'package:dnpp/models/map_geocode.dart';
 import 'package:dnpp/models/search.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_naver_map/flutter_naver_map.dart';
 import 'package:provider/provider.dart';
 import '../models/locationData.dart';
@@ -34,6 +35,7 @@ class MapScreen extends StatefulWidget {
 
 class _MapScreenState extends State<MapScreen> {
   TextEditingController _textFormFieldController = TextEditingController();
+  late BuildContext _context;
 
   StreamSubscription? _sub;
 
@@ -74,12 +76,12 @@ class _MapScreenState extends State<MapScreen> {
     super.dispose();
   }
 
-  void toggleLoading(bool isLoading) {
+  void toggleLoading(BuildContext context, bool isLoading) {
     setState(() {
 
       if (isLoading) {
         // 로딩 바를 화면에 표시
-        print('maoscreen 로딩 바를 화면에 표시');
+        print('mapscreen 로딩 바를 화면에 표시');
         showDialog(
           context: context,
           barrierDismissible: false,
@@ -91,7 +93,7 @@ class _MapScreenState extends State<MapScreen> {
           },
         );
       } else {
-        print('로딩 바 제거');
+        print('toggleLoading 로딩 바 제거');
         Navigator.pop(context);
         //Navigator.of(context).pop();
       }
@@ -132,7 +134,8 @@ class _MapScreenState extends State<MapScreen> {
     return input.replaceAll(exp, '');
   }
 
-  void showAlert() {
+  void showAlert(BuildContext context) {
+
       showDialog(
         context: context,
         builder: (context) {
@@ -182,7 +185,7 @@ class _MapScreenState extends State<MapScreen> {
     if (searchResult['items'].isEmpty) {
       print('검색 결과 없음');
 
-      showAlert();
+      showAlert(_context);
     } else {
       print('updatePPLocation 진입');
 
@@ -232,6 +235,7 @@ class _MapScreenState extends State<MapScreen> {
 
   @override
   Widget build(BuildContext context) {
+    _context = context;
     return SafeArea(
       child: GestureDetector(
         onTap: () {
@@ -245,7 +249,7 @@ class _MapScreenState extends State<MapScreen> {
                 size: 24.0, // 아이콘 크기 설정
               ),
               titleTextStyle: kAppbarTextStyle,
-              //backgroundColor: Colors.white,
+              backgroundColor: Colors.transparent,
               elevation: 0.0,
               leading: IconButton(
                 icon: Icon(Icons.arrow_back),
@@ -376,8 +380,8 @@ class _MapScreenState extends State<MapScreen> {
                 ),
                 // 등록한 탁구장 리스트
                 Padding(
-                  padding: const EdgeInsets.symmetric(
-                      vertical: 10.0, horizontal: 20.0),
+                  padding: const EdgeInsets.only(
+                      bottom: 10.0, left: 20.0, right: 10.0),
                   child: Row(
                     children: [
                       Expanded(
@@ -403,19 +407,21 @@ class _MapScreenState extends State<MapScreen> {
 
                           Search search = Search();
 
-                          toggleLoading(true);
+                          toggleLoading(context, true);
 
                           try {
+                            print('try');
                             var searchResult = await search.fetchSearchData(
                                 _textFormFieldController.text);
+                            print('searchResult: $searchResult');
+                            toggleLoading(context, false);
 
                             await updatePPLocation(searchResult);
-                            // 성공적으로 데이터를 받아온 후 로딩 바 닫기
-                            toggleLoading(false);
 
                             // 나머지 작업 수행
                           } catch (error) {
-                            toggleLoading(false);
+                            print('try end');
+                            toggleLoading(context, false);
                           }
                         },
                       ),

@@ -26,6 +26,7 @@ import '../models/locationData.dart';
 import 'package:kpostal/kpostal.dart';
 
 import '../viewModel/loginStatusUpdate.dart';
+import '../viewModel/mapWidgetUpdate.dart';
 import 'calendar_screen.dart';
 import 'main_screen.dart';
 
@@ -356,8 +357,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         onPressed: () async {
                           // 첫 회원 가입 시에 뒤로를 클릭하게 되면, userprofile을 초기화 해야 함
                           if (!Provider.of<LoginStatusUpdate>(context, listen: false).isLoggedIn) {
-                          await Provider.of<ProfileUpdate>(context, listen: false).resetUserProfile();
+                            await Provider.of<ProfileUpdate>(context, listen: false).resetUserProfile();
                           }
+
+                          final mapWidgetUpdate =
+                          Provider.of<MapWidgetUpdate>(
+                              context, listen: false);
+
+                          if (mapWidgetUpdate.pPListElements.isNotEmpty) {
+                            await mapWidgetUpdate.clearPPListElements();
+                          }
+
                           setState(() {
                             Navigator.pop(context);
                           });
@@ -1538,12 +1548,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     shape: kRoundedRectangleBorder,
                                     title: Text(
                                       "프로필 저장",
-                                      textAlign: TextAlign.center,
+                                      //textAlign: TextAlign.center,
                                       style: kAlertDialogTitleTextStyle,
                                     ),
                                     content: Text(
                                       "위 내용을 토대로 프로필을 저장합니다",
-                                      textAlign: TextAlign.center,
+                                      //textAlign: TextAlign.center,
                                       style: kAlertDialogContentTextStyle,
                                     ),
                                     actions: [

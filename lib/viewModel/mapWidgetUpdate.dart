@@ -151,7 +151,7 @@ class MapWidgetUpdate with ChangeNotifier {
     notifyListeners();
   }
 
-  void clearOverlays() {
+  Future clearOverlays() async {
     naverController.clearOverlays();
     notifyListeners();
   }
@@ -173,7 +173,7 @@ class MapWidgetUpdate with ChangeNotifier {
     notifyListeners();
   }
 
-  void clearPPListElements() {
+  Future clearPPListElements() async {
     pPListElements.clear();
     notifyListeners();
   }
