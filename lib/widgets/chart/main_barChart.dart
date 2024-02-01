@@ -6,6 +6,7 @@ import '../../constants.dart';
 import '../../viewModel/courtAppointmentUpdate.dart';
 import '../../viewModel/othersPersonalAppointmentUpdate.dart';
 import '../../viewModel/personalAppointmentUpdate.dart';
+import 'SelectableButton.dart';
 
 class MainBarChart extends StatelessWidget {
   MainBarChart({required this.isCourt, required this.isMine, required this.backgroundColor});
@@ -33,6 +34,14 @@ class MainBarChart extends StatelessWidget {
     return Container(
       height: 250,
       decoration: BoxDecoration(
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.5),
+              //spreadRadius: 5,
+              blurRadius: 5,
+              offset: Offset(0, 0.5),
+            ),
+          ],
           borderRadius: BorderRadius.all(
             Radius.circular(20),
           ),
@@ -56,12 +65,14 @@ class MainBarChart extends StatelessWidget {
                 } else {
                   return BarChart(individualBarDataCourt());
                 }
+
               } else { // 개인별 그래프
 
                 if (Provider.of<PersonalAppointmentUpdate>(context,
                         listen: false)
                     .daywiseDurations
                     .isEmpty) {
+
                   return Center(
                     child: Text(
                       '완료된 개인 일정이 없습니다',
@@ -195,6 +206,7 @@ class MainBarChart extends StatelessWidget {
       gridData: const FlGridData(show: false),
     );
   }
+
   Widget getTitlesPersonal(double value, TitleMeta meta) {
     const style = TextStyle(
       color: Colors.white,
@@ -358,6 +370,7 @@ class MainBarChart extends StatelessWidget {
       ),
     );
   } // 월, 화, 수, ... 타이틀 관련
+
   BarChartGroupData makeGroupDataPersonal(
       int x,
       double y, {
@@ -395,6 +408,7 @@ class MainBarChart extends StatelessWidget {
       showingTooltipIndicators: showTooltips,
     );
   }
+
   List<BarChartGroupData> showingGroupsPersonal() => List.generate(7, (i) {
     switch (i) {
       case 0:
@@ -640,7 +654,7 @@ class MainBarChart extends StatelessWidget {
       axisSide: meta.axisSide,
       space: 5,
       child: ConstrainedBox(
-        constraints: BoxConstraints.tightFor(width: 35.0),
+        constraints: BoxConstraints.tightFor(width: 40.0),
         child: SelectableButton(
           onPressed: () async {
             // 해당 버튼을 클릭하면 다른 버튼들의 선택을 해제하고 현재 버튼을 선택
@@ -831,46 +845,4 @@ class MainBarChart extends StatelessWidget {
             return throw Error();
         }
       });
-}
-
-class SelectableButton extends StatelessWidget {
-  SelectableButton({
-    super.key,
-    required this.selected,
-    this.style,
-    required this.onPressed,
-    required this.child,
-  });
-
-  final bool selected;
-  final ButtonStyle? style;
-  final VoidCallback? onPressed;
-  final Widget child;
-
-  late final MaterialStatesController statesController =
-      MaterialStatesController(
-          <MaterialState>{if (selected) MaterialState.selected});
-
-  @override
-  void didUpdateWidget(SelectableButton oldWidget) {
-    //super.didUpdateWidget(oldWidget);
-    if (selected != oldWidget.selected) {
-      statesController.update(MaterialState.selected, selected);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        shape: BoxShape.circle,
-      ),
-      child: TextButton(
-        statesController: statesController,
-        style: style,
-        onPressed: onPressed,
-        child: child,
-      ),
-    );
-  }
 }

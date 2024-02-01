@@ -43,8 +43,8 @@ class OthersPersonalAppointmentUpdate extends ChangeNotifier {
           // startTime에서 hour 추출
           int startDayOfWeek = customAppointment.appointments[0].startTime.weekday;
           int startHour = customAppointment.appointments[0].startTime.hour;
-          print('extractCustomAppointmentsByCourtAndHour startDayOfWeek: $startDayOfWeek');
-          print('extractCustomAppointmentsByCourtAndHour startHour: $startHour');
+          //print('extractCustomAppointmentsByCourtAndHour startDayOfWeek: $startDayOfWeek');
+          //print('extractCustomAppointmentsByCourtAndHour startHour: $startHour');
           //last28DaysHourlyCountsByDaysOfWeek: {5: {17: 3.0, 20: 1.0}, 3: {17: 9.0, 16: 1.0, 20: 1.0}, 6: {0: 1.0}, 4: {17: 1.0, 0: 1.0}, 2: {15: 1.0}}
           // 시간대 별 구하는 것 뿐만 아니라 요일별로 구해야함
 
@@ -590,50 +590,50 @@ class OthersPersonalAppointmentUpdate extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> updateChart(int index) async {
-
-    selectedList = falseSelectedList;
-
-    if (index == 0) {
-      isSelected[0] = true;
-      isSelected[1] = false;
-      isSelected[2] = false;
-      isSelected[3] = false;
-
-      await updateLast7DaysDurations();
-      await updateLast7DaysHourlyCounts();
-      updateRecentDays(index);
-    } else if (index == 1) {
-      isSelected[0] = false;
-      isSelected[1] = true;
-      isSelected[2] = false;
-      isSelected[3] = false;
-
-      await updateLast28DaysDurations();
-      await updateLast28DaysHourlyCounts();
-      updateRecentDays(index);
-    } else if (index == 2) {
-      isSelected[0] = false;
-      isSelected[1] = false;
-      isSelected[2] = true;
-      isSelected[3] = false;
-
-      await updateLast3MonthsDurations();
-      await updateLast3MonthsHourlyCounts();
-      updateRecentDays(index);
-    } else if (index == 3) {
-
-      isSelected[0] = false;
-      isSelected[1] = false;
-      isSelected[2] = false;
-      isSelected[3] = true;
-
-      await updateNext28daysDurations();
-      await updateNext28daysHourlyCounts();
-      updateRecentDays(index);
-
-    }
-  }
+  // Future<void> updateChart(int index) async {
+  //
+  //   selectedList = falseSelectedList;
+  //
+  //   if (index == 0) {
+  //     isSelected[0] = true;
+  //     isSelected[1] = false;
+  //     isSelected[2] = false;
+  //     isSelected[3] = false;
+  //
+  //     await updateLast7DaysDurations();
+  //     await updateLast7DaysHourlyCounts();
+  //     updateRecentDays(index);
+  //   } else if (index == 1) {
+  //     isSelected[0] = false;
+  //     isSelected[1] = true;
+  //     isSelected[2] = false;
+  //     isSelected[3] = false;
+  //
+  //     await updateLast28DaysDurations();
+  //     await updateLast28DaysHourlyCounts();
+  //     updateRecentDays(index);
+  //   } else if (index == 2) {
+  //     isSelected[0] = false;
+  //     isSelected[1] = false;
+  //     isSelected[2] = true;
+  //     isSelected[3] = false;
+  //
+  //     await updateLast3MonthsDurations();
+  //     await updateLast3MonthsHourlyCounts();
+  //     updateRecentDays(index);
+  //   } else if (index == 3) {
+  //
+  //     isSelected[0] = false;
+  //     isSelected[1] = false;
+  //     isSelected[2] = false;
+  //     isSelected[3] = true;
+  //
+  //     await updateNext28daysDurations();
+  //     await updateNext28daysHourlyCounts();
+  //     updateRecentDays(index);
+  //
+  //   }
+  // }
 
   int recentDays = 0;
 

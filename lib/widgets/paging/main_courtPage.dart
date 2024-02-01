@@ -11,7 +11,25 @@ import 'main_graphs.dart';
 class MainCourtChartPageView extends StatelessWidget {
   final PageController pageController;
 
-  MainCourtChartPageView({required this.pageController});
+  bool isPersonal = false;
+
+  int currentCourt;
+
+  int indexCourt;
+
+  //bool isLoading = false;
+  bool isRefresh = false;
+
+  String courtTitle;
+  String courtRoadAddress;
+
+  MainCourtChartPageView({
+    required this.pageController,
+    required this.currentCourt,
+    required this.indexCourt,
+    required this.courtTitle,
+    required this.courtRoadAddress,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -21,15 +39,55 @@ class MainCourtChartPageView extends StatelessWidget {
           height: 400,
           //color: Colors.red,
           child: PageView.builder(
+            onPageChanged: (int newPage) async {
+              if (newPage != currentCourt) {
+                currentCourt = newPage;
+
+                // 요일 버튼 눌린 것이 초기화 되어야 함
+                Provider.of<CourtAppointmentUpdate>(context, listen: false)
+                    .resetSelectedList();
+
+                indexCourt = currentCourt;
+
+                courtTitle = Provider.of<ProfileUpdate>(context, listen: false)
+                        .userProfile
+                        .pingpongCourt?[indexCourt]
+                        .title ??
+                    '';
+                courtRoadAddress =
+                    Provider.of<ProfileUpdate>(context, listen: false)
+                            .userProfile
+                            .pingpongCourt?[indexCourt]
+                            .roadAddress ??
+                        '';
+
+                await Provider.of<CourtAppointmentUpdate>(context,
+                        listen: false)
+                    .courtDaywiseDurationsCalculate(
+                        false, false, courtTitle, courtRoadAddress);
+                await Provider.of<CourtAppointmentUpdate>(context,
+                        listen: false)
+                    .courtCountHours(
+                        false, false, courtTitle, courtRoadAddress);
+              }
+            },
             controller: pageController,
             itemCount: (Provider.of<ProfileUpdate>(context, listen: false)
-                .userProfile.pingpongCourt?.length != 0)
+                        .userProfile
+                        .pingpongCourt
+                        ?.length !=
+                    0)
                 ? Provider.of<ProfileUpdate>(context, listen: false)
-                    .userProfile.pingpongCourt?.length
+                    .userProfile
+                    .pingpongCourt
+                    ?.length
                 : 1,
             itemBuilder: (context, index) {
               if (Provider.of<ProfileUpdate>(context, listen: false)
-                  .userProfile.pingpongCourt?.length != 0) {
+                      .userProfile
+                      .pingpongCourt
+                      ?.length !=
+                  0) {
                 return Container(
                   decoration: ShapeDecoration(
                     shape: kRoundedRectangleBorder,
@@ -37,8 +95,11 @@ class MainCourtChartPageView extends StatelessWidget {
                   ),
                   child: GraphsWidget(
                     //index: index, // index == 0
-                    titleText: Provider.of<ProfileUpdate>(context, listen: false)
-                        .userProfile.pingpongCourt![index].title,
+                    titleText:
+                        Provider.of<ProfileUpdate>(context, listen: false)
+                            .userProfile
+                            .pingpongCourt![index]
+                            .title,
                     backgroundColor: Colors.lightBlue,
                     isCourt: true, isMine: false,
                   ),
