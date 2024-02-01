@@ -9,6 +9,7 @@ import 'package:persistent_bottom_nav_bar/persistent_tab_view.dart';
 import 'package:provider/provider.dart';
 
 import '../models/search.dart';
+import '../viewModel/loginStatusUpdate.dart';
 import '../viewModel/personalAppointmentUpdate.dart';
 import 'map_screen.dart';
 import 'calendar_screen.dart';
@@ -18,7 +19,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 GlobalKey<_HomeScreenState> homePageKey = GlobalKey<_HomeScreenState>();
 
 class HomeScreen extends StatefulWidget {
-  static String id = '/';
+  static String id = '/HomeScreenID';
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -118,7 +119,6 @@ class _HomeScreenState extends State<HomeScreen> {
         controller: _controller,
         onItemSelected: (int) {
           setState(() {
-
             switch (int) {
               case 0:
               // WidgetsBinding.instance?.addPostFrameCallback((_) {
