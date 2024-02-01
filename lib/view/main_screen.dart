@@ -1,13 +1,17 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dnpp/constants.dart';
 import 'package:dnpp/models/customAppointment.dart';
 import 'package:dnpp/models/main_chartBasic.dart';
 import 'package:dnpp/models/pingpongList.dart';
+import 'package:dnpp/repository/launchUrl.dart';
+import 'package:dnpp/repository/loadFromFirebase.dart';
 import 'package:dnpp/view/profile_screen.dart';
 import 'package:dnpp/viewModel/courtAppointmentUpdate.dart';
+import 'package:dnpp/viewModel/loadingUpdate.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/gestures.dart';
@@ -44,7 +48,6 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> {
-
   final PageController _imagePageController = PageController(initialPage: 0);
   final PageController _firstBarChartPageController = PageController();
   final PageController _secondBarChartPageController = PageController(
@@ -53,7 +56,11 @@ class _MainScreenState extends State<MainScreen> {
   final PageController _thirdBarChartPageController = PageController(
     viewportFraction: 0.90, // 보이는 영역의 비율 조절
   );
-  int _currentimage = 0;
+
+  late Future<void> myFuture;
+
+  FirebaseFirestore db = FirebaseFirestore.instance;
+
   int _currentPersonal = 0;
   int _currentCourt = 0;
 
@@ -61,138 +68,23 @@ class _MainScreenState extends State<MainScreen> {
   int _indexCourt = -1;
   bool isPersonal = false;
 
-  Map<String?, Uint8List?> imageMap = {};
-  Map<String?, String?> urlMap = {};
-  Map<String, String> refStringList = {};
-
-  int count = 0;
-
-  late Future<void> myFuture;
-
-  FirebaseFirestore db = FirebaseFirestore.instance;
-
-  bool isLoading = false;
+  //bool isLoading = false;
   bool isRefresh = false;
 
   String _courtTitle = '';
   String _courtRoadAddress = '';
 
-  Future<void> downloadAllImages() async {
-    setState(() {
-      isLoading = true;
-    });
+  Future<void> mainScreenMyFuture(BuildContext context) async {
+    // setState(() {
+    //   isLoading = true;
+    //   print('isLoading: $isLoading');
+    // });
 
-    final gsReference =
-        FirebaseStorage.instance.refFromURL("gs://dnpp-402403.appspot.com");
+    //Provider.of<LoadingUpdate>(context, listen: false)
+    //    .downloadAllImages();
 
-    Reference imageReference = gsReference.child("main_images");
-    Reference urlReference = gsReference.child("main_urls");
-
-    // ListResult의 items를 통해 해당 폴더에 있는 파일들을 가져옵니다.
-    ListResult imageListResult = await imageReference.list();
-    ListResult urlListResult = await urlReference.list();
-
-    try {
-      for (Reference imageRef in imageListResult.items) {
-        try {
-          print('imageRef.fullPath: ${imageRef.fullPath}');
-          List<String> parts = imageRef.fullPath.split('/');
-          String result = parts.last.substring(0, parts.last.length - 4);
-          print('Result: $result');
-          const oneMegabyte = 1024 * 1024;
-          final Uint8List? imageData = await imageRef.getData(oneMegabyte);
-
-          imageMap['$result'] = imageData;
-
-          refStringList['$count'] = result;
-          count++;
-        } catch (e) {
-          // Handle any errors.
-          print("Error downloading image: $e");
-        }
-      }
-
-      for (Reference urlRef in urlListResult.items) {
-        try {
-          print('urlRef.fullPath: ${urlRef.fullPath}');
-          List<String> parts = urlRef.fullPath.split('/');
-          String result = parts.last.substring(0, parts.last.length - 4);
-          print('Result: $result');
-
-          final Uint8List? urlData = await urlRef.getData();
-          // Assuming the content of the text file is UTF-8 encoded
-          String? urlContent = utf8.decode(urlData!); // Convert bytes to string
-
-          urlMap['$result'] = urlContent;
-        } catch (e) {
-          // Handle any errors.
-          print("Error downloading image: $e");
-        }
-      }
-    } catch (e) {
-      print("Error in downloadAllImages: $e");
-    } finally {
-      setState(() {
-        isLoading = false;
-      });
-    }
-
-    print('downloadAllImages 완료');
-
-    print('loadDoc 완료');
-  }
-
-  Future<void> loadData() async {
-    try {
-      await downloadAllImages();
-      print('await downloadAllImages(); completed');
-
-      if (Provider.of<LoginStatusUpdate>(context, listen: false).isLoggedIn) {
-        await LoadData().fetchUserData(context);
-
-        await Provider.of<PersonalAppointmentUpdate>(context, listen: false)
-            .personalDaywiseDurationsCalculate(
-                false, isPersonal, _courtTitle, _courtRoadAddress);
-        await Provider.of<PersonalAppointmentUpdate>(context, listen: false)
-            .personalCountHours(
-                false, isPersonal, _courtTitle, _courtRoadAddress);
-
-        await Provider.of<OthersPersonalAppointmentUpdate>(context, listen: false)
-            .personalDaywiseDurationsCalculate(
-            false, isPersonal, _courtTitle, _courtRoadAddress);
-        await Provider.of<OthersPersonalAppointmentUpdate>(context, listen: false)
-            .personalCountHours(
-            false, isPersonal, _courtTitle, _courtRoadAddress);
-
-        await Provider.of<CourtAppointmentUpdate>(context, listen: false)
-            .courtDaywiseDurationsCalculate(
-                false, false, _courtTitle, _courtRoadAddress);
-        await Provider.of<CourtAppointmentUpdate>(context, listen: false)
-            .courtCountHours(false, false, _courtTitle, _courtRoadAddress);
-
-        setState(() {
-          _secondBarChartPageController.animateTo(
-            _secondBarChartPageController.position.minScrollExtent,
-            duration: Duration(milliseconds: 250),
-            curve: Curves.easeInOut,
-          );
-
-          _thirdBarChartPageController.animateTo(
-            _thirdBarChartPageController.position.minScrollExtent,
-            duration: Duration(milliseconds: 250),
-            curve: Curves.easeInOut,
-          );
-        });
-
-      } else {
-
-      }
-      print('await fetchUserData(); completed');
-    } catch (e) {
-      print(e);
-    }
-
-    isRefresh = false;
+    //Provider.of<LoadingUpdate>(context, listen: false)
+    //    .loadData(context, isPersonal, _courtTitle, _courtRoadAddress);
   }
 
   @override
@@ -203,98 +95,10 @@ class _MainScreenState extends State<MainScreen> {
     super.dispose();
   }
 
-  final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
-
   @override
   void initState() {
-    FirebaseAuth.instance.idTokenChanges()
-        .listen((User? user) async {
-
-      final SharedPreferences prefs = await _prefs;
-
-      if (user == null) {
-        // user == null
-        print('SignupScreen user isNotLoggedIn');
-        print('SignupScreen user: $user');
-        print('신규유저 이므로 프로필 생성 필요 또는 로그아웃한 상태');
-        await Provider.of<LoginStatusUpdate>(context, listen: false).falseIsLoggedIn();
-
-      } else {
-        // user != null
-        print('SignupScreen user isLoggedIn');
-        print('SignupScreen user: $user');
-
-        //Provider.of<LoginStatusUpdate>(context, listen: false).currentUser = user;
-        //Provider.of<LoginStatusUpdate>(context, listen: false).trueIsLoggedIn();
-        Provider.of<LoginStatusUpdate>(context, listen: false)
-            .updateCurrentUser(user);
-
-        if (user.providerData.isNotEmpty) {
-          //print('user.providerData.isNotEmpty');
-          print(
-              'SignupScreen user.providerData: ${user.providerData.first.providerId.toString()}');
-
-          String providerId = user.providerData.first.providerId.toString();
-          switch (providerId) {
-            case 'google.com':
-              print('구글로 로그인');
-            case 'apple.com':
-              print('애플로 로그인');
-          }
-          //Provider.of<LoginStatusUpdate>(context, listen: false).updateProviderId(user.providerData.first.providerId.toString());
-        } else if (user.providerData.isEmpty) {
-          print('카카오로 로그인한 상태');
-          print('user.providerData.isEmpty');
-        }
-
-        // 이전에 유저 정보가 있으면, 로그아웃했다가 다시 들어온 유저로 인식하고, 프로필 설정 화면으로 보낼 필요가 없음
-        final QuerySnapshot<Map<String, dynamic>> querySnapshot = await db
-            .collection("UserData")
-            .where("uid", isEqualTo: user.uid)
-            .get();
-       // print('이전에 유저 정보가 있으면, 로그아웃했다가 다시 들어온 유저로 인식하고, 프로필 설정 화면으로 보낼 필요가 없음');
-        print('querySnapshot: $querySnapshot');
-
-        if (querySnapshot.docs.isNotEmpty) {
-          // 문서가 존재하면 이전에 저장한 유저 정보가 있다고 판단
-          print('문서가 존재하면 이전에 저장한 유저 정보가 있다고 판단 UserData exists for ${user.uid}');
-          await Provider.of<LoginStatusUpdate>(context, listen: false).updateIsUserDataExists(true);
-          //Provider.of<ProfileUpdate>(context, listen: false).updateUserProfile(docRef as UserProfile);
-          await Provider.of<LoginStatusUpdate>(context, listen: false)
-              .updateIsAgreementChecked(true);
-          await Provider.of<LoginStatusUpdate>(context, listen: false).trueIsLoggedIn();
-
-        } else {
-          // 문서가 존재하지 않으면 이전에 저장한 유저 정보가 없다고 판단
-          print('문서가 존재하지 않으면 이전에 저장한 유저 정보가 없다고 판단 No UserData for ${user.uid}');
-          await Provider.of<LoginStatusUpdate>(context, listen: false).updateIsUserDataExists(false);
-          await prefs.setBool('isUserTried', true);
-           // 프로필 사진 가져올지 문의
-          //await Provider.of<LoginStatusUpdate>(context, listen: false).falseIsLoggedIn();
-          //print('이때, 유저에게 이용약관 동의 요청 필요');
-          // if (Provider.of<LoginStatusUpdate>(context, listen: false).isLogInButtonClicked) { // 유저가 로그인 버튼을 눌렀을 떄를 인
-          //   _showAgreementDialog(context);
-          // }
-          if (Provider.of<ProfileUpdate>(context, listen: false).userProfileUpdated == false) { // userprofile이 업데이트 되지 않았다면, 회원가입을 시도하는 것으로 간주
-            await _showAgreementDialog(context);
-          } else {
-            Navigator.pop(context);
-            print('Navigator.pop(context); 끝');
-          }
-        }
-
-        // 로그인 버튼 클릭 여부 초기화
-        await Provider.of<LoginStatusUpdate>(context, listen: false).updateIsLogInButtonClicked(false);
-
-      }
-
-      setState(() {
-        print('main screen 로그인 버튼 클릭 여부 초기화 이후의 setstate');
-      });
-
-    });
-
     _secondBarChartPageController.addListener(() async {
+
       final int newPage = _secondBarChartPageController.page?.round() ?? 0;
 
       if (newPage != _currentPersonal) {
@@ -329,16 +133,17 @@ class _MainScreenState extends State<MainScreen> {
                 .roadAddress ??
             '';
 
-        await Provider.of<PersonalAppointmentUpdate>(context, listen: false)
-            .personalDaywiseDurationsCalculate(
-                false, isPersonal, _courtTitle, _courtRoadAddress);
-        await Provider.of<PersonalAppointmentUpdate>(context, listen: false)
-            .personalCountHours(
-                false, isPersonal, _courtTitle, _courtRoadAddress);
-
-        // Provider.of<AppointmentUpdate>(context, listen: false)
-        //     .updateRecentDays(0);
-        setState(() {});
+        // await Provider.of<PersonalAppointmentUpdate>(context, listen: false)
+        //     .personalDaywiseDurationsCalculate(
+        //         false, isPersonal, _courtTitle, _courtRoadAddress);
+        // await Provider.of<PersonalAppointmentUpdate>(context, listen: false)
+        //     .personalCountHours(
+        //         false, isPersonal, _courtTitle, _courtRoadAddress);
+        //
+        // // Provider.of<AppointmentUpdate>(context, listen: false)
+        // //     .updateRecentDays(0);
+        //
+        // setState(() {});
       }
     });
 
@@ -375,208 +180,25 @@ class _MainScreenState extends State<MainScreen> {
                 .roadAddress ??
             '';
 
-        await Provider.of<CourtAppointmentUpdate>(context, listen: false)
-            .courtDaywiseDurationsCalculate(
-                false, false, _courtTitle, _courtRoadAddress);
-        await Provider.of<CourtAppointmentUpdate>(context, listen: false)
-            .courtCountHours(false, false, _courtTitle, _courtRoadAddress);
+        // await Provider.of<CourtAppointmentUpdate>(context, listen: false)
+        //     .courtDaywiseDurationsCalculate(
+        //         false, false, _courtTitle, _courtRoadAddress);
+        // await Provider.of<CourtAppointmentUpdate>(context, listen: false)
+        //     .courtCountHours(false, false, _courtTitle, _courtRoadAddress);
 
         // Provider.of<AppointmentUpdate>(context, listen: false)
         //     .updateRecentDays(0);
-        setState(() {});
+
+        //setState(() {});
       }
     });
 
-    myFuture = loadData();
     super.initState(); // downloadAllImages()가 완료된 후에 initState()를 호출
-  }
-
-  Future<void> _showAgreementDialog(BuildContext context) async {
-    return showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return Consumer<LoginStatusUpdate>(
-            builder: (context, loginStatus, child) {
-              return AlertDialog(
-                insetPadding: EdgeInsets.only(left: 15.0, right: 15.0),
-                shape: kRoundedRectangleBorder,
-                title: Text('이용약관 및 개인정보 처리방침 동의'),
-                content: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Checkbox(
-                      value: Provider.of<LoginStatusUpdate>(context, listen: false)
-                          .isAgreementChecked,
-                      onChanged: (value) async {
-                        await Provider.of<LoginStatusUpdate>(context, listen: false)
-                            .toggleIsAgreementChecked();
-                        // You can add any additional logic here if needed
-                      },
-                    ),
-                    RichText(
-                      text: TextSpan(
-                        style: TextStyle(
-                          fontSize: 14.0,
-                          color: Theme.of(context).brightness == Brightness.light
-                              ? Colors.black // 다크 모드일 때 텍스트 색상
-                              : Colors.white,
-                        ),
-                        children: <TextSpan>[
-                          TextSpan(text: '(필수) '),
-                          TextSpan(
-                            text: '이용약관',
-                            style: TextStyle(
-                              color: kMainColor,
-                              decoration: TextDecoration.underline,
-                            ),
-                            recognizer: TapGestureRecognizer()
-                              ..onTap = () async {
-                                await _launchUrl('https://www.naver.com/');
-                              },
-                          ),
-                          TextSpan(text: ' 및 '),
-                          TextSpan(
-                            text: '개인정보 처리방침',
-                            style: TextStyle(
-                              color: kMainColor,
-                              decoration: TextDecoration.underline,
-                            ),
-                            recognizer: TapGestureRecognizer()
-                              ..onTap = () async {
-                                await _launchUrl('https://www.naver.com/');
-                              },
-                          ),
-                          TextSpan(text: '에\n동의합니다')
-                        ],
-                      ),
-                    )
-                  ],
-                ),
-                actions: [
-                  Provider.of<LoginStatusUpdate>(context, listen: false)
-                      .isAgreementChecked ==
-                      true
-                      ? TextButton(
-                      style: kConfirmButtonStyle,
-                      onPressed: () {
-                        Navigator.pop(context);
-                        _showProfilePictureAskDialog(context);
-                      },
-                      child: ButtonBar(
-                        alignment: MainAxisAlignment.center,
-                        children: [
-                          Container(
-                            child: Text(
-                              '확인',
-                              textAlign: TextAlign.center,
-                              style: kTextButtonTextStyle,
-                            ),
-                          ),
-                        ],
-                      ))
-                      : SizedBox.shrink()
-                ],
-              );
-            });
-      },
-    );
-  }
-  Future<void> _showProfilePictureAskDialog(BuildContext context) async {
-    return showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          //insetPadding: EdgeInsets.only(left: 10.0, right: 10.0),
-          shape: kRoundedRectangleBorder,
-          title: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                "알림",
-                style: TextStyle(fontWeight: FontWeight.normal),
-              ),
-            ],
-          ),
-          content:
-          Text(
-            "소셜 로그인 계정에서 프로필 사진을 가져올까요?",
-            textAlign: TextAlign.start,
-          ),
-          actions: [
-            ButtonBar(
-              alignment: MainAxisAlignment.center,
-              mainAxisSize: MainAxisSize.max,
-              children: [
-                Container(
-                  width: kAlertDialogTextButtonWidth,
-                  child: TextButton(
-                    style: kCancelButtonStyle,
-                    child: Text(
-                      "아니오",
-                      textAlign: TextAlign.center,
-                      style: kTextButtonTextStyle,
-                    ),
-                    onPressed: () async {
-                      await Provider.of<ProfileUpdate>(context, listen: false)
-                          .updateIsGetImageUrl(false);
-                      Navigator.pop(context);
-
-                      PersistentNavBarNavigator.pushNewScreen(
-                        context,
-                        screen: ProfileScreen(),
-                        withNavBar: false,
-                        pageTransitionAnimation:
-                        PageTransitionAnimation.cupertino,
-                      );
-                    },
-                  ),
-                ),
-                Container(
-                  width: kAlertDialogTextButtonWidth,
-                  child: TextButton(
-                    style: kConfirmButtonStyle,
-                    child: Text(
-                      "예",
-                      textAlign: TextAlign.center,
-                      style: kTextButtonTextStyle,
-                    ),
-                    onPressed: () async {
-                      await Provider.of<ProfileUpdate>(context, listen: false)
-                          .updateIsGetImageUrl(true);
-                      Navigator.pop(context);
-
-                      PersistentNavBarNavigator.pushNewScreen(
-                        context,
-                        screen: ProfileScreen(),
-                        withNavBar: false,
-                        pageTransitionAnimation:
-                        PageTransitionAnimation.cupertino,
-                      ).then((value) {
-                        // This code will be executed when SignupScreen is popped.
-                        setState(() {
-                          print('로그인 완료 후 복귀 setState');
-                        });
-                      });
-                    },
-                  ),
-                ),
-              ],
-            ),
-          ],
-        );
-      },
-    );
-  }
-  Future<void> _launchUrl(String _url) async {
-    print('_launchURL 진입');
-    final Uri _newUrl = Uri.parse(_url);
-    if (!await launchUrl(_newUrl)) {
-      throw Exception('Could not launch $_newUrl');
-    }
   }
 
   @override
   Widget build(BuildContext context) {
+    myFuture = mainScreenMyFuture(context);
 
     double width = MediaQuery.of(context).size.width;
     double height = width * 3 / 4;
@@ -618,7 +240,25 @@ class _MainScreenState extends State<MainScreen> {
                     //LoadData().fetchUserData(context)
                     onRefresh: () {
                       isRefresh = true;
-                      return loadData(); //LoadData().refreshData(context);
+                      return Provider.of<LoadingUpdate>(context, listen: false)
+                          .loadData(context, isPersonal, _courtTitle,
+                              _courtRoadAddress)
+                          .whenComplete(() => setState(() {
+                                _secondBarChartPageController.animateTo(
+                                  _secondBarChartPageController
+                                      .position.minScrollExtent,
+                                  duration: Duration(milliseconds: 250),
+                                  curve: Curves.easeInOut,
+                                );
+
+                                _thirdBarChartPageController.animateTo(
+                                  _thirdBarChartPageController
+                                      .position.minScrollExtent,
+                                  duration: Duration(milliseconds: 250),
+                                  curve: Curves.easeInOut,
+                                );
+                                isRefresh = false;
+                              })); //LoadData().refreshData(context);
                     },
                     indicatorBuilder: (context, controller) {
                       return Icon(
@@ -633,9 +273,15 @@ class _MainScreenState extends State<MainScreen> {
                           pageController: _imagePageController,
                           width: width,
                           height: height,
-                          imageMap: imageMap,
-                          urlMap: urlMap,
-                          refStringList: refStringList,
+                          imageMap:
+                              Provider.of<LoadingUpdate>(context, listen: false)
+                                  .imageMap,
+                          urlMap:
+                              Provider.of<LoadingUpdate>(context, listen: false)
+                                  .urlMap,
+                          refStringList:
+                              Provider.of<LoadingUpdate>(context, listen: false)
+                                  .refStringList,
                         ),
                         Padding(
                           padding: const EdgeInsets.only(
@@ -668,6 +314,7 @@ class _MainScreenState extends State<MainScreen> {
                                     ),
                                     child: OutlinedButton(
                                       onPressed: () async {
+                                        print('OutlinedButton 클릭');
                                         setState(() {
                                           Provider.of<PersonalAppointmentUpdate>(
                                                   context,
@@ -699,15 +346,15 @@ class _MainScreenState extends State<MainScreen> {
                                         shape: kRoundedRectangleBorder,
                                       ),
                                       child: Text(
-                                          Provider.of<
-                                                  PersonalAppointmentUpdate>(
-                                              context,
-                                              listen: false)
-                                          .isSelectedString[index],
-                                      style: TextStyle(
-                                        //fontWeight: FontWeight.bold,
-                                        fontSize: 15.0,
-                                      ),),
+                                        Provider.of<PersonalAppointmentUpdate>(
+                                                context,
+                                                listen: false)
+                                            .isSelectedString[index],
+                                        style: TextStyle(
+                                          //fontWeight: FontWeight.bold,
+                                          fontSize: 15.0,
+                                        ),
+                                      ),
                                     ),
                                   ),
                                 );
@@ -726,13 +373,14 @@ class _MainScreenState extends State<MainScreen> {
                         Consumer<PersonalAppointmentUpdate>(
                           builder: (context, taskData, child) {
                             return MainPersonalChartPageView(
-                                pageController: _secondBarChartPageController);
+                              pageController: _secondBarChartPageController,
+                              currentPersonal: _currentPersonal,
+                              indexPersonal: _indexPersonal,
+                              courtTitle: _courtTitle,
+                              courtRoadAddress: _courtRoadAddress,
+                            );
                           },
                         ),
-
-                        // MainPersonalChartPageView(
-                        //     pageController: _secondBarChartPageController
-                        // ),
                         Center(
                           child: Padding(
                             padding: const EdgeInsets.symmetric(vertical: 10.0),
@@ -763,7 +411,12 @@ class _MainScreenState extends State<MainScreen> {
                         Consumer<CourtAppointmentUpdate>(
                           builder: (context, taskData, child) {
                             return MainCourtChartPageView(
-                                pageController: _thirdBarChartPageController);
+                              pageController: _thirdBarChartPageController,
+                              currentCourt: _currentCourt,
+                              indexCourt: _indexCourt,
+                              courtTitle: _courtTitle,
+                              courtRoadAddress: _courtRoadAddress,
+                            );
                           },
                         ),
                       ],
@@ -777,18 +430,17 @@ class _MainScreenState extends State<MainScreen> {
                 }
               },
             ),
-            if (isLoading)
-              IgnorePointer(
-                ignoring: isLoading,
-                child: Container(
-                  color: Colors.black.withOpacity(0.5),
-                  // Semi-transparent black
-                  child: Center(
-                    child: isRefresh ? null : kCustomCircularProgressIndicator,
-                  ),
-                ),
-              ),
-
+            // if (isLoading) // 로딩 화면
+            //   IgnorePointer(
+            //     ignoring: isLoading,
+            //     child: Container(
+            //       color: Colors.black.withOpacity(0.5),
+            //       // Semi-transparent black
+            //       child: Center(
+            //         child: isRefresh ? null : kCustomCircularProgressIndicator,
+            //       ),
+            //     ),
+            //   ),
           ],
         ),
       ),

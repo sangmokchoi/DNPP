@@ -779,7 +779,7 @@ class PersonalAppointmentUpdate extends ChangeNotifier {
         // }
       }
 
-      print('daywiseDurations: $daywiseDurations');
+      //print('daywiseDurations: $daywiseDurations');
 
     }
 
@@ -946,7 +946,7 @@ class PersonalAppointmentUpdate extends ChangeNotifier {
       //   hourlyCounts = next28daysHourlyCounts;
       // }
 
-      print('personalHourlyCounts : $personalHourlyCounts');
+      //print('personalHourlyCounts : $personalHourlyCounts');
     }
 
     notifyListeners();

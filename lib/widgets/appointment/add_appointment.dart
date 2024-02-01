@@ -46,12 +46,11 @@ class _AddAppointmentState extends State<AddAppointment> {
     setState(() {
       if (isLoading) {
         // 로딩 바를 화면에 표시
-        print('profileScreen 로딩 바를 화면에 표시');
         showDialog(
           context: context,
           builder: (context) {
             return Center(
-              child: kCustomCircularProgressIndicator, // 로딩 바 표시
+              child: CircularProgressIndicator(), // 로딩 바 표시
             );
           },
         );

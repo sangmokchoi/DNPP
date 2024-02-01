@@ -7,14 +7,17 @@ import 'package:dnpp/view/signup_screen.dart';
 import 'package:dnpp/widgets/paging/main_graphs.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:persistent_bottom_nav_bar/persistent_tab_view.dart';
 import 'package:provider/provider.dart';
 import 'package:syncfusion_flutter_calendar/calendar.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../constants.dart';
 import '../models/customAppointment.dart';
 import '../models/pingpongList.dart';
 import '../models/userProfile.dart';
+import '../repository/launchUrl.dart';
 import '../viewModel/loginStatusUpdate.dart';
 import '../viewModel/othersPersonalAppointmentUpdate.dart';
 import '../viewModel/personalAppointmentUpdate.dart';
@@ -50,6 +53,11 @@ class _MatchingScreenState extends State<MatchingScreen> {
   String chosenNeighborhood = '동네';
 
   int selectedIndex = 0;
+
+  GlobalKey zeroMenuKey = GlobalKey();
+  GlobalKey firstMenuKey = GlobalKey();
+  GlobalKey secondMenuKey = GlobalKey();
+
   bool isShowGraphZero = false;
   bool isShowGraphFirst = false;
   bool isShowGraphSecond = false;
@@ -87,14 +95,29 @@ class _MatchingScreenState extends State<MatchingScreen> {
     setState(() {
       if (number == 0) {
         isShowGraphZero = !isShowGraphZero;
+        print('isShowGraphFirst: $isShowGraphZero');
       }
 
       if (number == 1) {
         isShowGraphFirst = !isShowGraphFirst;
+        print('isShowGraphZero: $isShowGraphFirst');
+
+        // _scrollController.animateTo(
+        //   _scrollController.offset + 80, // 메뉴 타이틀로 스크롤
+        //   duration: Duration(milliseconds: 240),
+        //   curve: Curves.easeInOut,
+        // );
       }
 
       if (number == 2) {
         isShowGraphSecond = !isShowGraphSecond;
+        print('isShowGraphSecond: $isShowGraphSecond');
+
+        _scrollController.animateTo(
+          _scrollController.offset + 380.0, // 위젯 크기만큼 아래로 스크롤
+          duration: Duration(milliseconds: 240),
+          curve: Curves.easeInOut,
+        );
       }
     });
   }
@@ -132,26 +155,26 @@ class _MatchingScreenState extends State<MatchingScreen> {
     );
   }
 
-  Future<List<CustomAppointment>> filterAppointments(
-      List<CustomAppointment> otherUserAppointments,
-      DateTime targetTime) async {
-    var next28daysHourlyCounts =
-        Provider.of<PersonalAppointmentUpdate>(context, listen: false)
-            .next28daysHourlyCounts;
-    var next28daysHourlyCountsByDaysOfWeek =
-        Provider.of<PersonalAppointmentUpdate>(context, listen: false)
-            .next28daysHourlyCountsByDaysOfWeek;
-
-    print('next28daysHourlyCounts: $next28daysHourlyCounts');
-    print(
-        'next28daysHourlyCountsByDaysOfWeek: $next28daysHourlyCountsByDaysOfWeek');
-    List<CustomAppointment> filteredAppointments = otherUserAppointments
-        .where((appointment) => appointment.appointments.any((app) =>
-            app.startTime.isBefore(targetTime) &&
-            app.endTime.isAfter(targetTime)))
-        .toList();
-    return filteredAppointments;
-  }
+  // Future<List<CustomAppointment>> filterAppointments(
+  //     List<CustomAppointment> otherUserAppointments,
+  //     DateTime targetTime) async {
+  //   var next28daysHourlyCounts =
+  //       Provider.of<PersonalAppointmentUpdate>(context, listen: false)
+  //           .next28daysHourlyCounts;
+  //   var next28daysHourlyCountsByDaysOfWeek =
+  //       Provider.of<PersonalAppointmentUpdate>(context, listen: false)
+  //           .next28daysHourlyCountsByDaysOfWeek;
+  //
+  //   print('next28daysHourlyCounts: $next28daysHourlyCounts');
+  //   print(
+  //       'next28daysHourlyCountsByDaysOfWeek: $next28daysHourlyCountsByDaysOfWeek');
+  //   List<CustomAppointment> filteredAppointments = otherUserAppointments
+  //       .where((appointment) => appointment.appointments.any((app) =>
+  //           app.startTime.isBefore(targetTime) &&
+  //           app.endTime.isAfter(targetTime)))
+  //       .toList();
+  //   return filteredAppointments;
+  // }
 
   @override
   void initState() {
@@ -333,6 +356,8 @@ class _MatchingScreenState extends State<MatchingScreen> {
     }
   }
 
+  Map<int, bool> itemExpandStates = {};
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -359,225 +384,37 @@ class _MatchingScreenState extends State<MatchingScreen> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-                            stream: similarUsersCourtStream,
-                            builder: (context, snapshot) {
-                              // Handle real-time data from the stream correctly
-                              List<QueryDocumentSnapshot<Map<String, dynamic>>>
-                                  userDocs = snapshot.data?.docs ?? [];
-                              print('userDocs: $userDocs');
-
-                              if (userDocs.isEmpty) {
-                                return Center(
-                                  child: Text('No users found'),
-                                );
-                              }
-
-                              if (snapshot.connectionState ==
-                                  ConnectionState.waiting) {
-                                return Center(
-                                  child: kCustomCircularProgressIndicator,
-                                );
-                              }
-
-                              if (snapshot.hasError) {
-                                return Center(
-                                  child: Text('Error: ${snapshot.error}'),
-                                );
-                              }
-
-                              return Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Padding(
-                                    padding: const EdgeInsets.all(15.0),
-                                    child: Row(
-                                      children: [
-                                        RichText(
-                                          text: TextSpan(
-                                            text: '나와 비슷한 시간에 나오는 ',
-                                            style: Theme.of(context)
-                                                        .brightness ==
-                                                    Brightness.light
-                                                ? kMatchingScreenTextHeaderTextStyle
-                                                    .copyWith(
-                                                        color: Colors.black)
-                                                : kMatchingScreenTextHeaderTextStyle
-                                                    .copyWith(
-                                                        color: Colors.white),
-                                            children: [
-                                              TextSpan(
-                                                text: chosenCourthood,
-                                                style: TextStyle(
-                                                  fontWeight: FontWeight.bold,
-                                                ),
-                                              ),
-                                              TextSpan(
-                                                text: ' 사람들',
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  SizedBox(
-                                    height: 200,
-                                    width: MediaQuery.of(context).size.width,
-                                    child: ListView.builder(
-                                      scrollDirection: Axis.horizontal,
-                                      controller: _courtScrollController,
-                                      //shrinkWrap: true,
-                                      itemCount: userDocs.length,
-                                      //snapshot.data?.docs.length,
-                                      itemBuilder: (context, index) {
-                                        var user = snapshot.data?.docs[index]
-                                            .data() as Map<String, dynamic>;
-                                        //print('user[pingpongCourt][1].roadAddress: ${user['pingpongCourt'][1]['roadAddress']}');
-                                        // 맨 처음 item에 왼쪽에 8.0의 패딩 추가
-                                        EdgeInsets padding =
-                                            EdgeInsets.only(left: 8.0);
-                                        if (index == 0) {
-                                          padding = EdgeInsets.only(left: 8.0);
-                                        }
-                                        // 맨 마지막 item에 오른쪽에 8.0의 패딩 추가
-                                        else if (index == userDocs.length - 1) {
-                                          padding = EdgeInsets.only(right: 8.0);
-                                        }
-
-                                        return Padding(
-                                          padding: padding,
-                                          child: GestureDetector(
-                                            onTap: () async {
-                                              await onTapGraphAppear(user, 0);
-                                            },
-                                            child: Stack(children: [
-                                              Padding(
-                                                padding:
-                                                    const EdgeInsets.all(5.0),
-                                                child: Container(
-                                                  width: 200,
-                                                  decoration: BoxDecoration(
-                                                    color: kMainColor,
-                                                    borderRadius:
-                                                        BorderRadius.all(
-                                                            Radius.circular(
-                                                                20.0)),
-                                                  ),
-                                                  child: Column(
-                                                    mainAxisAlignment:
-                                                        MainAxisAlignment
-                                                            .center,
-                                                    children: [
-                                                      user['photoUrl']
-                                                              .isNotEmpty
-                                                          ? CircleAvatar(
-                                                              backgroundImage:
-                                                                  NetworkImage(user[
-                                                                      'photoUrl']),
-                                                            )
-                                                          : Icon(Icons.person),
-                                                      SizedBox(
-                                                        height: 5.0,
-                                                      ),
-                                                      Text(
-                                                        user['nickName'],
-                                                        style:
-                                                            kMatchingScreen_FirstNicknameTextStyle,
-                                                      ),
-                                                      Text(
-                                                        '${user['playStyle']} / ${user['racket']} / ${user['playedYears']} / ${user['rubber']}',
-                                                        style:
-                                                            kMatchingScreen_FirstUserInfoTextStyle,
-                                                      ),
-                                                      Text(
-                                                        chosenCourthood,
-                                                        style:
-                                                            kMatchingScreen_FirstAddressTextStyle,
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
-                                              ),
-                                              Positioned(
-                                                top: 10.0,
-                                                right: 5.0,
-                                                child: IconButton(
-                                                  icon: Icon(
-                                                    Icons
-                                                        .arrow_forward_ios_rounded,
-                                                    size: 15,
-                                                    color: Theme.of(context)
-                                                                .brightness ==
-                                                            Brightness.light
-                                                        ? Colors
-                                                            .black // 다크 모드일 때 텍스트 색상
-                                                        : Colors.white,
-                                                  ),
-                                                  onPressed: () {
-                                                    // 아이콘 버튼이 눌렸을 때 수행할 동작 추가
-                                                    print(
-                                                        '이 유저와 함께 탁구를 쳐보자는 메시지를 보낼까요?');
-                                                  },
-                                                ),
-                                              ),
-                                            ]),
-                                          ),
-                                        );
-
-                                        // return Column(
-                                        //   children: [
-                                        //     user['photoUrl'].isNotEmpty
-                                        //           ? CircleAvatar(
-                                        //         backgroundImage: NetworkImage(user['photoUrl']),
-                                        //       ) : Icon(Icons.person),
-                                        //     Text(user['uid']),
-                                        //     Text(user['uid'])
-                                        //   ],
-                                        // );
-                                      },
-                                    ),
+                        Card(
+                          child: Container(
+                            width: MediaQuery.of(context).size.width - 25,
+                            height: 70,
+                            decoration: BoxDecoration(
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.grey.withOpacity(0.5),
+                                    //spreadRadius: 5,
+                                    blurRadius: 5,
+                                    offset: Offset(0, 0.5),
                                   ),
                                 ],
-                              );
-                              // return Container(
-                              //   height: 200,
-                              //   width: 200,
-                              //   child: Padding(
-                              //     padding: const EdgeInsets.all(8.0),
-                              //     child: Container(
-                              //       decoration: BoxDecoration(
-                              //         color: Theme.of(context)
-                              //             .secondaryHeaderColor,
-                              //         borderRadius:
-                              //             BorderRadius.circular(8.0),
-                              //       ),
-                              //       child: const Padding(
-                              //         padding: EdgeInsets.symmetric(
-                              //           vertical: 15.0,
-                              //           horizontal: 5.0,
-                              //         ),
-                              //         child: Column(
-                              //           children: [
-                              //             Icon(Icons.person),
-                              //           ],
-                              //         ),
-                              //       ),
-                              //     ),
-                              //   ),
-                              // );
-                            }),
-                        AnimatedContainer(
-                          duration: Duration(milliseconds: 250),
-                          // Adjust the duration as needed
-                          height: isShowGraphZero ? 380 : 0,
-                          child: SingleChildScrollView(
-                            //physics: NeverScrollableScrollPhysics(),
-                            child: GraphsWidget(
-                                isCourt: false,
-                                titleText: '위젯',
-                                backgroundColor: kMainColor,
-                                isMine: false),
+                                color: Colors.grey,
+                                borderRadius:
+                                    BorderRadius.all(Radius.circular(5.0))),
+                            child: TextButton(
+                              onPressed: () {
+                                print('특별 프로모션 혜택!');
+                              },
+                              child: Align(
+                                alignment: Alignment.center,
+                                child: Text(
+                                  '특별 프로모션 혜택!\n저렴한 광고비 + 고효율!',
+                                  style: TextStyle(
+                                      color: Colors.yellow,
+                                      fontSize: 20.0,
+                                      fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                            ),
                           ),
                         ),
                         StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
@@ -612,68 +449,105 @@ class _MatchingScreenState extends State<MatchingScreen> {
                                 children: [
                                   Padding(
                                     padding: const EdgeInsets.all(15.0),
-                                    child: Row(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.stretch,
                                       children: [
-                                        RichText(
-                                          text: TextSpan(
-                                            text: '나와 같은 ',
-                                            style: Theme.of(context)
-                                                        .brightness ==
-                                                    Brightness.light
-                                                ? kMatchingScreenTextHeaderTextStyle
-                                                    .copyWith(
-                                                        color: Colors.black)
-                                                : kMatchingScreenTextHeaderTextStyle
-                                                    .copyWith(
-                                                        color: Colors.white),
-                                            children: [
-                                              TextSpan(
-                                                text: chosenCourthood,
-                                                style: TextStyle(
-                                                  fontWeight: FontWeight.bold,
-                                                ),
+                                        Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Align(
+                                              alignment: Alignment.centerLeft,
+                                              child: Text(
+                                                '같은 탁구장 사람들',
+                                                style: Theme.of(context)
+                                                            .brightness ==
+                                                        Brightness.light
+                                                    ? kMatchingScreenBigTextHeaderTextStyle
+                                                        .copyWith(
+                                                            color: Colors.black)
+                                                    : kMatchingScreenBigTextHeaderTextStyle
+                                                        .copyWith(
+                                                            color:
+                                                                Colors.white),
                                               ),
-                                              TextSpan(
-                                                text: ' 사람들',
-                                              ),
-                                            ],
-                                          ),
+                                            ),
+                                            //Icon(Icons.arrow_drop_up),
+                                          ],
                                         ),
-                                        DropdownButtonHideUnderline(
-                                          child: Expanded(
-                                            child: DropdownButton(
-                                              isExpanded: true,
-                                              value: null,
-                                              //chosenNeighborhood,
-                                              isDense: true,
-                                              items: (chosenCourthood != '탁구장')
-                                                  ? Provider.of<ProfileUpdate>(
-                                                          context,
-                                                          listen: false)
-                                                      .userProfile
-                                                      .pingpongCourt
-                                                      ?.map((element) =>
-                                                          DropdownMenuItem(
-                                                            value: element,
-                                                            child: Text(
-                                                              element.title,
-                                                              style:
-                                                                  kAppointmentTextButtonStyle,
-                                                            ),
-                                                          ))
-                                                      .toList()
-                                                  : [],
-                                              onChanged: (value) async {
-                                                var _value =
-                                                    value as PingpongList;
-                                                print('_value: ${_value}');
-                                                chosenCourthood = _value.title;
-                                                // usersCourtStream =
-                                                //     constructCourtUsersStream(
-                                                //         chosenCourthood);
-                                                // Find the index of the selected item
-                                                selectedIndex =
-                                                    Provider.of<ProfileUpdate>(
+                                        Row(
+                                          children: [
+                                            // RichText(
+                                            //   text: TextSpan(
+                                            //     text: '나와 같은 ',
+                                            //     style: Theme.of(context)
+                                            //                 .brightness ==
+                                            //             Brightness.light
+                                            //         ? kMatchingScreenTextHeaderTextStyle
+                                            //             .copyWith(
+                                            //                 color: Colors.black)
+                                            //         : kMatchingScreenTextHeaderTextStyle
+                                            //             .copyWith(
+                                            //                 color:
+                                            //                     Colors.white),
+                                            //     children: [
+                                            //       TextSpan(
+                                            //         text: chosenCourthood,
+                                            //         style: TextStyle(
+                                            //           fontWeight:
+                                            //               FontWeight.bold,
+                                            //         ),
+                                            //       ),
+                                            //       TextSpan(
+                                            //         text: ' 사람들',
+                                            //       ),
+                                            //     ],
+                                            //   ),
+                                            // ),
+                                            Text(
+                                              chosenCourthood,
+                                              style:
+                                                  kMatchingScreenTextHeaderTextStyle,
+                                            ),
+                                            DropdownButtonHideUnderline(
+                                              child: Expanded(
+                                                child: DropdownButton(
+                                                  isExpanded: true,
+                                                  value: null,
+                                                  //chosenNeighborhood,
+                                                  isDense: true,
+                                                  items: (chosenCourthood !=
+                                                          '탁구장')
+                                                      ? Provider.of<
+                                                                  ProfileUpdate>(
+                                                              context,
+                                                              listen: false)
+                                                          .userProfile
+                                                          .pingpongCourt
+                                                          ?.map((element) =>
+                                                              DropdownMenuItem(
+                                                                value: element,
+                                                                child: Text(
+                                                                  element.title,
+                                                                  style:
+                                                                      kAppointmentTextButtonStyle,
+                                                                ),
+                                                              ))
+                                                          .toList()
+                                                      : [],
+                                                  onChanged: (value) async {
+                                                    var _value =
+                                                        value as PingpongList;
+                                                    print('_value: ${_value}');
+                                                    chosenCourthood =
+                                                        _value.title;
+                                                    // usersCourtStream =
+                                                    //     constructCourtUsersStream(
+                                                    //         chosenCourthood);
+                                                    // Find the index of the selected item
+                                                    selectedIndex = Provider.of<
+                                                                    ProfileUpdate>(
                                                                 context,
                                                                 listen: false)
                                                             .userProfile
@@ -683,20 +557,22 @@ class _MatchingScreenState extends State<MatchingScreen> {
                                                                     element ==
                                                                     value) ??
                                                         0;
-                                                print(
-                                                    'selectedIndex: $selectedIndex');
+                                                    print(
+                                                        'selectedIndex: $selectedIndex');
 
-                                                usersCourtStream =
-                                                    constructCourtUsersStream(
-                                                        value);
+                                                    usersCourtStream =
+                                                        constructCourtUsersStream(
+                                                            value);
 
-                                                similarUsersCourtStream =
-                                                    await constructSimilarUsersCourtStream(
-                                                        value);
-                                                setState(() {});
-                                              },
+                                                    similarUsersCourtStream =
+                                                        await constructSimilarUsersCourtStream(
+                                                            value);
+                                                    setState(() {});
+                                                  },
+                                                ),
+                                              ),
                                             ),
-                                          ),
+                                          ],
                                         ),
                                       ],
                                     ),
@@ -727,7 +603,7 @@ class _MatchingScreenState extends State<MatchingScreen> {
                                           padding: padding,
                                           child: GestureDetector(
                                             onTap: () async {
-                                              await onTapGraphAppear(user, 1);
+                                              await onTapGraphAppear(user, 0);
                                             },
                                             child: Stack(
                                               children: [
@@ -737,6 +613,14 @@ class _MatchingScreenState extends State<MatchingScreen> {
                                                   child: Container(
                                                     width: 200,
                                                     decoration: BoxDecoration(
+                                                      boxShadow: [
+                                                        BoxShadow(
+                                                          color: Colors.grey.withOpacity(0.5),
+                                                          //spreadRadius: 5,
+                                                          blurRadius: 5,
+                                                          offset: Offset(0, 0.5),
+                                                        ),
+                                                      ],
                                                       color: kMainColor,
                                                       borderRadius:
                                                           BorderRadius.all(
@@ -799,11 +683,277 @@ class _MatchingScreenState extends State<MatchingScreen> {
                                                       // 아이콘 버튼이 눌렸을 때 수행할 동작 추가
                                                       print(
                                                           '이 유저와 함께 탁구를 쳐보자는 메시지를 보낼까요?');
+                                                      LaunchUrl().openBottomSheet(context);
                                                     },
                                                   ),
                                                 ),
                                               ],
                                             ),
+                                          ),
+                                        );
+
+                                        // return Column(
+                                        //   children: [
+                                        //     user['photoUrl'].isNotEmpty
+                                        //           ? CircleAvatar(
+                                        //         backgroundImage: NetworkImage(user['photoUrl']),
+                                        //       ) : Icon(Icons.person),
+                                        //     Text(user['uid']),
+                                        //     Text(user['uid'])
+                                        //   ],
+                                        // );
+                                      },
+                                    ),
+                                  ),
+                                ],
+                              );
+                              // return Container(
+                              //   height: 200,
+                              //   width: 200,
+                              //   child: Padding(
+                              //     padding: const EdgeInsets.all(8.0),
+                              //     child: Container(
+                              //       decoration: BoxDecoration(
+                              //         color: Theme.of(context)
+                              //             .secondaryHeaderColor,
+                              //         borderRadius:
+                              //             BorderRadius.circular(8.0),
+                              //       ),
+                              //       child: const Padding(
+                              //         padding: EdgeInsets.symmetric(
+                              //           vertical: 15.0,
+                              //           horizontal: 5.0,
+                              //         ),
+                              //         child: Column(
+                              //           children: [
+                              //             Icon(Icons.person),
+                              //           ],
+                              //         ),
+                              //       ),
+                              //     ),
+                              //   ),
+                              // );
+                            }),
+                        AnimatedContainer(
+                          duration: Duration(milliseconds: 250),
+                          // Adjust the duration as needed
+                          height: isShowGraphZero ? 380 : 0,
+                          child: SingleChildScrollView(
+                            //physics: NeverScrollableScrollPhysics(),
+                            child: GraphsWidget(
+                                isCourt: false,
+                                titleText: '위젯',
+                                backgroundColor: kMainColor,
+                                isMine: false),
+                          ),
+                        ),
+                        StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                            stream: similarUsersCourtStream,
+                            builder: (context, snapshot) {
+                              // Handle real-time data from the stream correctly
+                              List<QueryDocumentSnapshot<Map<String, dynamic>>>
+                                  userDocs = snapshot.data?.docs ?? [];
+                              print('userDocs: $userDocs');
+
+                              if (userDocs.isEmpty) {
+                                return Center(
+                                  child: Text('No users found'),
+                                );
+                              }
+
+                              if (snapshot.connectionState ==
+                                  ConnectionState.waiting) {
+                                return Center(
+                                  child: kCustomCircularProgressIndicator,
+                                );
+                              }
+
+                              if (snapshot.hasError) {
+                                return Center(
+                                  child: Text('Error: ${snapshot.error}'),
+                                );
+                              }
+
+                              return Column(
+                                key: firstMenuKey,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Padding(
+                                    padding: const EdgeInsets.all(15.0),
+                                    child: Column(
+                                      children: [
+                                        Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Align(
+                                              alignment: Alignment.centerLeft,
+                                              child: Text(
+                                                '시간대가 같은 탁구장 사람들',
+                                                style: Theme.of(context)
+                                                            .brightness ==
+                                                        Brightness.light
+                                                    ? kMatchingScreenBigTextHeaderTextStyle
+                                                        .copyWith(
+                                                            color: Colors.black)
+                                                    : kMatchingScreenBigTextHeaderTextStyle
+                                                        .copyWith(
+                                                            color:
+                                                                Colors.white),
+                                              ),
+                                            ),
+                                            //Icon(Icons.arrow_drop_up),
+                                          ],
+                                        ),
+                                        Row(
+                                          children: [
+                                            // RichText(
+                                            //   text: TextSpan(
+                                            //     text: '나와 비슷한 시간에 나오는 ',
+                                            //     style: Theme.of(context)
+                                            //                 .brightness ==
+                                            //             Brightness.light
+                                            //         ? kMatchingScreenTextHeaderTextStyle
+                                            //             .copyWith(
+                                            //                 color: Colors.black)
+                                            //         : kMatchingScreenTextHeaderTextStyle
+                                            //             .copyWith(
+                                            //                 color:
+                                            //                     Colors.white),
+                                            //     children: [
+                                            //       TextSpan(
+                                            //         text: chosenCourthood,
+                                            //         style: TextStyle(
+                                            //           fontWeight:
+                                            //               FontWeight.bold,
+                                            //         ),
+                                            //       ),
+                                            //       TextSpan(
+                                            //         text: ' 사람들',
+                                            //       ),
+                                            //     ],
+                                            //   ),
+                                            // ),
+                                            Text(
+                                              chosenCourthood,
+                                              style:
+                                                  kMatchingScreenTextHeaderTextStyle,
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  SizedBox(
+                                    height: 200,
+                                    width: MediaQuery.of(context).size.width,
+                                    child: ListView.builder(
+                                      scrollDirection: Axis.horizontal,
+                                      controller: _courtScrollController,
+                                      //shrinkWrap: true,
+                                      itemCount: userDocs.length,
+                                      //snapshot.data?.docs.length,
+                                      itemBuilder: (context, index) {
+                                        var user = snapshot.data?.docs[index]
+                                            .data() as Map<String, dynamic>;
+                                        //print('user[pingpongCourt][1].roadAddress: ${user['pingpongCourt'][1]['roadAddress']}');
+                                        // 맨 처음 item에 왼쪽에 8.0의 패딩 추가
+                                        EdgeInsets padding =
+                                            EdgeInsets.only(left: 8.0);
+                                        if (index == 0) {
+                                          padding = EdgeInsets.only(left: 8.0);
+                                        }
+                                        // 맨 마지막 item에 오른쪽에 8.0의 패딩 추가
+                                        else if (index == userDocs.length - 1) {
+                                          padding = EdgeInsets.only(right: 8.0);
+                                        }
+
+                                        return Padding(
+                                          padding: padding,
+                                          child: GestureDetector(
+                                            onTap: () async {
+                                              await onTapGraphAppear(user, 1);
+                                            },
+                                            child: Stack(children: [
+                                              Padding(
+                                                padding:
+                                                    const EdgeInsets.all(5.0),
+                                                child: Container(
+                                                  width: 200,
+                                                  decoration: BoxDecoration(
+                                                    boxShadow: [
+                                                      BoxShadow(
+                                                        color: Colors.grey.withOpacity(0.5),
+                                                        //spreadRadius: 5,
+                                                        blurRadius: 5,
+                                                        offset: Offset(0, 0.5),
+                                                      ),
+                                                    ],
+                                                    color: kMainColor,
+                                                    borderRadius:
+                                                        BorderRadius.all(
+                                                            Radius.circular(
+                                                                20.0)),
+                                                  ),
+                                                  child: Column(
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment
+                                                            .center,
+                                                    children: [
+                                                      user['photoUrl']
+                                                              .isNotEmpty
+                                                          ? CircleAvatar(
+                                                              backgroundImage:
+                                                                  NetworkImage(user[
+                                                                      'photoUrl']),
+                                                            )
+                                                          : Icon(Icons.person),
+                                                      SizedBox(
+                                                        height: 5.0,
+                                                      ),
+                                                      Text(
+                                                        user['nickName'],
+                                                        style:
+                                                            kMatchingScreen_FirstNicknameTextStyle,
+                                                      ),
+                                                      Text(
+                                                        '${user['playStyle']} / ${user['racket']} / ${user['playedYears']} / ${user['rubber']}',
+                                                        style:
+                                                            kMatchingScreen_FirstUserInfoTextStyle,
+                                                      ),
+                                                      Text(
+                                                        chosenCourthood,
+                                                        style:
+                                                            kMatchingScreen_FirstAddressTextStyle,
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ),
+                                              Positioned(
+                                                top: 10.0,
+                                                right: 5.0,
+                                                child: IconButton(
+                                                  icon: Icon(
+                                                    Icons
+                                                        .arrow_forward_ios_rounded,
+                                                    size: 15,
+                                                    color: Theme.of(context)
+                                                                .brightness ==
+                                                            Brightness.light
+                                                        ? Colors
+                                                            .black // 다크 모드일 때 텍스트 색상
+                                                        : Colors.white,
+                                                  ),
+                                                  onPressed: () {
+                                                    // 아이콘 버튼이 눌렸을 때 수행할 동작 추가
+                                                    print(
+                                                        '이 유저와 함께 탁구를 쳐보자는 메시지를 보낼까요?');
+                                                    LaunchUrl().openBottomSheet(context);
+                                                  },
+                                                ),
+                                              ),
+                                            ]),
                                           ),
                                         );
 
@@ -895,67 +1045,104 @@ class _MatchingScreenState extends State<MatchingScreen> {
                                 //     .isNotEmpty)
                                 Padding(
                                   padding: const EdgeInsets.all(15.0),
-                                  child: Row(
+                                  child: Column(
                                     children: [
-                                      RichText(
-                                        text: TextSpan(
-                                          text: '나와 같은 ',
-                                          style: Theme.of(context).brightness ==
-                                                  Brightness.light
-                                              ? kMatchingScreenTextHeaderTextStyle
-                                                  .copyWith(color: Colors.black)
-                                              : kMatchingScreenTextHeaderTextStyle
-                                                  .copyWith(
-                                                      color: Colors.white),
-                                          children: [
-                                            TextSpan(
-                                              text: chosenNeighborhood,
-                                              style: TextStyle(
-                                                fontWeight: FontWeight.bold,
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Align(
+                                            alignment: Alignment.centerLeft,
+                                            child: Text(
+                                              '같은 동네 사람들',
+                                              style: Theme.of(context)
+                                                          .brightness ==
+                                                      Brightness.light
+                                                  ? kMatchingScreenBigTextHeaderTextStyle
+                                                      .copyWith(
+                                                          color: Colors.black)
+                                                  : kMatchingScreenBigTextHeaderTextStyle
+                                                      .copyWith(
+                                                          color: Colors.white),
+                                            ),
+                                          ),
+                                          //Icon(Icons.arrow_drop_up),
+                                        ],
+                                      ),
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceAround,
+                                        children: [
+                                          // RichText(
+                                          //   text: TextSpan(
+                                          //     text: '나와 같은 ',
+                                          //     style: Theme.of(context)
+                                          //                 .brightness ==
+                                          //             Brightness.light
+                                          //         ? kMatchingScreenTextHeaderTextStyle
+                                          //             .copyWith(
+                                          //                 color: Colors.black)
+                                          //         : kMatchingScreenTextHeaderTextStyle
+                                          //             .copyWith(
+                                          //                 color: Colors.white),
+                                          //     children: [
+                                          //       TextSpan(
+                                          //         text: chosenNeighborhood,
+                                          //         style: TextStyle(
+                                          //           fontWeight: FontWeight.bold,
+                                          //         ),
+                                          //       ),
+                                          //       TextSpan(
+                                          //         text: ' 사람들',
+                                          //       ),
+                                          //     ],
+                                          //   ),
+                                          // ),
+                                          Text(chosenNeighborhood,
+                                              style:
+                                                  kMatchingScreenTextHeaderTextStyle),
+                                          DropdownButtonHideUnderline(
+                                            child: Expanded(
+                                              child: DropdownButton(
+                                                isExpanded: true,
+                                                value: null,
+                                                //chosenNeighborhood,
+                                                isDense: true,
+                                                items: (chosenNeighborhood !=
+                                                        '동네')
+                                                    ? Provider.of<
+                                                                ProfileUpdate>(
+                                                            context,
+                                                            listen: false)
+                                                        .userProfile
+                                                        .address
+                                                        ?.map(
+                                                          (element) =>
+                                                              DropdownMenuItem(
+                                                            value: element,
+                                                            child: Text(
+                                                              element,
+                                                              style:
+                                                                  kAppointmentTextButtonStyle,
+                                                            ),
+                                                          ),
+                                                        )
+                                                        .toList()
+                                                    : [],
+                                                onChanged: (value) {
+                                                  setState(() {
+                                                    print('value: $value');
+                                                    chosenNeighborhood =
+                                                        value.toString();
+                                                    usersNeighborhoodStream =
+                                                        constructNeighborhoodUsersStream(
+                                                            chosenNeighborhood);
+                                                  });
+                                                },
                                               ),
                                             ),
-                                            TextSpan(
-                                              text: ' 사람들',
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                      DropdownButtonHideUnderline(
-                                        child: Expanded(
-                                          child: DropdownButton(
-                                            isExpanded: true,
-                                            value: null,
-                                            //chosenNeighborhood,
-                                            isDense: true,
-                                            items: (chosenNeighborhood != '동네')
-                                                ? Provider.of<ProfileUpdate>(
-                                                        context,
-                                                        listen: false)
-                                                    .userProfile
-                                                    .address
-                                                    ?.map((element) =>
-                                                        DropdownMenuItem(
-                                                          value: element,
-                                                          child: Text(
-                                                            element,
-                                                            style:
-                                                                kAppointmentTextButtonStyle,
-                                                          ),
-                                                        ))
-                                                    .toList()
-                                                : [],
-                                            onChanged: (value) {
-                                              setState(() {
-                                                print('value: $value');
-                                                chosenNeighborhood =
-                                                    value.toString();
-                                                usersNeighborhoodStream =
-                                                    constructNeighborhoodUsersStream(
-                                                        chosenNeighborhood);
-                                              });
-                                            },
                                           ),
-                                        ),
+                                        ],
                                       ),
                                     ],
                                   ),
@@ -974,41 +1161,80 @@ class _MatchingScreenState extends State<MatchingScreen> {
                                       return GestureDetector(
                                         onTap: () async {
                                           await onTapGraphAppear(user, 2);
+
+                                          setState(() {
+                                            for (int i = 0;
+                                                i < itemExpandStates.length;
+                                                i++) {
+                                              if (i != index) {
+                                                itemExpandStates[i] = false;
+                                              }
+                                            }
+
+                                            itemExpandStates[index] =
+                                                !(itemExpandStates[index] ??
+                                                    false);
+                                          });
                                         },
-                                        child: ListTile(
-                                          leading: user['photoUrl'].isNotEmpty
-                                              ? CircleAvatar(
-                                                  backgroundImage: NetworkImage(
-                                                      user['photoUrl']),
-                                                )
-                                              : Icon(Icons.person),
-                                          title: Text(
-                                            user['nickName'],
-                                            style:
-                                                kMatchingScreen_SecondNicknameTextStyle,
-                                          ),
-                                          subtitle: Text(
-                                            '${user['playStyle']} / ${user['racket']} / ${user['playedYears']} / ${user['rubber']}',
-                                            style:
-                                                kMatchingScreen_SecondUserInfoTextStyle,
-                                          ),
-                                          trailing: IconButton(
-                                            icon: Icon(
-                                              Icons.arrow_forward_ios_rounded,
-                                              size: 15.0,
-                                              color: Theme.of(context)
-                                                          .brightness ==
-                                                      Brightness.light
-                                                  ? Colors
-                                                      .black // 다크 모드일 때 텍스트 색상
-                                                  : Colors.white,
+                                        child: Column(
+                                          children: [
+                                            ListTile(
+                                              leading: user['photoUrl']
+                                                      .isNotEmpty
+                                                  ? CircleAvatar(
+                                                      backgroundImage:
+                                                          NetworkImage(
+                                                              user['photoUrl']),
+                                                    )
+                                                  : Icon(Icons.person),
+                                              title: Text(
+                                                user['nickName'],
+                                                style:
+                                                    kMatchingScreen_SecondNicknameTextStyle,
+                                              ),
+                                              subtitle: Text(
+                                                '${user['playStyle']} / ${user['racket']} / ${user['playedYears']} / ${user['rubber']}',
+                                                style:
+                                                    kMatchingScreen_SecondUserInfoTextStyle,
+                                              ),
+                                              trailing: IconButton(
+                                                icon: Icon(
+                                                  Icons
+                                                      .arrow_forward_ios_rounded,
+                                                  size: 15.0,
+                                                  color: Theme.of(context)
+                                                              .brightness ==
+                                                          Brightness.light
+                                                      ? Colors
+                                                          .black // 다크 모드일 때 텍스트 색상
+                                                      : Colors.white,
+                                                ),
+                                                onPressed: () {
+                                                  // 아이콘 버튼이 눌렸을 때 수행할 동작 추가
+                                                  print(
+                                                      '이 유저와 함께 탁구를 쳐보자는 메시지를 보낼까요?');
+                                                  LaunchUrl().openBottomSheet(context);
+                                                },
+                                              ),
                                             ),
-                                            onPressed: () {
-                                              // 아이콘 버튼이 눌렸을 때 수행할 동작 추가
-                                              print(
-                                                  '이 유저와 함께 탁구를 쳐보자는 메시지를 보낼까요?');
-                                            },
-                                          ),
+                                            AnimatedContainer(
+                                              duration:
+                                                  Duration(milliseconds: 250),
+                                              // Adjust the duration as needed
+                                              height: itemExpandStates[index] ??
+                                                      false
+                                                  ? 380
+                                                  : 0,
+                                              child: SingleChildScrollView(
+                                                //physics: NeverScrollableScrollPhysics(),
+                                                child: GraphsWidget(
+                                                    isCourt: false,
+                                                    titleText: '위젯',
+                                                    backgroundColor: kMainColor,
+                                                    isMine: false),
+                                              ),
+                                            ),
+                                          ],
                                         ),
                                       );
 
@@ -1028,19 +1254,6 @@ class _MatchingScreenState extends State<MatchingScreen> {
                               ],
                             );
                           },
-                        ),
-                        AnimatedContainer(
-                          duration: Duration(milliseconds: 250),
-                          // Adjust the duration as needed
-                          height: isShowGraphSecond ? 380 : 0,
-                          child: SingleChildScrollView(
-                            //physics: NeverScrollableScrollPhysics(),
-                            child: GraphsWidget(
-                                isCourt: false,
-                                titleText: '위젯',
-                                backgroundColor: kMainColor,
-                                isMine: false),
-                          ),
                         ),
                       ],
                     ),
