@@ -24,6 +24,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../constants.dart';
+import '../repository/launchUrl.dart';
 import '../repository/repository_loadData.dart';
 import '../viewModel/profileUpdate.dart';
 import '../viewModel/sharedPreference.dart';
@@ -87,9 +88,9 @@ class _SignupScreenState extends State<SignupScreen> {
                   children: [
                     LoginButton('images/Google Button.png'),
                     LoginButton('images/Kakao Button.png'),
-                    Theme.of(context).brightness == Brightness.light ?
-                    LoginButton('images/Apple Button_black.png') :
-                    LoginButton('images/Apple Button_white.png')
+                    Theme.of(context).brightness == Brightness.light
+                        ? LoginButton('images/Apple Button_black.png')
+                        : LoginButton('images/Apple Button_white.png')
                   ],
                 ),
               ),
@@ -121,7 +122,8 @@ class _LoginButtonState extends State<LoginButton> {
     final SharedPreferences prefs = await _prefs;
 
     // 로그인 버튼이 클릭됨을 알려줌
-    await Provider.of<LoginStatusUpdate>(context, listen: false).updateIsLogInButtonClicked(true);
+    await Provider.of<LoginStatusUpdate>(context, listen: false)
+        .updateIsLogInButtonClicked(true);
 
     try {
       print('${widget._buttonTitle}');
@@ -170,10 +172,12 @@ class _LoginButtonState extends State<LoginButton> {
       }
 
       // 비동기 작업이 끝나면 다이얼로그를 닫습니다.
-      print('Provider.of<ProfileUpdate>(context, listen: false).userProfile.uid: ${Provider.of<ProfileUpdate>(context, listen: false).userProfile.uid}');
+      print(
+          'Provider.of<ProfileUpdate>(context, listen: false).userProfile.uid: ${Provider.of<ProfileUpdate>(context, listen: false).userProfile.uid}');
 
       //if (Provider.of<ProfileUpdate>(context, listen: false).userProfile.uid != 'uid') {
-      print('if (Provider.of<LoginStatusUpdate>(context, listen: false).isLoggedIn) {');
+      print(
+          'if (Provider.of<LoginStatusUpdate>(context, listen: false).isLoggedIn) {');
       await LoadData().fetchUserData(context);
       //}
       print('LoadData 에서 fetchUserData 함수 완료');
@@ -184,7 +188,6 @@ class _LoginButtonState extends State<LoginButton> {
       //print('Provider.of<ProfileUpdate>(context, listen: false).userProfileUpdated: ${Provider.of<ProfileUpdate>(context, listen: false).userProfileUpdated}');
 
       //});
-
     } finally {
       print('CircularProgressWorking finally 출력');
     }
@@ -196,66 +199,68 @@ class _LoginButtonState extends State<LoginButton> {
       builder: (BuildContext context) {
         return Consumer<LoginStatusUpdate>(
             builder: (context, loginStatus, child) {
-              return AlertDialog(
-                insetPadding: EdgeInsets.only(left: 15.0, right: 15.0),
-                shape: kRoundedRectangleBorder,
-                title: Text('이용약관 및 개인정보 처리방침 동의'),
-                content: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Checkbox(
-                      value: Provider.of<LoginStatusUpdate>(context, listen: false)
-                          .isAgreementChecked,
-                      onChanged: (value) async {
-                        await Provider.of<LoginStatusUpdate>(context, listen: false)
-                            .toggleIsAgreementChecked();
-                        // You can add any additional logic here if needed
-                      },
-                    ),
-                    RichText(
-                      text: TextSpan(
-                        style: TextStyle(
-                          fontSize: 14.0,
-                          color: Theme.of(context).brightness == Brightness.light
-                              ? Colors.black // 다크 모드일 때 텍스트 색상
-                              : Colors.white,
-                        ),
-                        children: <TextSpan>[
-                          TextSpan(text: '(필수) '),
-                          TextSpan(
-                            text: '이용약관',
-                            style: TextStyle(
-                              color: kMainColor,
-                              decoration: TextDecoration.underline,
-                            ),
-                            recognizer: TapGestureRecognizer()
-                              ..onTap = () async {
-                                await _launchUrl('https://www.naver.com/');
-                              },
-                          ),
-                          TextSpan(text: ' 및 '),
-                          TextSpan(
-                            text: '개인정보 처리방침',
-                            style: TextStyle(
-                              color: kMainColor,
-                              decoration: TextDecoration.underline,
-                            ),
-                            recognizer: TapGestureRecognizer()
-                              ..onTap = () async {
-                                await _launchUrl('https://www.naver.com/');
-                              },
-                          ),
-                          TextSpan(text: '에\n동의합니다')
-                        ],
-                      ),
-                    )
-                  ],
+          return AlertDialog(
+            insetPadding: EdgeInsets.only(left: 15.0, right: 15.0),
+            shape: kRoundedRectangleBorder,
+            title: Text('이용약관 및 개인정보 처리방침 동의'),
+            content: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Checkbox(
+                  value: Provider.of<LoginStatusUpdate>(context, listen: false)
+                      .isAgreementChecked,
+                  onChanged: (value) async {
+                    await Provider.of<LoginStatusUpdate>(context, listen: false)
+                        .toggleIsAgreementChecked();
+                    // You can add any additional logic here if needed
+                  },
                 ),
-                actions: [
-                  Provider.of<LoginStatusUpdate>(context, listen: false)
-                      .isAgreementChecked ==
+                RichText(
+                  text: TextSpan(
+                    style: TextStyle(
+                      fontSize: 14.0,
+                      color: Theme.of(context).brightness == Brightness.light
+                          ? Colors.black // 다크 모드일 때 텍스트 색상
+                          : Colors.white,
+                    ),
+                    children: <TextSpan>[
+                      TextSpan(text: '(필수) '),
+                      TextSpan(
+                        text: '이용약관',
+                        style: TextStyle(
+                          color: kMainColor,
+                          decoration: TextDecoration.underline,
+                        ),
+                        recognizer: TapGestureRecognizer()
+                          ..onTap = () async {
+                            await LaunchUrl()
+                                .myLaunchUrl('https://www.naver.com/');
+                          },
+                      ),
+                      TextSpan(text: ' 및 '),
+                      TextSpan(
+                        text: '개인정보 처리방침',
+                        style: TextStyle(
+                          color: kMainColor,
+                          decoration: TextDecoration.underline,
+                        ),
+                        recognizer: TapGestureRecognizer()
+                          ..onTap = () async {
+                            await LaunchUrl()
+                                .myLaunchUrl('https://www.naver.com/');
+                          },
+                      ),
+                      TextSpan(text: '에\n동의합니다')
+                    ],
+                  ),
+                )
+              ],
+            ),
+            actions: [
+              Provider.of<LoginStatusUpdate>(context, listen: false)
+                          .isAgreementChecked ==
                       true
-                      ? TextButton(
+                  ? TextButton(
                       style: kConfirmButtonStyle,
                       onPressed: () {
                         Navigator.pop(context);
@@ -273,20 +278,14 @@ class _LoginButtonState extends State<LoginButton> {
                           ),
                         ],
                       ))
-                      : SizedBox.shrink()
-                ],
-              );
-            });
+                  : SizedBox.shrink()
+            ],
+          );
+        });
       },
     );
   }
-  Future<void> _launchUrl(String _url) async {
-    print('_launchURL 진입');
-    final Uri _newUrl = Uri.parse(_url);
-    if (!await launchUrl(_newUrl)) {
-      throw Exception('Could not launch $_newUrl');
-    }
-  }
+
   Future<void> _showProfilePictureAskDialog(BuildContext context) async {
     return showDialog(
       context: context,
@@ -303,8 +302,7 @@ class _LoginButtonState extends State<LoginButton> {
               ),
             ],
           ),
-          content:
-          Text(
+          content: Text(
             "소셜 로그인 계정에서 프로필 사진을 가져올까요?",
             textAlign: TextAlign.start,
           ),
@@ -332,7 +330,7 @@ class _LoginButtonState extends State<LoginButton> {
                         screen: ProfileScreen(),
                         withNavBar: false,
                         pageTransitionAnimation:
-                        PageTransitionAnimation.cupertino,
+                            PageTransitionAnimation.cupertino,
                       );
                     },
                   ),
@@ -356,7 +354,7 @@ class _LoginButtonState extends State<LoginButton> {
                         screen: ProfileScreen(),
                         withNavBar: false,
                         pageTransitionAnimation:
-                        PageTransitionAnimation.cupertino,
+                            PageTransitionAnimation.cupertino,
                       ).then((value) {
                         // This code will be executed when SignupScreen is popped.
                         setState(() {
@@ -393,14 +391,15 @@ class _LoginButtonState extends State<LoginButton> {
             await CircularProgressWorking(context);
           },
           child: Container(
-              width: 60.0,
-              height: 60.0,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.all(Radius.circular(0.0)),
-              ),
-              child: Image.asset('${widget._buttonTitle}',
+            width: 60.0,
+            height: 60.0,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.all(Radius.circular(0.0)),
+            ),
+            child: Image.asset(
+              '${widget._buttonTitle}',
               fit: BoxFit.cover,
-              ),
+            ),
           ),
         );
       },

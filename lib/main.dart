@@ -2,6 +2,7 @@
 
 import 'package:dnpp/constants.dart';
 import 'package:dnpp/view/calendar_screen.dart';
+import 'package:dnpp/view/loading_screen.dart';
 import 'package:dnpp/view/main_screen.dart';
 import 'package:dnpp/view/map_screen.dart';
 import 'package:dnpp/view/profile_screen.dart';
@@ -9,6 +10,7 @@ import 'package:dnpp/view/map_screen.dart';
 import 'package:dnpp/view/setting_screen.dart';
 import 'package:dnpp/view/signup_screen.dart';
 import 'package:dnpp/viewModel/courtAppointmentUpdate.dart';
+import 'package:dnpp/viewModel/loadingUpdate.dart';
 import 'package:dnpp/viewModel/othersPersonalAppointmentUpdate.dart';
 import 'package:dnpp/viewModel/personalAppointmentUpdate.dart';
 import 'package:dnpp/viewModel/loginStatusUpdate.dart';
@@ -91,6 +93,9 @@ class HomePage extends StatelessWidget {
         ChangeNotifierProvider(
           create: (context) => SharedPreference(),
         ),
+        ChangeNotifierProvider(
+          create: (context) => LoadingUpdate(),
+        ),
       ],
       child: GestureDetector(
         onTap: () {
@@ -107,7 +112,7 @@ class HomePage extends StatelessWidget {
                 ),
               ),
             ),
-            nextScreen: HomeScreen(),
+            nextScreen: LoadingScreen(),//LoadingScreen(),//HomeScreen(),
             splashTransition: SplashTransition.fadeTransition,
           ),
           // theme: ThemeData(
@@ -117,9 +122,10 @@ class HomePage extends StatelessWidget {
           // ),
           theme: theme,
           darkTheme: darkTheme,
-          //initialRoute: HomeScreen.id,
+          // initialRoute: LoadingScreen.id,
           // routes: {
           //   // When navigating to the "/" route, build the FirstScreen widget.
+          //   LoadingScreen.id: (context) => LoadingScreen(),
           //   HomeScreen.id: (context) => HomeScreen(), // '/'
           //   SignupScreen.id: (context) => SignupScreen(), // '/SignupScreenID'
           //   ProfileScreen.id: (context) => ProfileScreen(),// '/ProfileScreenID'

@@ -1,9 +1,27 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 //const kNaverMapApiKey = '7evubnn4j6';
 
-const kCustomCircularProgressIndicator = CircularProgressIndicator(
-  valueColor: AlwaysStoppedAnimation<Color>(kMainColor),
+// const kCustomCircularProgressIndicator = CircularProgressIndicator(
+//   valueColor: AlwaysStoppedAnimation<Color>(kMainColor),
+// );
+
+const kCustomCircularProgressIndicator = Column(
+  mainAxisAlignment: MainAxisAlignment.center,
+  children: [
+    CircularProgressIndicator(
+      valueColor: AlwaysStoppedAnimation<Color>(kMainColor),
+    ),
+    SizedBox(height: 10.0), // 간격 조절을 위한 SizedBox 추가
+    Text(
+      '잠시만 기다려주세요',
+      style: TextStyle(
+        color: Colors.grey,
+        fontSize: 14.0,
+      ),
+    ),
+  ],
 );
 
 const kAppbarTextStyle =
@@ -29,7 +47,7 @@ const kAppointmentDateTextStyle = TextStyle(
 const kAppointmentTextButtonStyle = TextStyle(
   //
   //color: Colors.black,
-  color: kMainColor,
+  color: Colors.grey,
   fontSize: 18.0,
 );
 
@@ -40,7 +58,7 @@ const kAppointmentCourtTextButtonStyle = TextStyle(
 );
 
 const kElevationButtonStyle = TextStyle(
-  // 취소, 저장
+  // 취소, 저장, 추가
   color: kMainColor,
   fontSize: 18.0,
   fontWeight: FontWeight.normal,
@@ -153,4 +171,10 @@ const kProfileScreenTogglebuttonsTextStyle = TextStyle(
 const kMatchingScreenTextHeaderTextStyle = TextStyle(
     fontSize: 15.0,
     fontWeight: FontWeight.normal
+);
+
+const kMatchingScreenBigTextHeaderTextStyle = TextStyle(
+    fontSize: 18.0,
+    fontWeight: FontWeight.bold,
+
 );

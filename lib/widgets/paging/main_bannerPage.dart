@@ -3,6 +3,8 @@ import 'dart:typed_data';
 import 'package:flutter/cupertino.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../repository/launchUrl.dart';
+
 class MainBannerPageView extends StatelessWidget {
   final PageController pageController;
 
@@ -22,14 +24,6 @@ class MainBannerPageView extends StatelessWidget {
     required this.refStringList,
   });
 
-  Future<void> _launchUrl(String _url) async {
-    print('_launchURL 진입');
-    final Uri _newUrl = Uri.parse(_url);
-    if (!await launchUrl(_newUrl)) {
-      throw Exception('Could not launch $_newUrl');
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -46,7 +40,7 @@ class MainBannerPageView extends StatelessWidget {
                 return GestureDetector(
                   onTap: () async {
                     print('refStringList: $refStringList');
-                    await _launchUrl("${urlMap[refStringList['$index']]}");
+                    await LaunchUrl().myLaunchUrl("${urlMap[refStringList['$index']]}");
                   },
                   child: Container(
                     decoration: BoxDecoration(

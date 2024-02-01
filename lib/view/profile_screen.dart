@@ -1115,7 +1115,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             },
                             child: Text(
                               '추가',
-                              style: kAppointmentTextButtonStyle,
+                              style: kElevationButtonStyle,
                             ),
                           ),
                         ],
@@ -1492,9 +1492,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     // ), // 활동 지역
                     Padding(
                       padding: EdgeInsets.only(
-                          left: 25.0, right: 25.0, bottom: 20.0),
+                          left: 25.0, right: 25.0, top: 22.0, bottom: 20.0),
                       child: ConstrainedBox(
-                        constraints: BoxConstraints.tightFor(width: 100.0),
+                        constraints: BoxConstraints.tightFor(width: 200.0),
                         child: ElevatedButton(
                           onPressed: () async {
 
