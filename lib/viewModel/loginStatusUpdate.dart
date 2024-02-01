@@ -9,6 +9,13 @@ import 'package:dnpp/repository/repository_firebase.dart' as viewModel;
 
 class LoginStatusUpdate with ChangeNotifier {
 
+  bool isLoading = false;
+
+  Future<void> updateIsLoaging(bool value) async {
+    isLoading = value;
+    notifyListeners();
+  }
+
   late User currentUser;
 
   String providerId = '';
