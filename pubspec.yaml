@@ -34,6 +34,7 @@ dependencies:
   omni_datetime_picker: ^1.0.9
   bottom_picker: ^2.2.1
   fl_chart: ^0.64.0
+  flutter_svg: ^2.0.9
 
   # 소셜 로그인
   google_sign_in: ^6.1.6
@@ -46,6 +47,12 @@ dependencies:
   firebase_core: ^2.22.0
   firebase_storage: ^11.5.1
   cloud_firestore: ^4.13.2
+  # 파이어베이스 realtime_dataBase
+  firebase_database: ^10.4.5
+
+  # Chatiing
+  flutter_chat_ui: ^1.6.12
+  flutter_chat_types: ^3.6.2
 
 dev_dependencies:
   flutter_test:

@@ -4,9 +4,9 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import '../../constants.dart';
-import '../../viewModel/courtAppointmentUpdate.dart';
-import '../../viewModel/othersPersonalAppointmentUpdate.dart';
-import '../../viewModel/personalAppointmentUpdate.dart';
+import '../../statusUpdate/courtAppointmentUpdate.dart';
+import '../../statusUpdate/othersPersonalAppointmentUpdate.dart';
+import '../../statusUpdate/personalAppointmentUpdate.dart';
 
 class MainLineChart extends StatelessWidget {
   MainLineChart({required this.isCourt, required this.isMine});

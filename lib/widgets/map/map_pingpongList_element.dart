@@ -1,5 +1,3 @@
-//import 'dart:js_interop';
-
 import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
@@ -10,8 +8,8 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../constants.dart';
 import '../../models/pingpongList.dart';
-import '../../viewModel/mapWidgetUpdate.dart';
-import '../../viewModel/profileUpdate.dart';
+import '../../statusUpdate/mapWidgetUpdate.dart';
+import '../../statusUpdate/profileUpdate.dart';
 
 class PingpongListElement extends StatelessWidget {
   PingpongListElement(this._element);

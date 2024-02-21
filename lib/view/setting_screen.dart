@@ -1,25 +1,20 @@
-import 'dart:typed_data';
+import 'package:dnpp/repository/moveToOtherScreen.dart';
 
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:dnpp/models/userProfile.dart';
-import 'package:dnpp/view/main_screen.dart';
 import 'package:dnpp/view/profile_screen.dart';
 import 'package:dnpp/view/signup_screen.dart';
-import 'package:dnpp/viewModel/loginStatusUpdate.dart';
-import 'package:dnpp/viewModel/personalAppointmentUpdate.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:dnpp/viewModel/SettingScreen_ViewModel.dart';
+import 'package:dnpp/statusUpdate/loginStatusUpdate.dart';
+import 'package:dnpp/statusUpdate/personalAppointmentUpdate.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:persistent_bottom_nav_bar/persistent_tab_view.dart';
 import 'package:provider/provider.dart';
 
-import 'package:dnpp/repository/repository_firebase.dart' as viewModel;
+import 'package:dnpp/repository/repository_auth.dart';
 
 import '../constants.dart';
-import '../models/pingpongList.dart';
-import '../viewModel/courtAppointmentUpdate.dart';
-import '../viewModel/profileUpdate.dart';
+import '../statusUpdate/courtAppointmentUpdate.dart';
+import '../statusUpdate/profileUpdate.dart';
 import 'home_screen.dart';
 
 class SettingScreen extends StatefulWidget {
@@ -30,28 +25,12 @@ class SettingScreen extends StatefulWidget {
 }
 
 class _SettingScreenState extends State<SettingScreen> {
-  FirebaseFirestore db = FirebaseFirestore.instance;
-
-  List<String> LoggedInsettingMenuList = [
-    '프로필 수정',
-    '오픈소스 라이센스',
-    '이용약관',
-    '개인정보 처리방침',
-    '광고 문의',
-    '로그아웃',
-    '회원 탈퇴'
-  ];
-
-  List<String> LoggedOutsettingMenuList = [
-    '로그인',
-    '오픈소스 라이센스',
-    '이용약관',
-    '개인정보 처리방침',
-    '광고 문의',
-  ];
 
   @override
   Widget build(BuildContext context) {
+
+    final viewModel = SettingViewModel();
+
     return SafeArea(
       child: Scaffold(
         appBar: AppBar(
@@ -130,7 +109,7 @@ class _SettingScreenState extends State<SettingScreen> {
                     rows: Provider.of<LoginStatusUpdate>(context, listen: false)
                             .isLoggedIn
                         ? List<DataRow>.generate(
-                            LoggedInsettingMenuList.length,
+                        viewModel.LoggedInsettingMenuList.length,
                             (int index) => DataRow(
                               color: MaterialStateProperty.resolveWith<Color?>(
                                   (Set<MaterialState> states) {
@@ -142,7 +121,7 @@ class _SettingScreenState extends State<SettingScreen> {
                                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                     children: [
                                       Text(
-                                        LoggedInsettingMenuList[index],
+                                        viewModel.LoggedInsettingMenuList[index],
                                         style: kSettingMenuTextStyle,
                                       ),
                                       Icon(Icons.arrow_forward_ios_rounded),
@@ -155,14 +134,7 @@ class _SettingScreenState extends State<SettingScreen> {
                                         print('프로필 수정');
                                         //Navigator.pushNamed(context, ProfileScreen.id);
 
-                                        PersistentNavBarNavigator.pushNewScreen(
-                                          context,
-                                          screen: ProfileScreen(),
-                                          withNavBar: false,
-                                          // OPTIONAL VALUE. True by default.
-                                          pageTransitionAnimation:
-                                              PageTransitionAnimation.cupertino,
-                                        );
+                                        MoveToOtherScreen().persistentNavPushNewScreen(context, ProfileScreen(), false, PageTransitionAnimation.cupertino);
 
                                         // await Navigator.pushAndRemoveUntil(
                                         //     context,
@@ -199,8 +171,8 @@ class _SettingScreenState extends State<SettingScreen> {
                                           },
                                         );
                                         await Future.delayed(Duration(seconds: 1));
-                                        await viewModel.FirebaseRepository()
-                                            .signOut();
+                                        await RepositoryAuth().signOut();
+
                                         await Future.delayed(Duration.zero);
 
                                         await Provider.of<ProfileUpdate>(context,
@@ -251,8 +223,7 @@ class _SettingScreenState extends State<SettingScreen> {
                                         break;
                                       case 6:
                                         print('회원 탈퇴');
-                                        await viewModel.FirebaseRepository()
-                                            .deleteUserAccount();
+                                        await RepositoryAuth().deleteUserAccount();
                                         //Navigator.pushNamed(context, '/');
 
                                         await Provider.of<ProfileUpdate>(context, listen: false).updateUserProfileUpdated(false);
@@ -309,7 +280,7 @@ class _SettingScreenState extends State<SettingScreen> {
                             ),
                           )
                         : List<DataRow>.generate(
-                            LoggedOutsettingMenuList.length,
+                      viewModel.LoggedOutsettingMenuList.length,
                             (int index) => DataRow(
                               color: MaterialStateProperty.resolveWith<Color?>(
                                   (Set<MaterialState> states) {
@@ -321,7 +292,7 @@ class _SettingScreenState extends State<SettingScreen> {
                                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                     children: [
                                       Text(
-                                        LoggedOutsettingMenuList[index],
+                                        viewModel.LoggedOutsettingMenuList[index],
                                         style: kSettingMenuTextStyle,
                                       ),
                                       Icon(Icons.arrow_forward_ios_rounded),
@@ -333,21 +304,8 @@ class _SettingScreenState extends State<SettingScreen> {
                                     switch (index) {
                                       case 0:
                                         print('로그인');
-                                        // PersistentNavBarNavigator.pushNewScreen(
-                                        //   context,
-                                        //   screen: SignupScreen(),
-                                        //   withNavBar: false,
-                                        //   pageTransitionAnimation:
-                                        //   PageTransitionAnimation.fade,
-                                        // );
-                                        PersistentNavBarNavigator.pushNewScreen(
-                                          context,
-                                          screen: SignupScreen(),
-                                          withNavBar: false,
-                                          pageTransitionAnimation:
-                                              PageTransitionAnimation.fade,
-                                        ).then((value) {
-                                          // This code will be executed when SignupScreen is popped.
+
+                                        MoveToOtherScreen().persistentNavPushNewScreen(context, SignupScreen(), false, PageTransitionAnimation.fade).then((value) {
                                           setState(() {
                                             print('로그인 완료 후 복귀 setState');
                                           });

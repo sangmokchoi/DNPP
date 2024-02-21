@@ -1,29 +1,53 @@
 import 'package:dnpp/models/customAppointment.dart';
-import 'package:dnpp/viewModel/profileUpdate.dart';
+
 import 'package:intl/intl.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:provider/provider.dart';
+
 import 'package:syncfusion_flutter_calendar/calendar.dart';
 
 import '../constants.dart';
 
-class PersonalAppointmentUpdate extends ChangeNotifier {
+class OthersPersonalAppointmentUpdate extends ChangeNotifier {
 
   final CalendarController calendarController = CalendarController();
-  String segmentedButtonTitle = '월';
-
-  Future<void> updateSegmentedButtonTitle(String title) async {
-    segmentedButtonTitle = title;
-    notifyListeners();
-    print('segmentedButtonTitle: $segmentedButtonTitle');
-  }
 
   List<CustomAppointment> customAppointmentMeetings = <CustomAppointment>[];
-  List<CustomAppointment> customOthersAppointmentMeetings = <CustomAppointment>[];
+  List<CustomAppointment> OthersCustomAppointmentMeetings = <CustomAppointment>[];
+  List<String> extractCustomAppointmentsUserUids = [];
+
   List<Appointment> newMeetings = [];
   List<Appointment> defaultMeetings = <Appointment>[];
+
+  List<CustomAppointment> extractCustomAppointmentsByCourtAndHour(
+      List<CustomAppointment> customAppointmentMeetings,
+      String title,
+      String roadAddress,
+      Map<int, Map<int, double>> last28DaysHourlyCountsByDaysOfWeek,
+      ) {
+    return customAppointmentMeetings
+        .where((customAppointment) =>
+        customAppointment.pingpongCourtName == title &&
+        customAppointment.pingpongCourtAddress == roadAddress)
+
+        .where((customAppointment) =>
+        customAppointment.appointments.any((appointment) {
+          // startTime에서 hour 추출
+          int startDayOfWeek = customAppointment.appointments[0].startTime.weekday;
+          int startHour = customAppointment.appointments[0].startTime.hour;
+          //print('extractCustomAppointmentsByCourtAndHour startDayOfWeek: $startDayOfWeek');
+          //print('extractCustomAppointmentsByCourtAndHour startHour: $startHour');
+          //last28DaysHourlyCountsByDaysOfWeek: {5: {17: 3.0, 20: 1.0}, 3: {17: 9.0, 16: 1.0, 20: 1.0}, 6: {0: 1.0}, 4: {17: 1.0, 0: 1.0}, 2: {15: 1.0}}
+          // 시간대 별 구하는 것 뿐만 아니라 요일별로 구해야함
+
+          // last28DaysHourlyCountsByDaysOfWeek의 int값과 동일한 경우만 선택
+          // last28DaysHourlyCountsByDaysOfWeek의 요일별로 동일한 시간대를 가지는 경우만 선택
+          return last28DaysHourlyCountsByDaysOfWeek.containsKey(startDayOfWeek) &&
+              last28DaysHourlyCountsByDaysOfWeek[startDayOfWeek]!.containsKey(startHour);
+        }))
+        .toList();
+  }
 
   List<Appointment> extractAppointmentsByCourt(
       List<CustomAppointment> customAppointmentMeetings,
@@ -31,7 +55,7 @@ class PersonalAppointmentUpdate extends ChangeNotifier {
       String roadAddress) {
     return customAppointmentMeetings
         .where((customAppointment) =>
-    customAppointment.pingpongCourtName == title &&
+        customAppointment.pingpongCourtName == title &&
         customAppointment.pingpongCourtAddress == roadAddress)
         .map((customAppointment) => customAppointment.appointments)
         .expand((appointments) => appointments)
@@ -62,7 +86,7 @@ class PersonalAppointmentUpdate extends ChangeNotifier {
   Color color = Color.fromRGBO(33, 150, 243, 1.0);
 
 //Color(0xFF2196F3);
-  Color d = kMainColor;
+  //Color d = kMainColor;
   bool isOpened = false;
   bool isAllDay = false;
 
@@ -76,29 +100,6 @@ class PersonalAppointmentUpdate extends ChangeNotifier {
   bool repeatEveryYear = false;
 
   int repeatTimes = 1;
-
-  Future<void> updateCalendarView(String calendarTitle) async {
-    if (calendarTitle == '월') {
-      calendarController.view = CalendarView.month;
-      segmentedButtonTitle = calendarTitle;
-      print(calendarTitle);
-    } else if (calendarTitle == '주') {
-      calendarController.view = CalendarView.week;
-      segmentedButtonTitle = calendarTitle;
-      print(calendarTitle);
-    } else if (calendarTitle == '일') {
-      calendarController.view = CalendarView.day;
-      segmentedButtonTitle = calendarTitle;
-      print(calendarTitle);
-    } else if ((calendarTitle == '전체')) {
-      calendarController.view = CalendarView.schedule;
-      segmentedButtonTitle = calendarTitle;
-      print(calendarTitle);
-    } else {
-      print('calendarController.view else');
-    }
-    notifyListeners();
-  }
 
   Future<void> clear() async {
     subject = '';
@@ -232,12 +233,12 @@ class PersonalAppointmentUpdate extends ChangeNotifier {
       print('recurrenceRule: $recurrenceRule');
     } else if (repeatString == '매월') {
       recurrenceRule =
-          'FREQ=MONTHLY;BYMONTHDAY=${fromDate.day};INTERVAL=1;COUNT=$value';
+      'FREQ=MONTHLY;BYMONTHDAY=${fromDate.day};INTERVAL=1;COUNT=$value';
       notifyListeners();
       print('recurrenceRule: $recurrenceRule');
     } else if (repeatString == '매년') {
       recurrenceRule =
-          'FREQ=YEARLY;BYMONTHDAY=${fromDate.day};BYMONTH=${fromDate.month};INTERVAL=1;COUNT=$value';
+      'FREQ=YEARLY;BYMONTHDAY=${fromDate.day};BYMONTH=${fromDate.month};INTERVAL=1;COUNT=$value';
       notifyListeners();
       print('recurrenceRule: $recurrenceRule');
     } else if (repeatString == '반복 안 함') {
@@ -274,12 +275,12 @@ class PersonalAppointmentUpdate extends ChangeNotifier {
     await Future.delayed(Duration.zero);
     notifyListeners();
   }
-  //customOthersAppointmentMeetings
 
-  Future<void> addOthersCustomMeeting(CustomAppointment customMeeting) async {
-    customOthersAppointmentMeetings.add(customMeeting);
+  Future<void> updateDefaultMeetings(List<Appointment> list) async {
+    defaultMeetings = list;
     await Future.delayed(Duration.zero);
     notifyListeners();
+    //print('defaultMeetings: $defaultMeetings');
   }
 
   Future<void> addMeeting(Appointment meeting) async {
@@ -291,10 +292,10 @@ class PersonalAppointmentUpdate extends ChangeNotifier {
   Future<void> addRecurrenceExceptionDates(Appointment oldMeeting,
       Appointment newMeeting, bool onlyThisAppointment, bool isDeletion) async {
     Appointment? existingAppointment =
-        defaultMeetings.firstWhere((element) => element.id == oldMeeting.id);
+    defaultMeetings.firstWhere((element) => element.id == oldMeeting.id);
 
     final DateTime exceptionDate =
-        DateTime(fromDate.year, fromDate.month, fromDate.day);
+    DateTime(fromDate.year, fromDate.month, fromDate.day);
 
     if (existingAppointment != null) {
       print(11111);
@@ -559,50 +560,50 @@ class PersonalAppointmentUpdate extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> updateChart(int index) async {
-
-    selectedList = falseSelectedList;
-
-    if (index == 0) {
-      isSelected[0] = true;
-      isSelected[1] = false;
-      isSelected[2] = false;
-      isSelected[3] = false;
-
-      await updateLast7DaysDurations();
-      await updateLast7DaysHourlyCounts();
-      updateRecentDays(index);
-    } else if (index == 1) {
-      isSelected[0] = false;
-      isSelected[1] = true;
-      isSelected[2] = false;
-      isSelected[3] = false;
-
-      await updateLast28DaysDurations();
-      await updateLast28DaysHourlyCounts();
-      updateRecentDays(index);
-    } else if (index == 2) {
-      isSelected[0] = false;
-      isSelected[1] = false;
-      isSelected[2] = true;
-      isSelected[3] = false;
-
-      await updateLast3MonthsDurations();
-      await updateLast3MonthsHourlyCounts();
-      updateRecentDays(index);
-    } else if (index == 3) {
-
-      isSelected[0] = false;
-      isSelected[1] = false;
-      isSelected[2] = false;
-      isSelected[3] = true;
-
-      await updateNext28daysDurations();
-      await updateNext28daysHourlyCounts();
-      updateRecentDays(index);
-
-    }
-  }
+  // Future<void> updateChart(int index) async {
+  //
+  //   selectedList = falseSelectedList;
+  //
+  //   if (index == 0) {
+  //     isSelected[0] = true;
+  //     isSelected[1] = false;
+  //     isSelected[2] = false;
+  //     isSelected[3] = false;
+  //
+  //     await updateLast7DaysDurations();
+  //     await updateLast7DaysHourlyCounts();
+  //     updateRecentDays(index);
+  //   } else if (index == 1) {
+  //     isSelected[0] = false;
+  //     isSelected[1] = true;
+  //     isSelected[2] = false;
+  //     isSelected[3] = false;
+  //
+  //     await updateLast28DaysDurations();
+  //     await updateLast28DaysHourlyCounts();
+  //     updateRecentDays(index);
+  //   } else if (index == 2) {
+  //     isSelected[0] = false;
+  //     isSelected[1] = false;
+  //     isSelected[2] = true;
+  //     isSelected[3] = false;
+  //
+  //     await updateLast3MonthsDurations();
+  //     await updateLast3MonthsHourlyCounts();
+  //     updateRecentDays(index);
+  //   } else if (index == 3) {
+  //
+  //     isSelected[0] = false;
+  //     isSelected[1] = false;
+  //     isSelected[2] = false;
+  //     isSelected[3] = true;
+  //
+  //     await updateNext28daysDurations();
+  //     await updateNext28daysHourlyCounts();
+  //     updateRecentDays(index);
+  //
+  //   }
+  // }
 
   int recentDays = 0;
 
@@ -636,6 +637,9 @@ class PersonalAppointmentUpdate extends ChangeNotifier {
 
   Future<void> personalDaywiseDurationsCalculate(
       bool isInitial, bool isPersonal, String title, String roadAddress) async {
+    //print('others personalDaywiseDurationsCalculate 시작');
+    print(title);
+    print(roadAddress);
 
     if (isPersonal != true) {
 
@@ -643,17 +647,17 @@ class PersonalAppointmentUpdate extends ChangeNotifier {
           customAppointmentMeetings, title, roadAddress);
 
       newMeetings = extractedAppointments;
-      print('isMyTime false');
-      print('daywiseDurationsCalculate isMyTime false');
+      //print('others isMyTime false');
+      //print('others daywiseDurationsCalculate isMyTime false');
 
     } else {
       // isPersonal == true 이면, 개인별 차트
       newMeetings = defaultMeetings;
-      print('isMyTime true');
-      print('daywiseDurationsCalculate isMyTime true');
+      //print('others isMyTime true');
+      //print('others daywiseDurationsCalculate isMyTime true');
 
     }
-    print('personl daywiseDurationsCalculate 이제 시작');
+    //print('others personl daywiseDurationsCalculate 이제 시작');
 
     resetDaywiseDurations();
 
@@ -665,37 +669,7 @@ class PersonalAppointmentUpdate extends ChangeNotifier {
       String dayOfWeek = DateFormat('EEE', 'ko').format(appointment.startTime);
 
       if (appointment.startTime
-              .isAfter(currentDate.subtract(Duration(days: 7))) &&
-          appointment.startTime.isBefore(currentDate)) {
-        // Map에 이미 해당 요일이 있는지 확인하고 없으면 추가, 있으면 누적
-
-        if (last7DaysDurations.containsKey(dayOfWeek)) {
-
-          final double previousDuration = last7DaysDurations[dayOfWeek] ?? 0.0;
-          final double timeDifference = previousDuration +
-              appointment.endTime
-                  .difference(appointment.startTime)
-                  .inMinutes
-                  .toDouble();
-          //     .inMilliseconds
-          //     .toDouble() /
-          // 1000000;
-
-          last7DaysDurations[dayOfWeek] = timeDifference;
-        } else {
-          final timeDifference =
-              appointment.endTime.difference(appointment.startTime);
-          last7DaysDurations[dayOfWeek] = timeDifference.inMinutes
-              .toDouble(); //inMilliseconds.toDouble() / 1000000;
-        }
-
-        if (isInitial == true) {
-          daywiseDurations = last7DaysDurations;
-        }
-      }
-
-      if (appointment.startTime
-              .isAfter(currentDate.subtract(Duration(days: 28))) &&
+          .isAfter(currentDate.subtract(Duration(days: 28))) &&
           appointment.startTime.isBefore(currentDate)) {
 
         if (last28DaysDurations.containsKey(dayOfWeek)) {
@@ -705,102 +679,79 @@ class PersonalAppointmentUpdate extends ChangeNotifier {
                   .difference(appointment.startTime)
                   .inMinutes
                   .toDouble();
-          //     .toDouble() /
-          // 1000000;
 
           last28DaysDurations[dayOfWeek] = timeDifference;
         } else {
           final timeDifference =
-              appointment.endTime.difference(appointment.startTime);
+          appointment.endTime.difference(appointment.startTime);
           last28DaysDurations[dayOfWeek] =
               timeDifference.inMinutes.toDouble(); // 1000000;
         }
 
-        // if (isInitial == true) {
-        //   daywiseDurations = last7DaysDurations;
-        // }
+        daywiseDurations = last28DaysDurations;
+
       }
 
-      if (appointment.startTime
-              .isAfter(currentDate.subtract(Duration(days: 90))) &&
-          appointment.startTime.isBefore(currentDate)) {
-
-        if (last3MonthsDurations.containsKey(dayOfWeek)) {
-          final double previousDuration =
-              last3MonthsDurations[dayOfWeek] ?? 0.0;
-          final double timeDifference = previousDuration +
-              appointment.endTime
-                  .difference(appointment.startTime)
-                  .inMinutes
-                  .toDouble();
-          //     .inMilliseconds
-          //     .toDouble() /
-          // 1000000;
-
-          last3MonthsDurations[dayOfWeek] = timeDifference;
-        } else {
-          final timeDifference =
-              appointment.endTime.difference(appointment.startTime);
-          last3MonthsDurations[dayOfWeek] = timeDifference.inMinutes
-              .toDouble(); //inMilliseconds.toDouble() / 1000000;
-        }
-
-        // if (isInitial == true) {
-        //   daywiseDurations = last7DaysDurations;
-        // }
-      }
-
-      if (appointment.startTime
-          .isAfter(currentDate) &&
-          appointment.startTime.isBefore(currentDate.add(Duration(days: 28)))) {
-
-        if (next28daysDurations.containsKey(dayOfWeek)) {
-          final double previousDuration =
-              next28daysDurations[dayOfWeek] ?? 0.0;
-          final double timeDifference = previousDuration +
-              appointment.endTime
-                  .difference(appointment.startTime)
-                  .inMinutes
-                  .toDouble();
-          //     .inMilliseconds
-          //     .toDouble() /
-          // 1000000;
-
-          next28daysDurations[dayOfWeek] = timeDifference;
-        } else {
-          final timeDifference =
-          appointment.endTime.difference(appointment.startTime);
-          next28daysDurations[dayOfWeek] = timeDifference.inMinutes
-              .toDouble(); //inMilliseconds.toDouble() / 1000000;
-        }
-
-        // if (isInitial == true) {
-        //   daywiseDurations = next28daysDurations;
-        // }
-      }
-
-      //print('daywiseDurations: $daywiseDurations');
+      // print('last28DaysHourlyCountsByDaysOfWeek: $last28DaysHourlyCountsByDaysOfWeek');
+      //
+      // var extractCustomA0 =
+      // extractCustomAppointmentsByCourtAndHour0(customAppointmentMeetings, title, roadAddress, last28DaysHourlyCountsByDaysOfWeek);
+      //
+      // print('extractCustomA0: $extractCustomA0');
 
     }
 
+
+    extractCustomAppointments(title, roadAddress);
+
     notifyListeners();
-    print('notifyListeners after daywiseDurations: $daywiseDurations');
+
   }
+
+  Future<void> extractCustomAppointments(String title, String roadAddress) async {
+    var extractedResult =
+    extractCustomAppointmentsByCourtAndHour(customAppointmentMeetings, title, roadAddress, last28DaysHourlyCountsByDaysOfWeek);
+
+    OthersCustomAppointmentMeetings = extractedResult;
+    //print('extractCustomA: $extractedResult');
+
+    // extractedResult.forEach((customAppointment) {
+    //   print('extractCustomA userUid: ${customAppointment.userUid}');
+    // });
+
+    extractCustomAppointmentsUserUids = extractedResult.map((customAppointment) => customAppointment.userUid).toSet().toList();
+    print('extractCustomAppointmentsUserUids: $extractCustomAppointmentsUserUids');
+
+//     Set<String> uniqueUserUids = Set<String>();
+//
+// // 이미 있는 userUid를 추가하면서 중복 체크
+//     extractCustomAppointmentsUserUids.forEach((userUid) {
+//       if (!uniqueUserUids.contains(userUid)) {
+//         uniqueUserUids.add(userUid);
+//       }
+//     });
+//
+// // uniqueUserUids를 리스트로 변환
+//     extractCustomAppointmentsUserUids = uniqueUserUids.toList();
+
+    notifyListeners();
+  }
+
 
   Future<void> personalCountHours(bool isInitial, bool isMyTime, String title, String roadAddress) async {
 
-    print('personal countHours 시작');
+    //print('others personal countHours 시작');
     if (isMyTime != true) {
       // isMyTime == true 이면, 첫번째 바 차트
       List<Appointment> extractedAppointments = extractAppointmentsByCourt(
           customAppointmentMeetings, title, roadAddress);
 
       newMeetings = extractedAppointments;
-      print('countHours isMyTime false');
+      //print('others countHours isMyTime false');
       //print('countHours newMeetings: $newMeetings');
 
     } else {
-      print('countHours isMyTime true');
+      //print('others countHours isMyTime true');
       newMeetings = defaultMeetings;
       //print('countHours newMeetings: $newMeetings');
     }
@@ -812,40 +763,6 @@ class PersonalAppointmentUpdate extends ChangeNotifier {
 
     // 각 약속에서 startTime부터 endTime까지의 모든 시간을 추출하고 카운트
     for (var appointment in newMeetings) {
-      if (appointment.startTime
-          .isAfter(currentDate.subtract(Duration(days: 7))) &&
-          appointment.startTime.isBefore(currentDate)) {
-
-        DateTime startTime = appointment.startTime;
-        DateTime endTime = appointment.endTime;
-
-        while (startTime.isBefore(endTime) ||
-            startTime.isAtSameMomentAs(endTime)) {
-          //(startTime.hour <= endTime.hour)
-          int hour = startTime.hour;
-          int dayOfWeek = startTime.weekday;
-
-          last7DaysHourlyCounts[hour] = (last7DaysHourlyCounts[hour] ?? 0) + 1;
-
-          last7DaysHourlyCountsByDaysOfWeek[dayOfWeek] =
-          (last7DaysHourlyCountsByDaysOfWeek[dayOfWeek] ?? {})
-            ..update(
-              hour,
-                  (value) => value + 1,
-              ifAbsent: () => 1.0, // 여기를 1로 해서 double 타입으로 변경
-            );
-          //print('dayOfWeek: ${dayOfWeek}');
-          //print('last7DaysHourlyCountsByDaysOfWeek[dayOfWeek]: ${last7DaysHourlyCountsByDaysOfWeek[dayOfWeek]}');
-          personalHourlyCounts = last7DaysHourlyCounts;
-
-          startTime = startTime.add(Duration(hours: 1));
-        }
-
-        if (isInitial == true) {
-          personalHourlyCounts = last7DaysHourlyCounts;
-        }
-
-      }
 
       if (appointment.startTime
           .isAfter(currentDate.subtract(Duration(days: 28))) &&
@@ -856,7 +773,7 @@ class PersonalAppointmentUpdate extends ChangeNotifier {
 
         while (startTime.isBefore(endTime) ||
             startTime.isAtSameMomentAs(endTime)) {
-          //(startTime.hour <= endTime.hour)
+
           int hour = startTime.hour;
           int dayOfWeek = startTime.weekday;
           last28DaysHourlyCounts[hour] =
@@ -869,84 +786,14 @@ class PersonalAppointmentUpdate extends ChangeNotifier {
                   (value) => value + 1,
               ifAbsent: () => 1.0, // 여기를 1로 해서 double 타입으로 변경
             );
-          //print('last28DaysHourlyCountsByDaysOfWeek[dayOfWeek]: ${last28DaysHourlyCountsByDaysOfWeek[dayOfWeek]}');
+          //print('others last28DaysHourlyCountsByDaysOfWeek[dayOfWeek]: ${last28DaysHourlyCountsByDaysOfWeek[dayOfWeek]}');
 
           personalHourlyCounts = last28DaysHourlyCounts;
           startTime = startTime.add(Duration(hours: 1));
         }
 
-        // if (isInitial == true) {
-        //   hourlyCounts = last28DaysHourlyCounts;
-        // }
-
+        personalHourlyCounts = last28DaysHourlyCounts;
       }
-
-      if (appointment.startTime
-          .isAfter(currentDate.subtract(Duration(days: 90))) &&
-          appointment.startTime.isBefore(currentDate)) {
-
-        DateTime startTime = appointment.startTime;
-        DateTime endTime = appointment.endTime;
-
-        while (startTime.isBefore(endTime) ||
-            startTime.isAtSameMomentAs(endTime)) {
-          //(startTime.hour <= endTime.hour)
-          int hour = startTime.hour;
-          int dayOfWeek = startTime.weekday;
-          last3MonthsHourlyCounts[hour] =
-              (last3MonthsHourlyCounts[hour] ?? 0) + 1;
-
-          last3MonthsHourlyCountsByDaysOfWeek[dayOfWeek] =
-          (last3MonthsHourlyCountsByDaysOfWeek[dayOfWeek] ?? {})
-            ..update(
-              hour,
-                  (value) => value + 1,
-              ifAbsent: () => 1.0, // 여기를 1로 해서 double 타입으로 변경
-            );
-          //print('last3MonthsHourlyCountsByDaysOfWeek[dayOfWeek]: ${last3MonthsHourlyCountsByDaysOfWeek[dayOfWeek]}');
-
-          personalHourlyCounts = last3MonthsHourlyCounts;
-          startTime = startTime.add(Duration(hours: 1));
-        }
-      }
-      // if (isInitial == true) {
-      //   hourlyCounts = last3MonthsHourlyCounts;
-      // }
-
-      if (appointment.startTime
-          .isAfter(currentDate) &&
-          appointment.startTime.isBefore(currentDate.add(Duration(days: 28)))) {
-
-        DateTime startTime = appointment.startTime;
-        DateTime endTime = appointment.endTime;
-
-        while (startTime.isBefore(endTime) ||
-            startTime.isAtSameMomentAs(endTime)) {
-          //(startTime.hour <= endTime.hour)
-          int hour = startTime.hour;
-          int dayOfWeek = startTime.weekday;
-          next28daysHourlyCounts[hour] =
-              (next28daysHourlyCounts[hour] ?? 0) + 1;
-
-          next28daysHourlyCountsByDaysOfWeek[dayOfWeek] =
-          (next28daysHourlyCountsByDaysOfWeek[dayOfWeek] ?? {})
-            ..update(
-              hour,
-                  (value) => value + 1,
-              ifAbsent: () => 1.0, // 여기를 1로 해서 double 타입으로 변경
-            );
-          //print('next28daysHourlyCountsByDaysOfWeek[dayOfWeek]: ${next28daysHourlyCountsByDaysOfWeek[dayOfWeek]}');
-
-          personalHourlyCounts = next28daysHourlyCounts;
-          print('next28daysHourlyCounts : $next28daysHourlyCounts');
-          startTime = startTime.add(Duration(hours: 1));
-        }
-      }
-      // if (isInitial == true) {
-      //   hourlyCounts = next28daysHourlyCounts;
-      // }
-
-      //print('personalHourlyCounts : $personalHourlyCounts');
     }
 
     notifyListeners();

@@ -42,7 +42,8 @@ class UserProfile {
     '70대 이상'
   ];
   static List<String> playedYearsList = [
-    '3개월 이하',
+    '1개월 이하',
+    '3개월',
     '6개월',
     '1년',
     '3년',

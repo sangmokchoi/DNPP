@@ -1,22 +1,17 @@
 import 'package:dnpp/models/customAppointment.dart';
-import 'package:dnpp/viewModel/profileUpdate.dart';
+
 import 'package:intl/intl.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:provider/provider.dart';
+
 import 'package:syncfusion_flutter_calendar/calendar.dart';
 
 import '../constants.dart';
 
 class CourtAppointmentUpdate extends ChangeNotifier {
-  void updateSegmentedButtonTitle(String title) {
-    segmentedButtonTitle = title;
-    notifyListeners();
-  }
 
   final CalendarController calendarController = CalendarController();
-  String segmentedButtonTitle = '월';
 
   List<CustomAppointment> customAppointmentMeetings = <CustomAppointment>[];
   List<CustomAppointment> customAppointmentMeetingsByCourt = <CustomAppointment>[];
@@ -73,29 +68,6 @@ class CourtAppointmentUpdate extends ChangeNotifier {
   bool repeatEveryYear = false;
 
   int repeatTimes = 1;
-
-  void updateCalendarView(String calendarTitle) {
-    if (calendarTitle == '월') {
-      calendarController.view = CalendarView.month;
-      segmentedButtonTitle = calendarTitle;
-      print(calendarTitle);
-    } else if (calendarTitle == '주') {
-      calendarController.view = CalendarView.week;
-      segmentedButtonTitle = calendarTitle;
-      print(calendarTitle);
-    } else if (calendarTitle == '일') {
-      calendarController.view = CalendarView.day;
-      segmentedButtonTitle = calendarTitle;
-      print(calendarTitle);
-    } else if ((calendarTitle == '전체')) {
-      calendarController.view = CalendarView.schedule;
-      segmentedButtonTitle = calendarTitle;
-      print(calendarTitle);
-    } else {
-      print('calendarController.view else');
-    }
-    notifyListeners();
-  }
 
   Future<void> clear() async {
     subject = '';
@@ -645,23 +617,23 @@ class CourtAppointmentUpdate extends ChangeNotifier {
 
     if (isMyTime != true) {
 
-      print('court customAppointmentMeetings: $customAppointmentMeetings');
+      //print('court customAppointmentMeetings: $customAppointmentMeetings');
 
       List<Appointment> extractedAppointments = extractAppointmentsByCourt(
           customAppointmentMeetings, title, roadAddress);
 
       newMeetings = extractedAppointments;
-      print('court DaywiseDurationsCalculate isMyTime false');
-      print('court extractedAppointments: $extractedAppointments');
+      //print('court DaywiseDurationsCalculate isMyTime false');
+      //print('court extractedAppointments: $extractedAppointments');
 
     } else {
       // isMyTime == true 이면, 첫번째 바 차트
       newMeetings = defaultMeetings;
-      print('court DaywiseDurationsCalculate isMyTime true');
-      print('court newMeetings: $newMeetings');
+      //print('court DaywiseDurationsCalculate isMyTime true');
+      //print('court newMeetings: $newMeetings');
 
     }
-    print('court daywiseDurationsCalculate 이제 시작');
+    //print('court daywiseDurationsCalculate 이제 시작');
 
     resetDaywiseDurations();
 

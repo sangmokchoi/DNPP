@@ -1,43 +1,18 @@
 import 'dart:async';
-import 'dart:convert';
-import 'dart:io';
+
 import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dnpp/constants.dart';
-import 'package:dnpp/models/customAppointment.dart';
-import 'package:dnpp/models/main_chartBasic.dart';
-import 'package:dnpp/models/pingpongList.dart';
 import 'package:dnpp/repository/launchUrl.dart';
-import 'package:dnpp/repository/loadFromFirebase.dart';
-import 'package:dnpp/view/profile_screen.dart';
-import 'package:dnpp/viewModel/courtAppointmentUpdate.dart';
-import 'package:dnpp/viewModel/loadingUpdate.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_storage/firebase_storage.dart';
+import 'package:dnpp/statusUpdate/courtAppointmentUpdate.dart';
+import 'package:dnpp/statusUpdate/loadingUpdate.dart';
 import 'package:flutter/gestures.dart';
-import 'package:intl/intl.dart';
-import 'package:dnpp/widgets/map/map_widget.dart';
 import 'package:flutter/material.dart';
-import 'package:fl_chart/fl_chart.dart';
-import 'package:persistent_bottom_nav_bar/persistent_tab_view.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:syncfusion_flutter_calendar/calendar.dart';
-import 'package:url_launcher/url_launcher.dart';
-
-import '../models/userProfile.dart';
-import '../repository/repository_loadData.dart';
-import '../viewModel/loginStatusUpdate.dart';
-import '../viewModel/othersPersonalAppointmentUpdate.dart';
-import '../viewModel/profileUpdate.dart';
-import '../widgets/chart/main_barChart.dart';
-
-import '../viewModel/personalAppointmentUpdate.dart';
-import '../widgets/chart/main_lineChart.dart';
-import '../widgets/paging/main_bannerPage.dart';
-import '../widgets/paging/main_chartPage.dart';
-import '../widgets/paging/main_courtPage.dart';
-import '../widgets/paging/main_graphs.dart';
+import '../statusUpdate/profileUpdate.dart';
+import '../statusUpdate/personalAppointmentUpdate.dart';
+import '../widgets/paging/main_personalChartPage.dart';
+import '../widgets/paging/main_courtChartPage.dart';
 import 'package:custom_refresh_indicator/custom_refresh_indicator.dart';
 
 class MainScreen extends StatefulWidget {
@@ -48,7 +23,10 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> {
+
   final PageController _imagePageController = PageController(initialPage: 0);
+  int _currentImage = 0;
+
   final PageController _firstBarChartPageController = PageController();
   final PageController _secondBarChartPageController = PageController(
     viewportFraction: 0.90, // 보이는 영역의 비율 조절
@@ -220,22 +198,26 @@ class _MainScreenState extends State<MainScreen> {
                     child: Text('Error: ${snapshot.error}'),
                   );
                 } else if (snapshot.connectionState == ConnectionState.done) {
-                  WidgetsBinding.instance!.addPostFrameCallback((_) {
-                    Timer.periodic(Duration(seconds: 1), (timer) {
-                      // if (_currentimage < imageList.length - 1) {
-                      //   _currentimage++;
-                      // } else {
-                      //   _currentimage = 0;
-                      // }
 
+                  WidgetsBinding.instance!.addPostFrameCallback((_) {
+                    Timer.periodic(Duration(seconds: 4), (timer) {
+
+                      // if (_currentImage < Provider.of<LoadingUpdate>(context, listen: false)
+                      //     .refStringListMain.length - 1) {
+                      //   _currentImage++;
+                      // } else {
+                      //   _currentImage = 0;
+                      // }
+                      //
                       // _imagePageController.animateToPage(
-                      //   _currentimage,
+                      //   _currentImage,
                       //   duration: Duration(seconds: 1),
                       //   curve: Curves.easeInOut,
                       // );
+
                     });
                   });
-                  // CustomMaterialIndicator // onRefresh: refreshData,
+
                   return CustomMaterialIndicator(
                     //LoadData().fetchUserData(context)
                     onRefresh: () {
@@ -269,19 +251,39 @@ class _MainScreenState extends State<MainScreen> {
                     },
                     child: ListView(
                       children: [
-                        MainBannerPageView(
-                          pageController: _imagePageController,
-                          width: width,
-                          height: height,
-                          imageMap:
-                              Provider.of<LoadingUpdate>(context, listen: false)
-                                  .imageMap,
-                          urlMap:
-                              Provider.of<LoadingUpdate>(context, listen: false)
-                                  .urlMap,
-                          refStringList:
-                              Provider.of<LoadingUpdate>(context, listen: false)
-                                  .refStringList,
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 0.0, vertical: 0.0),
+                          child: Container(
+                            height: height, // or any desired height
+                            width: width, // 4:3 aspect ratio
+                            child: PageView.builder(
+                              controller: _imagePageController,
+                              itemCount: Provider.of<LoadingUpdate>(context, listen: false)
+                                  .refStringListMain.length,
+                              itemBuilder: (context, index) {
+                                return GestureDetector(
+                                  onTap: () async {
+                                    await LaunchUrl()
+                                        .myLaunchUrl("${Provider.of<LoadingUpdate>(context, listen: false)
+                                        .urlMapMain[Provider.of<LoadingUpdate>(context, listen: false)
+                                        .refStringListMain['$index']]}");
+                                  },
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      image: DecorationImage(
+                                        image: MemoryImage(
+                                            Provider.of<LoadingUpdate>(context, listen: false)
+                                                .imageMapMain[Provider.of<LoadingUpdate>(context, listen: false)
+                                                .refStringListMain['$index']] ??
+                                                Uint8List(0)),
+                                        fit: BoxFit.cover,
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
                         ),
                         Padding(
                           padding: const EdgeInsets.only(

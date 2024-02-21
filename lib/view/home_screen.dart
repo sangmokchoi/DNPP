@@ -9,8 +9,9 @@ import 'package:persistent_bottom_nav_bar/persistent_tab_view.dart';
 import 'package:provider/provider.dart';
 
 import '../models/search.dart';
-import '../viewModel/loginStatusUpdate.dart';
-import '../viewModel/personalAppointmentUpdate.dart';
+import '../statusUpdate/loginStatusUpdate.dart';
+import '../statusUpdate/personalAppointmentUpdate.dart';
+import '../statusUpdate/profileUpdate.dart';
 import 'map_screen.dart';
 import 'calendar_screen.dart';
 
@@ -79,24 +80,6 @@ class _HomeScreenState extends State<HomeScreen> {
     ];
   }
 
-  // static const TextStyle optionStyle =
-  // TextStyle(fontSize: 30, fontWeight: FontWeight.bold);
-  //
-  // static const List<Widget> _widgetOptions = <Widget>[
-  //   Text(
-  //     'Index 0: Home',
-  //     style: optionStyle,
-  //   ),
-  //   Text(
-  //     'Index 1: Business',
-  //     style: optionStyle,
-  //   ),
-  //   Text(
-  //     'Index 2: School',
-  //     style: optionStyle,
-  //   ),
-  // ];
-
   @override
   void initState() {
     super.initState();
@@ -112,97 +95,75 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: PersistentTabView(
-        key: homePageKey,
-        context,
-        controller: _controller,
-        onItemSelected: (int) {
-          setState(() {
-            switch (int) {
-              case 0:
-              // WidgetsBinding.instance?.addPostFrameCallback((_) {
-              //   try {
-              //     Provider.of<AppointmentUpdate>(context, listen: false)
-              //         .daywiseDurationsCalculate(false);
-              //     Provider.of<AppointmentUpdate>(context, listen: false)
-              //         .countHours(true);
-              //     Provider.of<AppointmentUpdate>(context, listen: false).updateRecentDays(0);
-              //     setState(() {});
-              //   } catch (e) {
-              //     print(e);
-              //   }
-              //
-              // });
-                return setState(() {
-                  print('$int');
-                });
-              case 1:
-                // WidgetsBinding.instance?.addPostFrameCallback((_) {
-                //   try {
-                //     Provider.of<AppointmentUpdate>(context, listen: false)
-                //         .daywiseDurationsCalculate(true);
-                //     Provider.of<AppointmentUpdate>(context, listen: false)
-                //         .countHours(true);
-                //     Provider.of<AppointmentUpdate>(context, listen: false).updateRecentDays(0);
-                //     setState(() {});
-                //   } catch (e) {
-                //     print(e);
-                //   }
-                //
-                // });
-                return setState(() {
-                  print('$int');
-                });
-              case 2:
-                return setState(() {
-                  print('$int');
-                });
-              case 3:
-                return setState(() {
-                  print('$int');
-                });
-              case 4:
-                return setState(() {
-                  print('$int');
-                });
-              case 5:
-                return setState(() {
-                  print('$int');
-                });
-              default:
-                return setState(() {
-                  print('$int');
-                });
-            }
-          }); // This is required to update the nav bar if Android back button is pressed
-        },
-        screens: _buildScreens(),
-        items: _navBarsItems(),
-        navBarHeight: 65,
-        confineInSafeArea: true,
-        backgroundColor: Colors.white70, // Default is Colors.white.
-        handleAndroidBackButtonPress: true, // Default is true.
-        resizeToAvoidBottomInset: true, // This needs to be true if you want to move up the screen when keyboard appears. Default is true.
-        stateManagement: true, // Default is true.
-        hideNavigationBarWhenKeyboardShows: true, // Recommended to set 'resizeToAvoidBottomInset' as true while using this argument. Default is true.
-        decoration: NavBarDecoration(
-          borderRadius: BorderRadius.circular(10.0),
-          colorBehindNavBar: Colors.white,
-        ),
-        popAllScreensOnTapOfSelectedTab: true,
-        popActionScreens: PopActionScreensType.all,
-        itemAnimationProperties: ItemAnimationProperties( // Navigation Bar's items animation properties.
-          duration: Duration(milliseconds: 200),
-          curve: Curves.ease,
-        ),
-        screenTransitionAnimation: ScreenTransitionAnimation( // Screen transition animation on change of selected tab.
-          animateTabTransition: true,
-          curve: Curves.ease,
-          duration: Duration(milliseconds: 200),
-        ),
-        navBarStyle: NavBarStyle.style1, // Choose the nav bar style with this property.
-      ),
+    return Consumer<ProfileUpdate>(
+        builder: (context, currentUserUpdate, child) {
+        return SafeArea(
+          child: PersistentTabView(
+            key: homePageKey,
+            context,
+            controller: _controller,
+            onItemSelected: (int) {
+              setState(() {
+                switch (int) {
+                  case 0:
+                    return setState(() {
+                      print('$int');
+                    });
+                  case 1:
+                    return setState(() {
+                      print('$int');
+                    });
+                  case 2:
+                    return setState(() {
+                      print('$int');
+                    });
+                  case 3:
+                    return setState(() {
+                      print('$int');
+                    });
+                  case 4:
+                    return setState(() {
+                      print('$int');
+                    });
+                  case 5:
+                    return setState(() {
+                      print('$int');
+                    });
+                  default:
+                    return setState(() {
+                      print('$int');
+                    });
+                }
+              }); // This is required to update the nav bar if Android back button is pressed
+            },
+            screens: _buildScreens(),
+            items: _navBarsItems(),
+            navBarHeight: 65,
+            confineInSafeArea: true,
+            backgroundColor: Colors.white70, // Default is Colors.white.
+            handleAndroidBackButtonPress: true, // Default is true.
+            resizeToAvoidBottomInset: true, // This needs to be true if you want to move up the screen when keyboard appears. Default is true.
+            stateManagement: true, // Default is true.
+            hideNavigationBarWhenKeyboardShows: true, // Recommended to set 'resizeToAvoidBottomInset' as true while using this argument. Default is true.
+            decoration: NavBarDecoration(
+              borderRadius: BorderRadius.circular(10.0),
+              colorBehindNavBar: Colors.white,
+            ),
+            popAllScreensOnTapOfSelectedTab: true,
+            popActionScreens: PopActionScreensType.all,
+            itemAnimationProperties: ItemAnimationProperties( // Navigation Bar's items animation properties.
+              duration: Duration(milliseconds: 200),
+              curve: Curves.ease,
+            ),
+            screenTransitionAnimation: ScreenTransitionAnimation( // Screen transition animation on change of selected tab.
+              animateTabTransition: true,
+              curve: Curves.ease,
+              duration: Duration(milliseconds: 200),
+            ),
+            navBarStyle: NavBarStyle.style1, // Choose the nav bar style with this property.
+          ),
+        );
+      }
     );
 
   }

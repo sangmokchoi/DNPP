@@ -1,26 +1,19 @@
-import 'package:bottom_picker/bottom_picker.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:dnpp/view/calendar_screen.dart';
 import 'package:dnpp/widgets/chart/chart_repeat_appointment.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 
 import 'package:flutter/material.dart';
 import 'package:omni_datetime_picker/omni_datetime_picker.dart';
-import 'package:persistent_bottom_nav_bar/persistent_tab_view.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:syncfusion_flutter_calendar/calendar.dart';
 
 import '../../constants.dart';
 import '../../models/customAppointment.dart';
-import '../../models/pingpongList.dart';
-import '../../models/userProfile.dart';
-import '../../repository/repository_loadData.dart';
-import '../../view/home_screen.dart';
-import '../../viewModel/courtAppointmentUpdate.dart';
-import '../../viewModel/loginStatusUpdate.dart';
-import '../../viewModel/personalAppointmentUpdate.dart';
-import '../../viewModel/profileUpdate.dart';
+import '../../repository/repository_userData.dart';
+import '../../statusUpdate/courtAppointmentUpdate.dart';
+import '../../statusUpdate/loginStatusUpdate.dart';
+import '../../statusUpdate/personalAppointmentUpdate.dart';
+import '../../statusUpdate/profileUpdate.dart';
 import '../chart/chart_repeat_times.dart';
 
 class EditAppointment extends StatefulWidget {
@@ -209,7 +202,7 @@ class _EditAppointmentState extends State<EditAppointment> {
           .resetHourlyCounts();
 
       //await LoadData().fetchUserData(context);
-      await LoadData().fetchUserData(context);
+      await RepositoryUserData().fetchUserData(context);
       //setState(() {});
     } catch (e) {
       print(e);
@@ -499,7 +492,9 @@ class _EditAppointmentState extends State<EditAppointment> {
                           ignoring: _editAppointment ? false : true,
                           child: Column(
                             children: [
-                              TextFormField(
+                              TextField(
+                                autocorrect: false,
+                                enableSuggestions: false,
                                 controller: _eventNametextController,
                                 decoration: InputDecoration(
                                     labelText: '일정 제목', hintText: '예) 레슨'),
@@ -508,13 +503,31 @@ class _EditAppointmentState extends State<EditAppointment> {
                                   _eventName = value;
                                 },
                               ),
-                              TextFormField(
-                                controller: _memoTextController,
-                                decoration: InputDecoration(labelText: '메모'),
-                                style: kAppointmentDateTextStyle,
-                                onChanged: (value) {
-                                  _memoText = value;
-                                },
+                              Container(
+                                height: 120,
+                                margin: EdgeInsets.only(top: 15.0),
+                                padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 0.0),
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.all(
+                                      Radius.circular(15)),
+                                  border: Border.all(
+                                      color: Colors.grey, width: 0.3),
+                                ),
+                                child: TextField(
+                                  autocorrect: false,
+                                  enableSuggestions: false,
+                                  controller: _memoTextController,
+                                  decoration: InputDecoration(
+                                    focusedBorder: InputBorder.none,
+                                    border: InputBorder.none,
+                                      labelText: '메모',
+                                  ),
+                                  maxLines: null,
+                                  style: kAppointmentDateTextStyle,
+                                  onChanged: (value) {
+                                    _memoText = value;
+                                  },
+                                ),
                               ),
                             ],
                           ),
@@ -685,6 +698,7 @@ class _EditAppointmentState extends State<EditAppointment> {
                                   ),
                                 ),
                               ),
+                              SizedBox(height: 10.0,),
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -857,7 +871,7 @@ class _EditAppointmentState extends State<EditAppointment> {
                         Visibility(
                           visible: _editAppointment ? false : true,
                           // _editAppointment이 false 일때 보여야함
-                          child: TextButton(
+                          child: ElevatedButton(
                             style: kElevationButtonDeletionStyle.copyWith(
                                 backgroundColor:
                                     MaterialStatePropertyAll(kMainColor)),
