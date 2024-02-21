@@ -3,18 +3,15 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../constants.dart';
-import '../../viewModel/courtAppointmentUpdate.dart';
-import '../../viewModel/personalAppointmentUpdate.dart';
-import '../../viewModel/profileUpdate.dart';
+import '../../statusUpdate/courtAppointmentUpdate.dart';
+import '../../statusUpdate/profileUpdate.dart';
 import 'main_graphs.dart';
 
 class MainCourtChartPageView extends StatelessWidget {
   final PageController pageController;
 
   bool isPersonal = false;
-
   int currentCourt;
-
   int indexCourt;
 
   //bool isLoading = false;

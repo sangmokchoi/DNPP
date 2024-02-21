@@ -35,7 +35,7 @@ class ProfileUpdate with ChangeNotifier {
       photoUrl: 'https://firebasestorage.googleapis.com/v0/b/dnpp-402403.appspot.com/o/profile_photos%2Fempty_profile_160.png?alt=media&token=4fc4c247-c9b0-473e-b38f-ee6b78967536',
       gender: '밝히지 않음',
       ageRange: '10대 이하',
-      playedYears: '3개월 이하',
+      playedYears: '3개월',
       address: [],
       pingpongCourt: [],
       playStyle: '공격',
@@ -177,6 +177,7 @@ class ProfileUpdate with ChangeNotifier {
   }
 
   Future<double> initializePlayedYears(String playedYears) async {
+    print('playedYears: $playedYears');
     int extractedIndex = UserProfile.playedYearsList.indexOf(playedYears);
     print('initializePlayedYears extractedIndex: ${extractedIndex}');
     return extractedIndex.toDouble();

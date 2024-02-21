@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../constants.dart';
-import '../../viewModel/personalAppointmentUpdate.dart';
+import '../../statusUpdate/personalAppointmentUpdate.dart';
 
 class RepeatAppointment extends StatelessWidget {
 

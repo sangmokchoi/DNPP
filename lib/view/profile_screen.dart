@@ -1,21 +1,13 @@
 import 'dart:core';
 import 'dart:io';
-
-//import 'dart:js_interop';
-import 'dart:typed_data';
-
 import 'package:dnpp/models/userProfile.dart';
-import 'package:dnpp/view/home_screen.dart';
 import 'package:dnpp/view/map_screen.dart';
-import 'package:dnpp/view/setting_screen.dart';
-import 'package:dnpp/view/signup_screen.dart';
-import 'package:dnpp/viewModel/profileUpdate.dart';
+import 'package:dnpp/statusUpdate/profileUpdate.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
-import 'package:persistent_bottom_nav_bar/persistent_tab_view.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -23,12 +15,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../constants.dart';
 import '../models/locationData.dart';
-import 'package:kpostal/kpostal.dart';
 
-import '../viewModel/loginStatusUpdate.dart';
-import '../viewModel/mapWidgetUpdate.dart';
-import 'calendar_screen.dart';
-import 'main_screen.dart';
+import '../statusUpdate/loginStatusUpdate.dart';
+import '../statusUpdate/mapWidgetUpdate.dart';
 
 class ProfileScreen extends StatefulWidget {
   static String id = '/ProfileScreenID';
@@ -88,6 +77,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     UserProfile? currentUserProfile =
         Provider.of<ProfileUpdate>(context, listen: false).userProfile;
+
 //userProfileUpdated
     //if (currentUserProfile.uid != 'uid') {
     if (Provider.of<ProfileUpdate>(context, listen: false).userProfileUpdated != false) {
@@ -112,7 +102,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
           await Provider.of<ProfileUpdate>(context, listen: false)
               .initializePlayedYears(newProfile.playedYears);
       print('profile screen initialize() _currentPlayedYearsSliderValue: ${_currentPlayedYearsSliderValue}');
-      print('_currentPlayedYearsSliderValue: ${_currentPlayedYearsSliderValue}');
       //pickedLocationList = newProfile.pingpongCourt;
 
       pickedLocationList = newProfile.address ?? [];
@@ -486,15 +475,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       padding:
                           EdgeInsets.only(left: 25.0, right: 25.0, bottom: 5.0),
                       child: TextFormField(
+                        autocorrect: false,
+                        enableSuggestions: false,
                         style: TextStyle(
                           fontSize: 20.0
                         ),
                         controller: _nickNameTextFormFieldController,
+                        maxLength: 30,
                         decoration: const InputDecoration(
                           labelText: '닉네임 (필수)',
                           labelStyle: TextStyle(color: Colors.grey),
                           focusedBorder: UnderlineInputBorder(
                             borderSide: BorderSide(color: Colors.grey), // 밑줄 색상
+                          ),
+                          hintText: '30자 이내',
+                          hintStyle: TextStyle(
+                            fontSize: 14.0
                           ),
                           // enabledBorder: const OutlineInputBorder(
                           //   borderSide: BorderSide(color: Colors.red, width: 1.0),
@@ -826,6 +822,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       padding: EdgeInsets.symmetric(
                           horizontal: 25.0, vertical: 10.0),
                       child: TextFormField(
+                        autocorrect: false,
+                        enableSuggestions: false,
                         controller: _locationTextFormFieldController,
                         decoration: InputDecoration(
                           hintText: '예) 신사동, 흥업면',

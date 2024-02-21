@@ -1,34 +1,27 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:dnpp/repository/moveToOtherScreen.dart';
 import 'package:flutter/material.dart';
+import 'package:persistent_bottom_nav_bar/persistent_tab_view.dart';
 import 'package:provider/provider.dart';
 import 'package:syncfusion_flutter_calendar/calendar.dart';
 import '../../constants.dart';
 import '../../dataSource/SFcalendar_dataSource.dart';
-import '../../models/customAppointment.dart';
-import '../../viewModel/loginStatusUpdate.dart';
-import '../../viewModel/personalAppointmentUpdate.dart';
+import '../../viewModel/CalendarScreen_ViewModel.dart';
+import '../../statusUpdate/personalAppointmentUpdate.dart';
+import '../appointment/edit_appointment.dart';
 
 class CustomSFCalendar extends StatelessWidget {
-  CustomSFCalendar({required this.calendarTapped, required this.context});
+  CustomSFCalendar({required this.context});
 
-  final Function(CalendarTapDetails) calendarTapped;
   final BuildContext context;
 
   List<Appointment> _getDataSource() =>
       Provider.of<PersonalAppointmentUpdate>(context, listen: false)
           .defaultMeetings;
 
-  FirebaseFirestore db = FirebaseFirestore.instance;
+  //FirebaseFirestore db = FirebaseFirestore.instance;
 
   @override
   Widget build(BuildContext context) {
-    // final docRef = db.collection("Appointments").where("userUid",
-    //     isEqualTo: Provider.of<LoginStatusUpdate>(context, listen: false)
-    //         .currentUser
-    //         .uid).withConverter(
-    //   fromFirestore: CustomAppointment.fromFirestore,
-    //   toFirestore: (CustomAppointment customAppointment, _) => customAppointment.toFirestore(),
-    // );
 
     return SfCalendar(
       view: CalendarView.month,
@@ -53,7 +46,7 @@ class CustomSFCalendar extends StatelessWidget {
             fontWeight: FontWeight.w500,
           )),
       controller:
-          Provider.of<PersonalAppointmentUpdate>(context).calendarController,
+          Provider.of<CalendarScreenViewModel>(context).calendarController,
       initialDisplayDate: DateTime.now(),
       initialSelectedDate: DateTime.now(),
       onTap: calendarTapped,
@@ -183,8 +176,248 @@ class CustomSFCalendar extends StatelessWidget {
       },
       showDatePickerButton: true,
       showCurrentTimeIndicator: true,
-      allowViewNavigation: true,
+      //allowViewNavigation: true,
       showTodayButton: true,
     );
+  }
+
+  void calendarTapped(CalendarTapDetails calendarTapDetails) async {
+    if (Provider.of<CalendarScreenViewModel>(context, listen: false)
+        .calendarController
+        .view ==
+        CalendarView.month) {
+      if (calendarTapDetails.targetElement == CalendarElement.resourceHeader) {
+        print('111');
+      } else if (calendarTapDetails.targetElement ==
+          CalendarElement.appointment) {
+        print('222');
+
+        final appointmentDetails = calendarTapDetails.appointments?.first;
+        print("appointmentDetails: ${appointmentDetails}");
+
+        print("appointmentDetails recurrenceRule: ${appointmentDetails.recurrenceRule}");
+
+        //print(appointmentDetails); // color 가 MaterialAccentColor(primary value: Color(0xff448aff)
+        // 이면, 일반 일정이고, 다른 색상이면 공유되는 일정으로 표시해야함
+
+        //Appointment? existingAppointment = meetings.firstWhere((element) => element.id == oldMeeting.id);
+
+        if (appointmentDetails.recurrenceRule != null) {
+          print('appointmentDetails.recurrenceRule != null, 반복 일정 O'); // 반복 일정 O
+
+          await updateProvider(appointmentDetails);
+          openModalBottomSheet(context, appointmentDetails);
+        } else {
+          print('appointmentDetails.recurrenceRule == null, 반복 일정 X'); // 반복 일정 X
+          await updateProvider(appointmentDetails);
+          openModalBottomSheet(context, appointmentDetails);
+        }
+      } else if (calendarTapDetails.targetElement ==
+          CalendarElement.calendarCell) {
+        print('333-1');
+        final year = calendarTapDetails.date?.year;
+        final month = calendarTapDetails.date?.month;
+        final day = calendarTapDetails.date?.day;
+        final day2 = calendarTapDetails.date?.weekday;
+        // 일 - 7, 토 - 6
+
+        var fromDate = DateTime(
+          year!,
+          month!,
+          day!,
+          DateTime.now().hour,
+          (DateTime.now().minute / 5).round() * 5,
+        );
+
+        var toDate = DateTime(
+          year,
+          month,
+          day,
+          DateTime.now().add(Duration(minutes: 20)).hour,
+          (DateTime.now().add(Duration(minutes: 20)).minute / 5).round() * 5,
+        );
+        Provider.of<PersonalAppointmentUpdate>(context, listen: false)
+            .updateFromDate(fromDate);
+        Provider.of<PersonalAppointmentUpdate>(context, listen: false)
+            .updateToDate(toDate);
+      } else {
+        print('333-2');
+      }
+    } else if (Provider.of<CalendarScreenViewModel>(context, listen: false)
+        .calendarController
+        .view ==
+        CalendarView.week) {
+      print('444');
+      if (calendarTapDetails.targetElement == CalendarElement.viewHeader) {
+        //Provider.of<MapWidgetUpdate>(context, listen: false).calendarController.view = CalendarView.day;
+        print('일 캘린더가 나타나야함');
+        print('555');
+      } else if (calendarTapDetails.targetElement == CalendarElement.agenda) {
+        print('666 - 0');
+      } else if (calendarTapDetails.targetElement == CalendarElement.appointment) {
+        print('666 - 1'); // 주 에서 약속 클릭
+        final appointmentDetails = calendarTapDetails.appointments![0];
+
+        await updateProvider(appointmentDetails);
+        openModalBottomSheet(context, appointmentDetails);
+      } else if (calendarTapDetails.targetElement ==
+          CalendarElement.calendarCell) {
+        print('666 - 2');
+        final year = calendarTapDetails.date?.year;
+        final month = calendarTapDetails.date?.month;
+        final day = calendarTapDetails.date?.day;
+        final hour = calendarTapDetails.date?.hour;
+        final minute = calendarTapDetails.date?.minute;
+        // 일 - 7, 토 - 6
+
+        var fromDate = DateTime(
+          year!,
+          month!,
+          day!,
+          hour!,
+          (minute! / 5).round() * 5,
+        );
+
+        var toDate = DateTime(
+          year,
+          month,
+          day,
+          fromDate.add(Duration(minutes: 20)).hour,
+          (fromDate.add(Duration(minutes: 20)).minute / 5).round() * 5,
+        );
+        Provider.of<PersonalAppointmentUpdate>(context, listen: false)
+            .updateFromDate(fromDate);
+        Provider.of<PersonalAppointmentUpdate>(context, listen: false)
+            .updateToDate(toDate);
+      } else {
+        print('666 - 3');
+      }
+    } else if (Provider.of<CalendarScreenViewModel>(context, listen: false)
+        .calendarController
+        .view ==
+        CalendarView.day) {
+      print('777');
+
+      final year = calendarTapDetails.date?.year;
+      final month = calendarTapDetails.date?.month;
+      final day = calendarTapDetails.date?.day;
+      final day2 = calendarTapDetails.date?.weekday;
+      // 일 - 7, 토 - 6
+
+      var fromDate = DateTime(
+        year!,
+        month!,
+        day!,
+        DateTime.now().hour,
+        (DateTime.now().minute / 5).round() * 5,
+      );
+
+      var toDate = DateTime(
+        year,
+        month,
+        day,
+        DateTime.now().add(Duration(minutes: 20)).hour,
+        (DateTime.now().add(Duration(minutes: 20)).minute / 5).round() * 5,
+      );
+      Provider.of<PersonalAppointmentUpdate>(context, listen: false)
+          .updateFromDate(fromDate);
+      Provider.of<PersonalAppointmentUpdate>(context, listen: false)
+          .updateToDate(toDate);
+
+      String _segmentedButtonTitle =
+          Provider.of<CalendarScreenViewModel>(context, listen: false)
+              .segmentedButtonTitle;
+      Provider.of<CalendarScreenViewModel>(context, listen: false)
+          .updateCalendarView(_segmentedButtonTitle);
+
+      if (calendarTapDetails.targetElement == CalendarElement.viewHeader) {
+        print('777-1');
+        print(fromDate);
+        print(toDate);
+        Provider.of<CalendarScreenViewModel>(context, listen: false)
+            .calendarController
+            .view = CalendarView.day;
+
+        Provider.of<CalendarScreenViewModel>(context, listen: false)
+            .updateSegmentedButtonTitle('일');
+        Provider.of<CalendarScreenViewModel>(context, listen: false)
+            .updateCalendarView(
+            Provider.of<CalendarScreenViewModel>(context, listen: false)
+                .segmentedButtonTitle);
+
+      } else if (calendarTapDetails.targetElement ==
+          CalendarElement.appointment) {
+        print('888');
+        final appointmentDetails = calendarTapDetails.appointments![0];
+
+        await updateProvider(appointmentDetails);
+        openModalBottomSheet(context, appointmentDetails);
+      } else if (calendarTapDetails.targetElement ==
+          CalendarElement.calendarCell) {
+        print('888 - 1');
+
+        final year = calendarTapDetails.date?.year;
+        final month = calendarTapDetails.date?.month;
+        final day = calendarTapDetails.date?.day;
+        final hour = calendarTapDetails.date?.hour;
+        final minute = calendarTapDetails.date?.minute;
+
+        var fromDate = DateTime(
+          year!,
+          month!,
+          day!,
+          hour!,
+          (minute! / 5).round() * 5,
+        );
+
+        var toDate = DateTime(
+          year,
+          month,
+          day,
+          fromDate.add(Duration(minutes: 20)).hour,
+          (fromDate.add(Duration(minutes: 20)).minute / 5).round() * 5,
+        );
+        Provider.of<PersonalAppointmentUpdate>(context, listen: false)
+            .updateFromDate(fromDate);
+        Provider.of<PersonalAppointmentUpdate>(context, listen: false)
+            .updateToDate(toDate);
+      } else {
+        print('888 - 2');
+      }
+    } else if (Provider.of<CalendarScreenViewModel>(context, listen: false)
+        .calendarController
+        .view ==
+        CalendarView.schedule) {
+      print('999');
+      print(calendarTapDetails.targetElement);
+
+      if (calendarTapDetails.targetElement == CalendarElement.appointment) {
+        final appointmentDetails = calendarTapDetails.appointments![0];
+
+        await updateProvider(appointmentDetails);
+        openModalBottomSheet(context, appointmentDetails);
+      }
+    } else {
+      print('1000');
+    }
+  }
+
+  Future<void> updateProvider(dynamic appointmentDetails) async {
+    Provider.of<PersonalAppointmentUpdate>(context, listen: false)
+        .updateSubject(appointmentDetails.subject);
+    Provider.of<PersonalAppointmentUpdate>(context, listen: false)
+        .updateFromDate(appointmentDetails.startTime);
+    Provider.of<PersonalAppointmentUpdate>(context, listen: false)
+        .updateToDate(appointmentDetails.endTime);
+    Provider.of<PersonalAppointmentUpdate>(context, listen: false)
+        .changeIsAllDay(appointmentDetails.isAllDay);
+    Provider.of<PersonalAppointmentUpdate>(context, listen: false)
+        .updateNotes(appointmentDetails.notes);
+  }
+
+
+  void openModalBottomSheet(BuildContext context, dynamic appointmentDetails) {
+    MoveToOtherScreen().persistentNavPushNewScreen(context, EditAppointment(
+        context: context, userCourt: '', oldMeeting: appointmentDetails), true, PageTransitionAnimation.slideUp,);
   }
 }
