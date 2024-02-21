@@ -7,21 +7,26 @@ import 'package:url_launcher/url_launcher.dart';
 //   valueColor: AlwaysStoppedAnimation<Color>(kMainColor),
 // );
 
-const kCustomCircularProgressIndicator = Column(
-  mainAxisAlignment: MainAxisAlignment.center,
-  children: [
-    CircularProgressIndicator(
-      valueColor: AlwaysStoppedAnimation<Color>(kMainColor),
-    ),
-    SizedBox(height: 10.0), // 간격 조절을 위한 SizedBox 추가
-    Text(
-      '잠시만 기다려주세요',
-      style: TextStyle(
-        color: Colors.grey,
-        fontSize: 14.0,
+const kCustomCircularProgressIndicator = SizedBox(
+  height: 150,
+  width: 150,
+  child: Column(
+    mainAxisAlignment: MainAxisAlignment.center,
+    children: [
+      CircularProgressIndicator(
+        valueColor: AlwaysStoppedAnimation<Color>(kMainColor),
       ),
-    ),
-  ],
+      SizedBox(height: 10.0), // 간격 조절을 위한 SizedBox 추가
+      // Text(
+      //   '잠시만 기다려주세요',
+      //   style: TextStyle(
+      //     color: Colors.grey,
+      //     fontSize: 14.0,
+      //   ),
+      // ),
+
+    ],
+  ),
 );
 
 const kAppbarTextStyle =
@@ -136,9 +141,10 @@ const kMapPingponglistElementEtcTextStyle = TextStyle(
     fontWeight: FontWeight.normal);
 
 const kMatchingScreen_FirstNicknameTextStyle = TextStyle(
-    fontSize: 18.0,
+    fontSize: 20.0,
     color: Colors.white,
-    fontWeight: FontWeight.bold
+    fontWeight: FontWeight.bold,
+    overflow: TextOverflow.fade
 );
 
 const kMatchingScreen_FirstUserInfoTextStyle = TextStyle(

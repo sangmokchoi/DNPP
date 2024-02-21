@@ -3,9 +3,9 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:provider/provider.dart';
 
 import '../../constants.dart';
-import '../../viewModel/courtAppointmentUpdate.dart';
-import '../../viewModel/othersPersonalAppointmentUpdate.dart';
-import '../../viewModel/personalAppointmentUpdate.dart';
+import '../../statusUpdate/courtAppointmentUpdate.dart';
+import '../../statusUpdate/othersPersonalAppointmentUpdate.dart';
+import '../../statusUpdate/personalAppointmentUpdate.dart';
 import 'SelectableButton.dart';
 
 class MainBarChart extends StatelessWidget {

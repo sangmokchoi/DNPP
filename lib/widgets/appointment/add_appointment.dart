@@ -1,7 +1,7 @@
-import 'package:bottom_picker/bottom_picker.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dnpp/constants.dart';
 import 'package:dnpp/models/pingpongList.dart';
+import 'package:dnpp/repository/launchUrl.dart';
 import 'package:dnpp/widgets/chart/chart_repeat_appointment.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -11,18 +11,17 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:syncfusion_flutter_calendar/calendar.dart';
 import '../../models/customAppointment.dart';
-import '../../models/userProfile.dart';
-import '../../repository/repository_loadData.dart';
-import '../../viewModel/courtAppointmentUpdate.dart';
-import '../../viewModel/personalAppointmentUpdate.dart';
-import '../../viewModel/loginStatusUpdate.dart';
-import '../../viewModel/profileUpdate.dart';
+
+import '../../repository/repository_userData.dart';
+import '../../statusUpdate/courtAppointmentUpdate.dart';
+import '../../statusUpdate/personalAppointmentUpdate.dart';
+import '../../statusUpdate/loginStatusUpdate.dart';
+import '../../statusUpdate/profileUpdate.dart';
 import '../chart/chart_repeat_times.dart';
 
 class AddAppointment extends StatefulWidget {
-  AddAppointment({required this.userCourt, required this.context});
+  AddAppointment({required this.userCourt});
 
-  final BuildContext context;
   final String userCourt;
 
   @override
@@ -33,17 +32,14 @@ class _AddAppointmentState extends State<AddAppointment> {
   TextEditingController _eventNametextController = TextEditingController();
   TextEditingController _memoTextController = TextEditingController();
 
-  String _eventName = '';
-  String _memoText = '';
-
   String chosenCourtRoadAddress = '';
 
   PingpongList? foundCourt;
 
   FirebaseFirestore db = FirebaseFirestore.instance;
 
-  Future<void> toggleLoading(bool isLoading, BuildContext context) async {
-    setState(() {
+  void toggleLoading(bool isLoading, BuildContext context) {
+    //setState(() {
       if (isLoading) {
         // 로딩 바를 화면에 표시
         showDialog(
@@ -59,16 +55,11 @@ class _AddAppointmentState extends State<AddAppointment> {
         //Navigator.pop(context);
         Navigator.of(context, rootNavigator: true).pop();
       }
-    });
+    //});
   }
 
   Future<void> refreshData(BuildContext context) async {
 
-    try {
-
-      await Future.delayed(Duration(seconds: 1)).then((value) {
-        print('refreshData done');
-      });
       await Provider.of<PersonalAppointmentUpdate>(context, listen: false)
           .resetMeetings();
       await Provider.of<PersonalAppointmentUpdate>(context, listen: false)
@@ -83,12 +74,6 @@ class _AddAppointmentState extends State<AddAppointment> {
       await Provider.of<CourtAppointmentUpdate>(context, listen: false)
           .resetHourlyCounts();
 
-      //await LoadData().fetchUserData(context);
-      await LoadData().fetchUserData(context);
-      //setState(() {});
-    } catch (e) {
-      print(e);
-    }
   }
 
   @override
@@ -182,7 +167,7 @@ class _AddAppointmentState extends State<AddAppointment> {
                               alignment: Alignment.centerRight,
                             ),
                             onPressed: () async {
-                              await toggleLoading(true, defaultContext);
+                              toggleLoading(true, defaultContext);
 
                               Appointment meeting = Appointment(
                                 startTime: Provider.of<PersonalAppointmentUpdate>(
@@ -193,7 +178,7 @@ class _AddAppointmentState extends State<AddAppointment> {
                                         defaultContext,
                                         listen: false)
                                     .toDate,
-                                subject: _eventName,
+                                subject: _eventNametextController.text,
                                 //Provider.of<AppointmentUpdate>(context, listen: false).subject,//
 
                                 // color: Provider.of<AppointmentUpdate>(context,
@@ -205,7 +190,7 @@ class _AddAppointmentState extends State<AddAppointment> {
                                         defaultContext,
                                         listen: false)
                                     .isAllDay,
-                                notes: _memoText,
+                                notes: _memoTextController.text,
                                 //Provider.of<AppointmentUpdate>(context, listen: false).notes,//
                                 recurrenceRule:
                                     Provider.of<PersonalAppointmentUpdate>(defaultContext,
@@ -239,46 +224,70 @@ class _AddAppointmentState extends State<AddAppointment> {
                               await docRef.set(newCustomAppointment);
                               print('docRef.set done');
 
-                              // await Provider.of<AppointmentUpdate>(context,
-                              //         listen: false)
-                              //     .daywiseDurationsCalculate(false);
-                              // await Provider.of<AppointmentUpdate>(context,
-                              //         listen: false)
-                              //    .countHours(false);
-
                               await Provider.of<PersonalAppointmentUpdate>(defaultContext,
                                       listen: false)
                                   .clear();
 
-                              print('await LoadData().refreshData(context);');
-                              //await LoadData().refreshData(context);
-                              await refreshData(defaultContext);
-                              print('await LoadData().refreshData(context);');
-                              await toggleLoading(false, defaultContext);
+                              await refreshData(defaultContext).then((value) async {
+                                print('await LoadData().refreshData(context);');
+                                //await LoadData().fetchUserData(context);
+                                await RepositoryUserData().fetchUserData(context).then((value) {
+                                  toggleLoading(false, defaultContext);
 
-                              Navigator.pop(defaultContext);
+                                  setState(() {
+                                    LaunchUrl().alertFunc(context, '알림', '일정이 등록되었습니다', '확인', () {
+                                      Navigator.pop(defaultContext);
+                                    });
+                                  });
+
+                                });
+                              });
+
                             },
                           ),
                         ],
                       ),
-                      TextFormField(
-                        //controller: _eventNametextController,
+                      TextField(
+                        controller: _eventNametextController,
+                        autocorrect: false,
+                        enableSuggestions: false,
                         decoration:
-                            InputDecoration(labelText: '일정 제목', hintText: '예) 레슨'),
+                            InputDecoration(
+                                labelText: '일정 제목',
+                                hintText: '예) 레슨',
+                            ),
                         style: kAppointmentDateTextStyle,
-                        onChanged: (value) {
-                          _eventName = value;
-                          //Provider.of<AppointmentUpdate>(context, listen: false).updateSubject(value);
-                        },
+                        // onChanged: (value) {
+                        //   _eventName = value;
+                        //   //Provider.of<AppointmentUpdate>(context, listen: false).updateSubject(value);
+                        // },
                       ),
-                      TextFormField(
-                        //controller: _memoTextController,
-                        decoration: InputDecoration(labelText: '메모'),
-                        style: kAppointmentDateTextStyle,
-                        onChanged: (value) {
-                          _memoText = value;
-                          //Provider.of<AppointmentUpdate>(context, listen: false).updateNotes(value);
-                        },
+                      Container(
+                        height: 120,
+                        margin: EdgeInsets.only(top: 15.0),
+                        padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 0.0),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.all(
+                              Radius.circular(15)),
+                          border: Border.all(
+                              color: Colors.grey, width: 0.3),
+                        ),
+                        child: TextField(
+                          controller: _memoTextController,
+                          autocorrect: false,
+                          enableSuggestions: false,
+                          decoration: InputDecoration(
+                              focusedBorder: InputBorder.none,
+                            border: InputBorder.none,
+                            labelText: '메모'
+                          ),
+                          maxLines: null,
+                          style: kAppointmentDateTextStyle,
+                          // onChanged: (value) {
+                          //   _memoText = value;
+                          //   //Provider.of<AppointmentUpdate>(context, listen: false).updateNotes(value);
+                          // },
+                        ),
                       ),
                     ],
                   ),
@@ -453,6 +462,7 @@ class _AddAppointmentState extends State<AddAppointment> {
                       //     ),
                       //   ],
                       // ),
+                      SizedBox(height: 10.0,),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -463,7 +473,7 @@ class _AddAppointmentState extends State<AddAppointment> {
                           ),
                           DropdownButtonHideUnderline(
                             child: DropdownButton(
-                              value: (chosenCourtRoadAddress != '') ? null : chosenCourtRoadAddress,
+                              value: (chosenCourtRoadAddress != '') ? chosenCourtRoadAddress : null,
                               items: (chosenCourtRoadAddress != '')
                                   ? Provider.of<ProfileUpdate>(defaultContext, listen: false)
                                       .userProfile

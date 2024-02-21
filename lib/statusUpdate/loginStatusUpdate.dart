@@ -4,7 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 
-import 'package:dnpp/repository/repository_firebase.dart' as viewModel;
+import 'package:dnpp/repository/repository_auth.dart' as viewModel;
 
 
 class LoginStatusUpdate with ChangeNotifier {
