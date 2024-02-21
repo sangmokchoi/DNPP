@@ -1,31 +1,24 @@
-//import 'dart:js';
-
 import 'package:dnpp/constants.dart';
-import 'package:dnpp/view/calendar_screen.dart';
 import 'package:dnpp/view/loading_screen.dart';
-import 'package:dnpp/view/main_screen.dart';
-import 'package:dnpp/view/map_screen.dart';
-import 'package:dnpp/view/profile_screen.dart';
-import 'package:dnpp/view/map_screen.dart';
-import 'package:dnpp/view/setting_screen.dart';
-import 'package:dnpp/view/signup_screen.dart';
-import 'package:dnpp/viewModel/courtAppointmentUpdate.dart';
-import 'package:dnpp/viewModel/loadingUpdate.dart';
-import 'package:dnpp/viewModel/othersPersonalAppointmentUpdate.dart';
-import 'package:dnpp/viewModel/personalAppointmentUpdate.dart';
-import 'package:dnpp/viewModel/loginStatusUpdate.dart';
-import 'package:dnpp/viewModel/mapWidgetUpdate.dart';
-import 'package:dnpp/viewModel/profileUpdate.dart';
-import 'package:dnpp/viewModel/sharedPreference.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:dnpp/viewModel/CalendarScreen_ViewModel.dart';
+import 'package:dnpp/viewModel/LoadingScreen_ViewModel.dart';
+import 'package:dnpp/viewModel/MapScreen_ViewModel.dart';
+import 'package:dnpp/viewModel/MatchingScreen_ViewModel.dart';
+import 'package:dnpp/viewModel/SettingScreen_ViewModel.dart';
+import 'package:dnpp/statusUpdate/courtAppointmentUpdate.dart';
+import 'package:dnpp/statusUpdate/loadingUpdate.dart';
+import 'package:dnpp/statusUpdate/othersPersonalAppointmentUpdate.dart';
+import 'package:dnpp/statusUpdate/personalAppointmentUpdate.dart';
+import 'package:dnpp/statusUpdate/loginStatusUpdate.dart';
+import 'package:dnpp/statusUpdate/mapWidgetUpdate.dart';
+import 'package:dnpp/statusUpdate/profileUpdate.dart';
+import 'package:dnpp/statusUpdate/sharedPreference.dart';
 import 'package:animated_splash_screen/animated_splash_screen.dart';
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart' as kakao;
 import 'package:provider/provider.dart';
-import 'view/home_screen.dart';
 import 'package:flutter_naver_map/flutter_naver_map.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
@@ -53,27 +46,51 @@ void main() async {
 }
 
 class HomePage extends StatelessWidget {
-
-  static final ValueNotifier<ThemeMode> themeNotifier = ValueNotifier(ThemeMode.light);
+  static final ValueNotifier<ThemeMode> themeNotifier =
+      ValueNotifier(ThemeMode.light);
 
   @override
   Widget build(final BuildContext context) {
-
     // 라이트 모드와 다크 모드에 따라 테마 설정
     ThemeData theme = ThemeData(
-      primaryColor: kMainColor, // 라이트 모드의 primaryColor 설정
-      secondaryHeaderColor: Colors.grey,
-    );
+        primaryColor: kMainColor, // 라이트 모드의 primaryColor 설정
+        secondaryHeaderColor: Colors.grey,
+        inputDecorationTheme: InputDecorationTheme(
+            floatingLabelStyle: TextStyle(color: kMainColor),
+            focusedBorder: UnderlineInputBorder(
+              borderSide:
+                  BorderSide(style: BorderStyle.solid, color: kMainColor),
+            )));
 
     ThemeData darkTheme = ThemeData.dark().copyWith(
-      primaryColor: kMainColor, // 다크 모드의 primaryColor 설정
-      secondaryHeaderColor: Colors.grey,
-    );
+        primaryColor: kMainColor, // 다크 모드의 primaryColor 설정
+        secondaryHeaderColor: Colors.grey,
+        inputDecorationTheme: InputDecorationTheme(
+            floatingLabelStyle: TextStyle(color: kMainColor),
+            focusedBorder: UnderlineInputBorder(
+              borderSide:
+                  BorderSide(style: BorderStyle.solid, color: kMainColor),
+            )));
 
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(
           create: (context) => MapWidgetUpdate(),
+        ),
+        ChangeNotifierProvider(
+          create: (context) => CalendarScreenViewModel(),
+        ),
+        ChangeNotifierProvider(
+          create: (context) => LoadingScreenViewModel(),
+        ),
+        ChangeNotifierProvider(
+          create: (context) => MapScreenViewModel(),
+        ),
+        ChangeNotifierProvider(
+          create: (context) => SettingViewModel(),
+        ),
+        ChangeNotifierProvider(
+          create: (context) => MatchingScreenViewModel(),
         ),
         ChangeNotifierProvider(
           create: (context) => PersonalAppointmentUpdate(),
@@ -102,6 +119,7 @@ class HomePage extends StatelessWidget {
           FocusManager.instance.primaryFocus?.unfocus();
         },
         child: MaterialApp(
+          debugShowCheckedModeBanner: false,
           home: AnimatedSplashScreen(
             backgroundColor: kMainColor, //Theme.of(context).primaryColor,
             splash: Container(
@@ -112,7 +130,7 @@ class HomePage extends StatelessWidget {
                 ),
               ),
             ),
-            nextScreen: LoadingScreen(),//LoadingScreen(),//HomeScreen(),
+            nextScreen: LoadingScreen(), //LoadingScreen(),//HomeScreen(),
             splashTransition: SplashTransition.fadeTransition,
           ),
           // theme: ThemeData(

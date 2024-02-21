@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../constants.dart';
-import '../../viewModel/personalAppointmentUpdate.dart';
-import '../../viewModel/profileUpdate.dart';
+import '../../statusUpdate/personalAppointmentUpdate.dart';
+import '../../statusUpdate/profileUpdate.dart';
 import 'main_graphs.dart';
 
 class MainPersonalChartPageView extends StatelessWidget {
@@ -12,11 +12,8 @@ class MainPersonalChartPageView extends StatelessWidget {
   //_currentPersonal
 
   bool isPersonal = false;
-
   int currentPersonal;
-
   int indexPersonal;
-
 
   //bool isLoading = false;
   bool isRefresh = false;
