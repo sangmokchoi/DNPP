@@ -1,6 +1,6 @@
 
 import 'package:flutter_naver_map/flutter_naver_map.dart';
-import '../../viewModel/mapWidgetUpdate.dart';
+import '../../statusUpdate/mapWidgetUpdate.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 //

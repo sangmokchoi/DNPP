@@ -2,7 +2,7 @@ import 'package:dnpp/constants.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../viewModel/personalAppointmentUpdate.dart';
+import '../../statusUpdate/personalAppointmentUpdate.dart';
 
 
 class RepeatTimes extends StatelessWidget {

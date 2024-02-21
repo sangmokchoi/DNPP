@@ -4,7 +4,7 @@ import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:crypto/crypto.dart';
 import 'package:dnpp/dataSource/firebase_auth_remote_data_source.dart';
-import 'package:dnpp/viewModel/profileUpdate.dart';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
@@ -18,7 +18,9 @@ import 'package:kakao_flutter_sdk_user/kakao_flutter_sdk_user.dart' as kakao;
 import 'package:provider/provider.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
-class FirebaseRepository {
+import '../statusUpdate/profileUpdate.dart';
+
+class RepositoryAuth {
   final _fireAuthInstance = FirebaseAuth.instance;
 
   FirebaseFirestore db = FirebaseFirestore.instance;
@@ -245,6 +247,7 @@ class FirebaseRepository {
   }
 
   Future<void> signInWithApple(BuildContext context) async {
+    print('signInWithApple 시작');
     try {
       final rawNonce = generateNonce();
       final nonce = sha256ofString(rawNonce);
