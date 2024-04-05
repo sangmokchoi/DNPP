@@ -17,37 +17,44 @@ class MapScreenViewModel extends ChangeNotifier {
   Future<void> updatePPLocation(BuildContext context, Map<String, dynamic> searchResult) async {
     print('updatePPLocation 시작');
 
-    if (searchResult['items'].isEmpty) {
-      print('검색 결과 없음');
+    try {
+      if (searchResult['items'].isEmpty) {
+        print('검색 결과 없음');
+        //Navigator.pop(context);
 
-      showAlert(context);
-    } else {
-      print('updatePPLocation 진입');
+        //await showAlert(context);
+        //notifyListeners();
 
-      var items = searchResult["items"];
+      } else {
+        print('updatePPLocation 진입');
 
-      for (dynamic item in items) {
-        final _pingpoingList = PingpongList(
-          title: removeHtmlTags(item['title']),
-          link: item['link'],
-          description: removeHtmlTags(item['description']),
-          telephone: item['telephone'],
-          address: item['address'],
-          roadAddress: item['roadAddress'],
-          mapx: double.parse(item['mapx']) / 10000000,
-          mapy: double.parse(item['mapy']) / 10000000,
-        );
+        var items = searchResult["items"];
 
-        Provider.of<MapWidgetUpdate>(context, listen: false)
-            .updatePPListElements(_pingpoingList);
+        for (dynamic item in items) {
+          final _pingpoingList = PingpongList(
+            title: removeHtmlTags(item['title']),
+            link: item['link'],
+            description: removeHtmlTags(item['description']),
+            telephone: item['telephone'],
+            address: item['address'],
+            roadAddress: item['roadAddress'],
+            mapx: double.parse(item['mapx']) / 10000000,
+            mapy: double.parse(item['mapy']) / 10000000,
+          );
+
+          Provider.of<MapWidgetUpdate>(context, listen: false)
+              .updatePPListElements(_pingpoingList);
+        }
+
+        //setState(() {
+
+        await Provider.of<MapWidgetUpdate>(context, listen: false).overlayMake();
+        //});
       }
-
-      //setState(() {
-      notifyListeners();
-        Provider.of<MapWidgetUpdate>(context, listen: false).overlayMake();
-      //});
+      print('updatePPLocation 완료');
+    } catch (e) {
+      print('updatePPLocation e: $e');
     }
-    print('updatePPLocation 완료');
 
   }
 
@@ -63,16 +70,19 @@ class MapScreenViewModel extends ChangeNotifier {
           useRootNavigator: false,
           builder: (context) {
             return Center(
-              child: kCustomCircularProgressIndicator, // 로딩 바 표시
+              child: kCustomCircularProgressIndicator,
             );
           },
         );
+
       } else {
         print('toggleLoading 로딩 바 제거');
-        Navigator.pop(context);
+        //Navigator.of(context, rootNavigator: true).pop();
+         Navigator.pop(context);
         //Navigator.of(context).pop();
       }
     //});
+
   }
 
   String removeHtmlTags(String input) {
@@ -80,7 +90,7 @@ class MapScreenViewModel extends ChangeNotifier {
     return input.replaceAll(exp, '');
   }
 
-  void showAlert(BuildContext context) {
+  Future<void> showAlert(BuildContext context) async {
 
     showDialog(
       context: context,

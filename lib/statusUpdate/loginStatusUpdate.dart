@@ -10,19 +10,22 @@ import 'package:dnpp/repository/repository_auth.dart' as viewModel;
 class LoginStatusUpdate with ChangeNotifier {
 
   bool isLoading = false;
-
-  Future<void> updateIsLoaging(bool value) async {
-    isLoading = value;
-    notifyListeners();
-  }
+  final auth = FirebaseAuth.instance;
 
   late User currentUser;
 
   String providerId = '';
   bool isAgreementChecked = false;
+  bool isUnderstood = false;
   bool isLoggedIn = false;
   bool isLogInButtonClicked = false;
   bool isUserDataExists = false;
+  DateTime currentVisit = DateTime.now();
+
+  Stream<bool> isLoggedInStream() async* {
+    print('isLoggedInStream isLoggedIn: $isLoggedIn');
+    yield isLoggedIn;
+  }
 
   Future<void> updateIsAgreementChecked(bool value) async {
     isAgreementChecked = value;
@@ -33,6 +36,12 @@ class LoginStatusUpdate with ChangeNotifier {
   Future<void> toggleIsAgreementChecked() async {
     isAgreementChecked = !isAgreementChecked;
     print('isAgreementChecked: $isAgreementChecked');
+    notifyListeners();
+  }
+
+  Future<void> toggleIsUnderstood() async {
+    isUnderstood = !isUnderstood;
+    print('isUnderstood: $isUnderstood');
     notifyListeners();
   }
 
@@ -50,14 +59,14 @@ class LoginStatusUpdate with ChangeNotifier {
 
   Future<void> trueIsLoggedIn() async {
     isLoggedIn = true;
-    print('isLoggedIn: $isLoggedIn');
     notifyListeners();
+    print('trueIsLoggedIn isLoggedIn: $isLoggedIn');
   }
 
   Future<void> falseIsLoggedIn() async {
     isLoggedIn = false;
-    print('isLoggedIn: $isLoggedIn');
     notifyListeners();
+    print('falseIsLoggedIn isLoggedIn: $isLoggedIn');
   }
 
   Future<void> updateProviderId(String newProviderId) async {
@@ -70,6 +79,13 @@ class LoginStatusUpdate with ChangeNotifier {
     currentUser = newUser;
     print('updatecurrentUser 완료');
     print('currentUser: $currentUser');
+    notifyListeners();
+  }
+
+  Future<void> updateCurrentVisit(DateTime value) async {
+    currentVisit = value;
+    print('updateCurrentVisit 완료');
+    print('currentVisit: $currentVisit');
     notifyListeners();
   }
 

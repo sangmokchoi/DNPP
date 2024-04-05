@@ -7,33 +7,17 @@ import 'package:url_launcher/url_launcher.dart';
 //   valueColor: AlwaysStoppedAnimation<Color>(kMainColor),
 // );
 
-const kCustomCircularProgressIndicator = SizedBox(
-  height: 150,
-  width: 150,
-  child: Column(
-    mainAxisAlignment: MainAxisAlignment.center,
-    children: [
-      CircularProgressIndicator(
-        valueColor: AlwaysStoppedAnimation<Color>(kMainColor),
-      ),
-      SizedBox(height: 10.0), // 간격 조절을 위한 SizedBox 추가
-      // Text(
-      //   '잠시만 기다려주세요',
-      //   style: TextStyle(
-      //     color: Colors.grey,
-      //     fontSize: 14.0,
-      //   ),
-      // ),
-
-    ],
-  ),
+const kCustomCircularProgressIndicator = CircularProgressIndicator(
+  valueColor: AlwaysStoppedAnimation<Color>(kMainColor),
 );
 
 const kAppbarTextStyle =
+
     TextStyle(
         //color: Colors.black,
         fontSize: 20.0,
-        fontWeight: FontWeight.bold);
+        fontWeight: FontWeight.bold
+    );
 
 const kMainColor = Color(0xFF46ABF6);
 
@@ -46,26 +30,31 @@ const kAppointmentTextStyle = TextStyle(
 const kAppointmentDateTextStyle = TextStyle(
     // 2023. 10. 10. (화) 14:30
     //color: Colors.black,
-    fontSize: 18.0,
+    fontSize: 16.0,
     fontWeight: FontWeight.normal);
 
 const kAppointmentTextButtonStyle = TextStyle(
   //
   //color: Colors.black,
-  color: Colors.grey,
-  fontSize: 18.0,
+  color: kMainColor,
+  fontSize: 16.0,
 );
 
 const kAppointmentCourtTextButtonStyle = TextStyle(
   //
   //color: Colors.black,
-  fontSize: 18.0,
+  fontSize: 16.0,
+);
+
+const kAppointmentCourtAlertTextStyle = TextStyle(
+    fontSize: 14.0,
+    fontWeight: FontWeight.normal
 );
 
 const kElevationButtonStyle = TextStyle(
   // 취소, 저장, 추가
   color: kMainColor,
-  fontSize: 18.0,
+  fontSize: 16.0,
   fontWeight: FontWeight.normal,
 );
 
@@ -96,7 +85,7 @@ const kSettingMenuTextStyle = TextStyle(
 
 const kTextButtonTextStyle = TextStyle(
     color: Colors.white,
-    fontSize: 18.0,
+    fontSize: 16.0,
     fontWeight: FontWeight.normal);
 
 final kCancelButtonStyle = ButtonStyle(
@@ -105,6 +94,10 @@ final kCancelButtonStyle = ButtonStyle(
 
 final kConfirmButtonStyle = ButtonStyle(
   backgroundColor: MaterialStateProperty.all(kMainColor),
+);
+
+final kNotConfirmButtonStyle = ButtonStyle(
+  backgroundColor: MaterialStateProperty.all(kMainColor.withOpacity(0.5)),
 );
 
 const kAlertDialogTextButtonWidth = 120.0;
@@ -135,9 +128,14 @@ const kMapPingponglistElementAddressTextStyle = TextStyle(
     fontSize: 12.0,
     fontWeight: FontWeight.normal);
 
+const kMapPingponglistElementLinkTextStyle = TextStyle(
+    color: Colors.blue,
+    fontSize: 12.0,
+    fontWeight: FontWeight.normal);
+
 const kMapPingponglistElementEtcTextStyle = TextStyle(
     //color: Colors.white,
-    fontSize: 14.0,
+    fontSize: 12.0,
     fontWeight: FontWeight.normal);
 
 const kMatchingScreen_FirstNicknameTextStyle = TextStyle(
@@ -175,7 +173,7 @@ const kProfileScreenTogglebuttonsTextStyle = TextStyle(
 );
 
 const kMatchingScreenTextHeaderTextStyle = TextStyle(
-    fontSize: 15.0,
+    fontSize: 16.0,
     fontWeight: FontWeight.normal
 );
 

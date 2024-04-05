@@ -8,6 +8,7 @@ class UserProfile {
       {required this.uid,
         required this.email,
       required this.nickName,
+        required this.selfIntroduction,
       required this.photoUrl,
       required this.gender,
       required this.ageRange,
@@ -16,11 +17,13 @@ class UserProfile {
       required this.pingpongCourt,
       required this.playStyle,
       required this.rubber,
-      required this.racket});
+      required this.racket,
+      });
 
   String uid;
   String email;
   String nickName;
+  String selfIntroduction;
   String photoUrl;
   String gender;
   String ageRange;
@@ -66,6 +69,7 @@ class UserProfile {
       uid: data?['uid'],
       email: data?['email'],
       nickName: data?['nickName'],
+      selfIntroduction: data?['selfIntroduction'],
       photoUrl: data?['photoUrl'],
       gender: data?['gender'],
       ageRange: data?['ageRange'],
@@ -95,6 +99,7 @@ class UserProfile {
       if (uid != null) "uid": uid,
       if (email != null) "email": email,
       if (nickName != null) "nickName": nickName,
+      if (selfIntroduction != null) "selfIntroduction": selfIntroduction,
       if (photoUrl != null) "photoUrl": photoUrl,
       if (gender != null) "gender": gender,
       if (ageRange != null) "ageRange": ageRange,
@@ -124,4 +129,21 @@ class UserProfile {
     // 유저의 pingpongCourt 서브컬렉션을 참조합니다.
     return FirebaseFirestore.instance.collection('UserData/$uid/pingpongCourt');
   }
+
+  static UserProfile emptyUserProfile = UserProfile(
+    uid: 'uid',
+    email: '로그인이 필요합니다',
+    nickName: '반갑습니다!',
+    selfIntroduction: '',
+    photoUrl: 'https://firebasestorage.googleapis.com/v0/b/dnpp-402403.appspot.com/o/profile_photos%2Fempty_profile_6.png?alt=media&token=545efdd6-5b89-4cd6-953a-4c1a66f96f96',
+    gender: '밝히지 않음',
+    ageRange: '20대',
+    playedYears: 'playedYears',
+    address: ['동네를 추가해주세요'],
+    pingpongCourt: [],
+    playStyle: '공격',
+    rubber: '미정',
+    racket: '미정',
+  );
+
 }

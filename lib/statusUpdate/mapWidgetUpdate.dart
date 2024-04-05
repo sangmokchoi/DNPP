@@ -68,7 +68,7 @@ class MapWidgetUpdate with ChangeNotifier {
     notifyListeners();
   }
 
-  void overlayMake() {
+  Future<void> overlayMake() async {
     print('overlayMake 진입');
 
     double mapx = 0.0;
@@ -81,7 +81,7 @@ class MapWidgetUpdate with ChangeNotifier {
     for (PingpongList pPListElement in pPListElements) {
       final index = pPListElements.indexOf(pPListElement);
       final latlng = NLatLng(pPListElement.mapy, pPListElement.mapx);
-      final nMarker = NMarker(id: '$index', position: latlng);
+      final nMarker = NMarker(id: '$index', position: latlng, iconTintColor: kMainColor);
 
       mapx = mapx + pPListElement.mapx;
       mapy = mapy + pPListElement.mapy;
@@ -105,7 +105,6 @@ class MapWidgetUpdate with ChangeNotifier {
 
       });
 
-      nMarker.setIconTintColor(kMainColor);
     }
 
     double absMapY = (maxMapY - mapy/count).abs();
