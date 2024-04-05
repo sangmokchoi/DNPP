@@ -28,19 +28,7 @@ class ProfileUpdate with ChangeNotifier {
   // String imageUrl = '';
 
   //late UserProfile userProfile;
-  UserProfile userProfile = UserProfile(
-      uid: 'uid',
-      email: 'email',
-      nickName: '사용자',
-      photoUrl: 'https://firebasestorage.googleapis.com/v0/b/dnpp-402403.appspot.com/o/profile_photos%2Fempty_profile_160.png?alt=media&token=4fc4c247-c9b0-473e-b38f-ee6b78967536',
-      gender: '밝히지 않음',
-      ageRange: '10대 이하',
-      playedYears: '3개월',
-      address: [],
-      pingpongCourt: [],
-      playStyle: '공격',
-      rubber: '미정',
-      racket: '미정');
+  UserProfile userProfile = UserProfile.emptyUserProfile;
 
   Future<List<PingpongList>> extractPingpongList() async {
     return pingpongList;
@@ -102,8 +90,13 @@ class ProfileUpdate with ChangeNotifier {
     notifyListeners();
   }
 
-  void removePingpongList(int index) {
+  void removeByIndexPingpongList(int index) {
     pingpongList.removeAt(index);
+    notifyListeners();
+  }
+
+  void removeByElementPingpongList(PingpongList element) {
+    pingpongList.remove(element);
     notifyListeners();
   }
 
@@ -123,20 +116,7 @@ class ProfileUpdate with ChangeNotifier {
   }
 
   Future<void> resetUserProfile() async {
-    userProfile = UserProfile(
-      uid: 'uid',
-      email: 'email',
-      nickName: '사용자',
-      photoUrl: 'https://firebasestorage.googleapis.com/v0/b/dnpp-402403.appspot.com/o/profile_photos%2Fempty_profile_160.png?alt=media&token=4fc4c247-c9b0-473e-b38f-ee6b78967536',
-      gender: '밝히지 않음',
-      ageRange: '20대',
-      playedYears: 'playedYears',
-      address: ['address'],
-      pingpongCourt: [],
-      playStyle: '공격',
-      rubber: '미정',
-      racket: '미정',
-    );
+    userProfile = UserProfile.emptyUserProfile;
     notifyListeners();
     print('resetUserProfile done');
   }

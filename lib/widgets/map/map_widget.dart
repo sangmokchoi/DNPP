@@ -54,27 +54,25 @@ class MapWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-      child: NaverMap(
-        options: NaverMapViewOptions(
-          initialCameraPosition: NCameraPosition(
-            target: nLatLng,
-            zoom: 10,
-            bearing: 0,
-            tilt: 0,
-          ),
+    return NaverMap(
+      options: NaverMapViewOptions(
+        initialCameraPosition: NCameraPosition(
+          target: nLatLng,
+          zoom: 10,
+          bearing: 0,
+          tilt: 0,
         ),
-        onMapReady: (controller) {
-          Provider.of<MapWidgetUpdate>(context, listen: false).updateNaverController(controller);
-        },
-        onMapTapped: (point, latLng) {
-          print(latLng);
-        },
-        onSymbolTapped: (symbol) {},
-        onCameraChange: (position, reason) {},
-        onCameraIdle: () {},
-        onSelectedIndoorChanged: (indoor) {},
       ),
+      onMapReady: (controller) {
+        Provider.of<MapWidgetUpdate>(context, listen: false).updateNaverController(controller);
+      },
+      onMapTapped: (point, latLng) {
+        print(latLng);
+      },
+      onSymbolTapped: (symbol) {},
+      onCameraChange: (position, reason) {},
+      onCameraIdle: () {},
+      onSelectedIndoorChanged: (indoor) {},
     );
   }
 }
