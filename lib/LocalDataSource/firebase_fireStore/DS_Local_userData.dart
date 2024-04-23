@@ -1,21 +1,18 @@
 import 'dart:async';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:dnpp/repository/launchUrl.dart';
-import 'package:dnpp/repository/repsitory_appointments.dart';
+import 'package:dnpp/LocalDataSource/firebase_fireStore/DS_Local_appointments.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
+import '../../models/pingpongList.dart';
+import '../../models/userProfile.dart';
+import '../../statusUpdate/courtAppointmentUpdate.dart';
+import '../../statusUpdate/othersPersonalAppointmentUpdate.dart';
+import '../../statusUpdate/personalAppointmentUpdate.dart';
+import '../../statusUpdate/profileUpdate.dart';
 
-import '../models/pingpongList.dart';
-import '../models/userProfile.dart';
+class LocalDSUserData {
 
-import '../statusUpdate/courtAppointmentUpdate.dart';
-import '../statusUpdate/othersPersonalAppointmentUpdate.dart';
-import '../statusUpdate/personalAppointmentUpdate.dart';
-import '../statusUpdate/profileUpdate.dart';
-
-class RepositoryUserData {
   FirebaseFirestore db = FirebaseFirestore.instance;
   FirebaseAuth auth = FirebaseAuth.instance;
 
@@ -57,7 +54,7 @@ class RepositoryUserData {
       print("fetchUserData 에서 Provider.of<PersonalAppointmentUpdate>(context).newMeetings.length: ${Provider.of<PersonalAppointmentUpdate>(context, listen: false).newMeetings.length}");
 
       try {
-        await RepositoryUserData().refreshData(context);
+        await LocalDSUserData().refreshData(context);
 
         try {
 
@@ -113,12 +110,12 @@ class RepositoryUserData {
                 await Provider.of<ProfileUpdate>(context, listen: false)
                     .updateUserProfileUpdated(true);
 
-                await RepositoryAppointments()
+                await LocalDSAppointments()
                     .fetchCurrentUserAppointmentData(context, currentUser!).then((value) async {
-                  await RepositoryAppointments()
+                  await LocalDSAppointments()
                       .fetchOtherUsersAppointmentData(context, currentUser!).then((value) async {
                     print('await fetchOtherUsersAppointmentData(); completed');
-                    await RepositoryAppointments()
+                    await LocalDSAppointments()
                         .fetchAppointmentDataForCalculatingByCourt(context);
                     print('await fetchAppointmentData(); completed');
                     return;
@@ -343,7 +340,7 @@ class RepositoryUserData {
     return snapshots;
   }
 
-  Stream<QuerySnapshot<Map<String, dynamic>>> getOneUserData(String uid) {
+  Stream<QuerySnapshot<Map<String, dynamic>>> oneUserData(String uid) {
     final snapshots =
         db.collection("UserData").where('uid', isEqualTo: uid).snapshots();
 
