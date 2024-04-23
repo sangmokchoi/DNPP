@@ -1,9 +1,7 @@
 import 'dart:io';
 import 'package:dnpp/statusUpdate/loadingUpdate.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:sn_progress_dialog/sn_progress_dialog.dart';
 import 'package:provider/provider.dart';
 import '../constants.dart';
 import '../viewModel/LoadingScreen_ViewModel.dart';
@@ -63,8 +61,12 @@ class LoadingScreen extends StatelessWidget {
                                 ),
                               ),
                               SizedBox(width: 20.0,),
-                              CircularProgressIndicator(
-                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white)
+                              SizedBox(
+                                width: 30,
+                                height: 30,
+                                child: CircularProgressIndicator(
+                                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white)
+                                ),
                               ),
                             ],
                           ),
@@ -82,8 +84,8 @@ class LoadingScreen extends StatelessWidget {
                   //   MaterialPageRoute(builder: (context) => HomeScreen()),
                   // );
                   print("Storage에서 지금 종료됨");
+
                   return FutureBuilder(
-          
                       future: Provider.of<LoadingUpdate>(context, listen: false)
                           .loadData(context, true, '', '')
                           .timeout(
@@ -142,8 +144,12 @@ class LoadingScreen extends StatelessWidget {
                                       ),
                                     ),
                                     SizedBox(width: 20.0,),
-                                    CircularProgressIndicator(
-                                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white)
+                                    SizedBox(
+                                      width: 30,
+                                      height: 30,
+                                      child: CircularProgressIndicator(
+                                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white)
+                                      ),
                                     ),
                                   ],
                                 ),

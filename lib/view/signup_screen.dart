@@ -1,40 +1,64 @@
 import 'dart:io';
-
 import 'package:dnpp/models/userProfile.dart';
-import 'package:dnpp/repository/moveToOtherScreen.dart';
-
+import 'package:dnpp/repository/firebase_firestore_userData.dart';
 import 'package:dnpp/view/profile_screen.dart';
-import 'package:dnpp/viewModel/MatchingScreen_ViewModel.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:persistent_bottom_nav_bar/persistent_tab_view.dart';
 import 'package:provider/provider.dart';
-import 'package:dnpp/repository/repository_auth.dart' as viewModel;
-
 import 'package:shared_preferences/shared_preferences.dart';
-
+import '../LocalDataSource/firebase_realtime/users/DS_Local_isUserInApp.dart';
 import '../constants.dart';
-import '../repository/launchUrl.dart';
-import '../repository/repository_userData.dart';
+import '../models/launchUrl.dart';
+import '../models/moveToOtherScreen.dart';
+import '../repository/firebase_realtime_users.dart';
+import '../statusUpdate/googleAnalytics.dart';
+import '../LocalDataSource/DS_Local_auth.dart';
+import '../repository/firebase_auth.dart';
+import '../LocalDataSource/firebase_fireStore/DS_Local_userData.dart';
+import '../statusUpdate/CurrentPageProvider.dart';
 import '../statusUpdate/courtAppointmentUpdate.dart';
 import '../statusUpdate/personalAppointmentUpdate.dart';
 import '../statusUpdate/profileUpdate.dart';
 import '../statusUpdate/loginStatusUpdate.dart';
-
 import 'package:flutter_svg/flutter_svg.dart';
 
 class SignupScreen extends StatelessWidget {
   static String id = '/SignupScreenID';
 
+  SignupScreen(this.previousScreen);
+
+  int previousScreen; // 0은 MainScreen, 1은 CalendarScreen , 2은 MatchingScreen , 3는 SettingScreen
+
   final String title = '';
 
   TextEditingController _textFormFieldController = TextEditingController();
 
+  // @override
   @override
   Widget build(BuildContext context) {
+
+    WidgetsBinding.instance!.addPostFrameCallback((_) async {
+      switch (previousScreen){
+        case 0:
+          Provider.of<GoogleAnalyticsNotifier>(context, listen: false)
+              .startTimer('MainScreen');
+        case 1:
+          Provider.of<GoogleAnalyticsNotifier>(context, listen: false)
+              .startTimer('CalendarScreen');
+        case 2:
+          Provider.of<GoogleAnalyticsNotifier>(context, listen: false)
+              .startTimer('MatchingScreen');
+        case 3:
+          Provider.of<GoogleAnalyticsNotifier>(context, listen: false)
+              .startTimer('SettingScreen');
+      }
+      await Provider.of<CurrentPageProvider>(context, listen: false).setCurrentPage('SignupScreen');
+
+    });
+
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.inversePrimary,
       appBar: AppBar(
@@ -43,6 +67,19 @@ class SignupScreen extends StatelessWidget {
           size: 24.0, // 아이콘 크기 설정
         ),
         titleTextStyle: kAppbarTextStyle,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back),
+          onPressed: () async {
+            Future.microtask(() async {
+
+              await Provider.of<GoogleAnalyticsNotifier>(context, listen: false)
+                  .startTimer('SignupScreen');
+
+            }).then((value) {
+              Navigator.pop(context);
+            });
+          },
+        ),
         title: Text('로그인'),
         backgroundColor: Colors.transparent,
         elevation: 0.0,
@@ -131,6 +168,8 @@ class LoginButton extends StatelessWidget {
     await Provider.of<LoginStatusUpdate>(context, listen: false)
         .updateIsLogInButtonClicked(true);
 
+    await RepositoryFirebaseAuth().getSignOut();
+
     try {
       print('$_buttonTitle');
 
@@ -139,7 +178,7 @@ class LoginButton extends StatelessWidget {
       switch (_buttonTitle) {
         case 'images/Google Login.svg':
           loginSuccess =
-              await viewModel.RepositoryAuth().signInWithGoogle(context);
+              await RepositoryFirebaseAuth().getSignInWithGoogle(context);
           print('images/Google Login.svg');
 
         // case 'images/btnG_아이콘원형.png':
@@ -148,26 +187,29 @@ class LoginButton extends StatelessWidget {
 
         case 'images/Kakao ID Login.svg':
           //await FirebaseRepository().kakaoSelectFriends(context);
-          loginSuccess = await viewModel.RepositoryAuth().kakaoLogin(context);
+          loginSuccess = await RepositoryFirebaseAuth().kakaoLogin(context);
           print('images/Kakao ID Login.svg 완료');
 
         case 'images/Apple ID Login.svg':
           loginSuccess =
-              await viewModel.RepositoryAuth().signInWithApple(context);
+              await RepositoryFirebaseAuth().getSignInWithApple(context);
           print('images/Apple Login.svg 완료');
 
         case 'images/Apple ID Login_black.svg':
           loginSuccess =
-              await viewModel.RepositoryAuth().signInWithApple(context);
+              await RepositoryFirebaseAuth().getSignInWithApple(context);
           print('images/Apple Login_black.svg 완료');
       }
       print('loginSuccess: $loginSuccess');
 
       if (loginSuccess == true) {
         print('await RepositoryUserData().fetchUserData(context); 직전');
-        await RepositoryUserData().fetchUserData(context).then((value) async {
+        await RepositoryFirestoreUserData().getFetchUserData(context).then((value) async {
           Future.delayed(Duration(seconds: 1));
           print('await RepositoryUserData().fetchUserData(context); 직후');
+
+          // 유저가 realtime DB에서 로그인 된 것으로 표시
+          RepositoryRealtimeUsers().getSetIsCurrentUserInApp();
 
           await Provider.of<
               PersonalAppointmentUpdate>(context,
@@ -196,12 +238,20 @@ class LoginButton extends StatelessWidget {
         });
 
         if (Provider.of<ProfileUpdate>(context, listen: false).userProfile != UserProfile.emptyUserProfile) {
-          LaunchUrl().alertFunc(context, '알림', '로그인이 완료되었습니다', '확인', () {
 
-            Navigator.pop(context);
-            Navigator.pop(context);
+          // Fluttertoast.showToast(
+          //     msg: '로그인이 완료되었습니다',
+          //   gravity: ToastGravity.BOTTOM,
+          //   toastLength: Toast.LENGTH_SHORT
+          // );
+          Navigator.pop(context);
+          
+          // LaunchUrl().alertFunc(context, '알림', '로그인이 완료되었습니다', '확인', () {
+          //
 
-          });
+          //   Navigator.pop(context);
+          //
+          // });
         }
 
       } else {
@@ -364,7 +414,20 @@ class LoginButton extends StatelessWidget {
               TextButton(
                   style: kCancelButtonStyle,
                   onPressed: () {
-                    Navigator.pop(context);
+                    LaunchUrl().alertOkAndCancelFunc(context, '알림', '회원가입을 정말 취소하시겠습니까?', '아니오', '예', Colors.red, kMainColor, () {
+                      Navigator.pop(context);
+                    }, () async {
+                      try {
+                        await FirebaseAuth.instance.signOut();
+                        print('FirebaseAuth.instance.signOut 성공');
+                        Navigator.pop(context);
+
+                      } catch (error) {
+                        print('FirebaseAuth.instance.signOut 실패: $error');
+                        Navigator.pop(context);
+                      }
+                    });
+
                   },
                   child: ButtonBar(
                     alignment: MainAxisAlignment.center,
@@ -545,6 +608,10 @@ class LoginButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    WidgetsBinding.instance!.addPostFrameCallback((_) async {
+      await GoogleAnalytics().trackScreen(context, 'SignupScreen');
+    });
+
     return GestureDetector(
       onTap: () async {
         showDialog(

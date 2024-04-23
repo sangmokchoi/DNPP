@@ -1,10 +1,13 @@
-//import 'dart:js_interop';
+
+import 'package:dnpp/repository/firebase_realtime_users.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 
-import 'package:dnpp/repository/repository_auth.dart' as viewModel;
+import 'package:dnpp/LocalDataSource/DS_Local_auth.dart' as viewModel;
+
+import '../LocalDataSource/firebase_realtime/users/DS_Local_isUserInApp.dart';
 
 
 class LoginStatusUpdate with ChangeNotifier {
@@ -23,8 +26,10 @@ class LoginStatusUpdate with ChangeNotifier {
   DateTime currentVisit = DateTime.now();
 
   Stream<bool> isLoggedInStream() async* {
-    print('isLoggedInStream isLoggedIn: $isLoggedIn');
-    yield isLoggedIn;
+    //print('isLoggedInStream isLoggedIn: $isLoggedIn');
+
+    //yield isLoggedIn;
+    yield* RepositoryRealtimeUsers().getCheckIsCurrentUserInApp(currentUser.uid);
   }
 
   Future<void> updateIsAgreementChecked(bool value) async {

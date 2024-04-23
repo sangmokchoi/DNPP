@@ -1,17 +1,33 @@
+import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:dnpp/repository/launchUrl.dart';
+import 'package:dnpp/LocalDataSource/DS_Local_Auth.dart';
+import 'package:dnpp/LocalDataSource/firebase_fireStore/DS_Local_appointments.dart';
+import 'package:dnpp/repository/firebase_auth.dart';
+import 'package:dnpp/repository/firebase_firestore_appointments.dart';
+import 'package:dnpp/repository/firebase_realtime_messages.dart';
+import 'package:dnpp/repository/firebase_realtime_users.dart';
 import 'package:dnpp/statusUpdate/othersPersonalAppointmentUpdate.dart';
 import 'package:dnpp/viewModel/CalendarScreen_ViewModel.dart';
 import 'package:dnpp/viewModel/MatchingScreen_ViewModel.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:persistent_bottom_nav_bar/persistent_tab_view.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
+import '../LocalDataSource/firebase_realtime/messages/DS_Local_chat.dart';
 import '../constants.dart';
-import '../repository/moveToOtherScreen.dart';
-import '../repository/repository_auth.dart';
+import '../models/launchUrl.dart';
+
+import '../models/moveToOtherScreen.dart';
+import '../LocalDataSource/DS_Local_auth.dart';
+import '../LocalDataSource/firebase_fireStore/DS_Local_userData.dart';
+
+import '../repository/firebase_firestore_userData.dart';
+import '../statusUpdate/ShowToast.dart';
 import '../statusUpdate/courtAppointmentUpdate.dart';
 import '../statusUpdate/personalAppointmentUpdate.dart';
 import '../statusUpdate/profileUpdate.dart';
@@ -20,13 +36,17 @@ import '../view/profile_screen.dart';
 import '../view/signup_screen.dart';
 
 class SettingViewModel extends ChangeNotifier {
+
   FirebaseFirestore db = FirebaseFirestore.instance;
+  final _fireAuth = FirebaseAuth.instance;
 
   List<String> LoggedInsettingMenuList = [
     '프로필 수정',
     '오픈소스 라이센스',
     '이용약관',
     '개인정보 처리방침',
+    '운영정책',
+    '스토어 평점 남기기',
     '문의',
     '로그아웃',
     '회원 탈퇴'
@@ -37,6 +57,7 @@ class SettingViewModel extends ChangeNotifier {
     '오픈소스 라이센스',
     '이용약관',
     '개인정보 처리방침',
+    '운영정책',
     '문의',
   ];
 
@@ -63,7 +84,7 @@ class SettingViewModel extends ChangeNotifier {
   Future<void> settingScreenLogin(BuildContext context) async {
     await MoveToOtherScreen()
         .persistentNavPushNewScreen(
-            context, SignupScreen(), false, PageTransitionAnimation.fade)
+            context, SignupScreen(3), false, PageTransitionAnimation.fade)
         .then((value) async {
       print('로그인 완료 후 복귀 setState');
 
@@ -81,6 +102,11 @@ class SettingViewModel extends ChangeNotifier {
         'https://sites.google.com/view/pingponplus-privacy/%ED%99%88');
   }
 
+  Future<void> settingOperationPolicy(BuildContext context) async {
+    await LaunchUrl().myLaunchUrl(
+        'https://sites.google.com/view/pingponplus-operationpolicy/%ED%99%88');
+  }
+
   Future<void> settingEnquire(BuildContext context) async {
     LaunchUrl().alertFunc(
         context, '문의', '아래 이메일 주소를 복사합니다\nsimonwork177@simonwork.net', '복사',
@@ -88,6 +114,34 @@ class SettingViewModel extends ChangeNotifier {
       Clipboard.setData(ClipboardData(text: 'simonwork177@simonwork.net'));
       Navigator.of(context, rootNavigator: true).pop();
     });
+  }
+
+  Future<void> settingMoveToStore(BuildContext context) async {
+
+    if (Platform.isAndroid || Platform.isIOS) {
+      final appId = Platform.isAndroid ? 'com.simonwork.dnpp.dnpp' : '6478840964';
+
+      // final String url = Platform.isAndroid ?
+      // "market://details?id=$appId" :
+      // "https://apps.apple.com/app/id$appId";
+
+      final url = Uri.parse(
+        Platform.isAndroid
+            ? "market://details?id=$appId"
+            : "https://apps.apple.com/app/id$appId",
+        //: "https://apps.apple.com/app/id389801252", // 핑퐁플러스 app id : id6478840964
+        //itms-apps://apps.apple.com/app/
+        //id389801252
+      );
+
+      //LaunchUrl().myLaunchUrl(url);
+      launchUrl(
+        url,
+        mode: LaunchMode.externalApplication,
+      );
+    }
+
+
   }
 
   Future<void> settingScreenLogout(BuildContext context) async {
@@ -153,12 +207,15 @@ class SettingViewModel extends ChangeNotifier {
                       );
 
                       await signOut(context).then((value) {
-                        LaunchUrl().alertFunc(
-                            context, '알림', '로그아웃이 완료되었습니다', '확인', () {
-                          Navigator.of(context, rootNavigator: true).pop();
-                          Navigator.of(context, rootNavigator: true).pop();
-                          //Navigator.pop(context);
-                        });
+                        Navigator.of(context, rootNavigator: true).pop();
+                        ShowToast().showToast("로그아웃이 완료되었습니다");
+
+                        // LaunchUrl().alertFunc(
+                        //     context, '알림', '로그아웃이 완료되었습니다', '확인', () {
+                        //   Navigator.of(context, rootNavigator: true).pop();
+                        //   Navigator.of(context, rootNavigator: true).pop();
+                        //   //Navigator.pop(context);
+                        // });
                       });
                     },
                   ),
@@ -177,7 +234,7 @@ class SettingViewModel extends ChangeNotifier {
       await Provider.of<ProfileUpdate>(context, listen: false)
           .updateUserProfileUpdated(false);
 
-      await RepositoryAuth().signOut();
+      await RepositoryFirebaseAuth().getSignOut();
 
       await Provider.of<ProfileUpdate>(context, listen: false)
           .resetUserProfile();
@@ -212,12 +269,9 @@ class SettingViewModel extends ChangeNotifier {
             await Provider.of<CourtAppointmentUpdate>(context, listen: false)
                 .resetSelectedList();
 
-            try {
-              await Provider.of<CalendarScreenViewModel>(context, listen: false)
-                  .resetAppointments(); // 캘린더에 있는 appointment 리스트 초기화
-            } catch (e) {
-              print('resetAppointments 에러: $e');
-            }
+            await Provider.of<CalendarScreenViewModel>(context, listen: false)
+                .resetAppointments(); // 캘린더에 있는 appointment 리스트 초기화
+
 
             try {
               await Provider.of<MatchingScreenViewModel>(context, listen: false)
@@ -335,7 +389,16 @@ class SettingViewModel extends ChangeNotifier {
     await Future.delayed(Duration(seconds: 1));
 
     try {
-      await RepositoryAuth().deleteUserAccount().then((value) async {
+      await RepositoryFirebaseAuth().deleteUserAccount().then((value) async {
+
+        await RepositoryFirestoreUserData()
+            .getDeleteUser(_fireAuth.currentUser!.uid.toString());
+        await RepositoryFirestoreAppointments()
+            .getDeleteUserAppointment(_fireAuth.currentUser!.uid.toString());
+        await RepositoryRealtimeMessages()
+            .getDeleteUsersData(_fireAuth.currentUser!.uid.toString());
+        await RepositoryRealtimeMessages()
+            .getDeleteChatData(_fireAuth.currentUser!.uid.toString());
 
         try {
           await Provider.of<ProfileUpdate>(context, listen: false)
@@ -374,10 +437,12 @@ class SettingViewModel extends ChangeNotifier {
                 await Provider.of<CourtAppointmentUpdate>(context, listen: false)
                     .resetSelectedList();
 
+                await Provider.of<CalendarScreenViewModel>(context,
+                    listen: false)
+                    .resetAppointments(); // 캘린더에 있는 appointment 리스트 초기화
+
                 try {
-                  await Provider.of<CalendarScreenViewModel>(context,
-                          listen: false)
-                      .resetAppointments(); // 캘린더에 있는 appointment 리스트 초기화
+
                   await Provider.of<MatchingScreenViewModel>(context,
                           listen: false)
                       .initializeListeners()

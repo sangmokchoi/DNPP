@@ -48,8 +48,8 @@ class MainBarChart extends StatelessWidget {
           Provider.of<PersonalAppointmentUpdate>(buildcontext, listen: false);
     }
 
-    print('bar number: $number');
-    print('bar basicData.daywiseDurations: ${basicData.daywiseDurations}');
+    // print('bar number: $number');
+    // print('bar basicData.daywiseDurations: ${basicData.daywiseDurations}');
 
     return Container(
       height: 250,

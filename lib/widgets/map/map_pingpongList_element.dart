@@ -7,8 +7,8 @@ import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../constants.dart';
+import '../../models/launchUrl.dart';
 import '../../models/pingpongList.dart';
-import '../../repository/launchUrl.dart';
 import '../../statusUpdate/mapWidgetUpdate.dart';
 import '../../statusUpdate/profileUpdate.dart';
 

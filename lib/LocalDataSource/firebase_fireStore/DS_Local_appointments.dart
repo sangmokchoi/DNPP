@@ -1,24 +1,18 @@
 import 'dart:async';
-import 'dart:convert';
-import 'dart:typed_data';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:dnpp/repository/repository_userData.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
 import 'package:syncfusion_flutter_calendar/calendar.dart';
 
-import '../models/customAppointment.dart';
-import '../models/pingpongList.dart';
-import '../statusUpdate/courtAppointmentUpdate.dart';
-import '../statusUpdate/loginStatusUpdate.dart';
-import '../statusUpdate/othersPersonalAppointmentUpdate.dart';
-import '../statusUpdate/personalAppointmentUpdate.dart';
-import '../statusUpdate/profileUpdate.dart';
+import '../../models/customAppointment.dart';
+import '../../models/pingpongList.dart';
+import '../../statusUpdate/courtAppointmentUpdate.dart';
+import '../../statusUpdate/othersPersonalAppointmentUpdate.dart';
+import '../../statusUpdate/personalAppointmentUpdate.dart';
+import '../../statusUpdate/profileUpdate.dart';
 
-class RepositoryAppointments {
+class LocalDSAppointments {
 
   FirebaseFirestore db = FirebaseFirestore.instance;
   FirebaseAuth auth = FirebaseAuth.instance;
@@ -716,15 +710,15 @@ class RepositoryAppointments {
             );
             _customAppointment.id = docSnapshot.id;
 
-            print('fetchOtherUsersAppointmentData _customAppointment: ${_customAppointment.userUid}');
+            //print('fetchOtherUsersAppointmentData _customAppointment: ${_customAppointment.userUid}');
             // // //Provider.of<AppointmentUpdate>(context, listen: false).meetings.add(_appointment?.first);
-            print('_appointment: ${_appointment}');
-            print('_appointment.isempty: ${_appointment.isEmpty}');
-            print('_appointment.length: ${_appointment.length}');
+            //print('_appointment: ${_appointment}');
+            //print('_appointment.isempty: ${_appointment.isEmpty}');
+            //print('_appointment.length: ${_appointment.length}');
 
             if (_appointment != null || _appointment.isNotEmpty) {
               othersPersonalAppointmentUpdate.addCustomMeeting(_customAppointment);
-              print('_customAppointment add 함');
+              //print('_customAppointment add 함');
               for (int i = 0; i < _appointment.length; i++) {
                 othersPersonalAppointmentUpdate.addMeeting(_appointment[i]);
               }

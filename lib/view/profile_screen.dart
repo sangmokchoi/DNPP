@@ -2,6 +2,7 @@ import 'dart:core';
 import 'dart:io';
 import 'dart:math';
 import 'package:dnpp/models/userProfile.dart';
+import 'package:dnpp/repository/firebase_firestore_userData.dart';
 import 'package:dnpp/view/map_screen.dart';
 import 'package:dnpp/statusUpdate/profileUpdate.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -15,10 +16,12 @@ import 'package:image_picker/image_picker.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../constants.dart';
+import '../models/launchUrl.dart';
 import '../models/locationData.dart';
 
-import '../repository/launchUrl.dart';
-import '../repository/repository_userData.dart';
+import '../statusUpdate/googleAnalytics.dart';
+import '../LocalDataSource/firebase_fireStore/DS_Local_userData.dart';
+import '../statusUpdate/CurrentPageProvider.dart';
 import '../statusUpdate/loginStatusUpdate.dart';
 import '../statusUpdate/mapWidgetUpdate.dart';
 
@@ -216,11 +219,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   @override
+  void deactivate() {
+    super.deactivate();
+  }
+
+  @override
   void dispose() {
     _viewVerticalScrollController.dispose();
     _nickNameTextFormFieldController.dispose();
     _locationTextFormFieldController.dispose();
 
+    print('profile 디스포스!!!');
     super.dispose();
   }
 
@@ -390,6 +399,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ? Theme.of(context).colorScheme.background
         : ThemeData.dark().colorScheme.background;
 
+    WidgetsBinding.instance!.addPostFrameCallback((_) async {
+      Provider.of<GoogleAnalyticsNotifier>(context, listen: false).startTimer('SettingScreen');
+      await Provider.of<CurrentPageProvider>(context, listen: false).setCurrentPage('ProfileScreen');
+      await GoogleAnalytics().trackScreen(context, 'ProfileScreen');
+    });
+
     return GestureDetector(
       onTap: () {
         FocusScope.of(context).unfocus();
@@ -404,20 +419,62 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
               if (!Provider.of<LoginStatusUpdate>(context, listen: false)
                   .isLoggedIn) {
-                await Provider.of<ProfileUpdate>(context, listen: false)
-                    .resetUserProfile();
+
+                LaunchUrl().alertOkAndCancelFunc(context, '알림', '회원가입을 정말 취소하시겠습니까?', '아니오', '예', Colors.red, kMainColor, () {
+                  Navigator.pop(context);
+                }, () async {
+
+                  try {
+                    await FirebaseAuth.instance.signOut().then((value) async {
+                      await Provider.of<ProfileUpdate>(context, listen: false)
+                          .resetUserProfile();
+                      print('FirebaseAuth.instance.signOut 성공');
+
+                      Future.microtask(() {
+
+                        Provider.of<GoogleAnalyticsNotifier>(context, listen: false)
+                            .startTimer('ProfileScreen');
+
+                      }).then((value) {
+                        Navigator.pop(context);
+                      });
+                    });
+
+
+                  } catch (error) {
+                    print('FirebaseAuth.instance.signOut 실패: $error');
+                    Future.microtask(() {
+
+                      Provider.of<GoogleAnalyticsNotifier>(context, listen: false)
+                          .startTimer('ProfileScreen');
+
+                    }).then((value) {
+                      Navigator.pop(context);
+                    });
+                  }
+                });
+
+              } else {
+
+                final mapWidgetUpdate =
+                Provider.of<MapWidgetUpdate>(context, listen: false);
+
+                if (mapWidgetUpdate.pPListElements.isNotEmpty) {
+                  await mapWidgetUpdate.clearPPListElements();
+                }
+
+                setState(() {
+                  Future.microtask(() {
+
+                    Provider.of<GoogleAnalyticsNotifier>(context, listen: false)
+                        .startTimer('ProfileScreen');
+
+                  }).then((value) {
+                    Navigator.pop(context);
+                  });
+
+                });
               }
-
-              final mapWidgetUpdate =
-                  Provider.of<MapWidgetUpdate>(context, listen: false);
-
-              if (mapWidgetUpdate.pPListElements.isNotEmpty) {
-                await mapWidgetUpdate.clearPPListElements();
-              }
-
-              setState(() {
-                Navigator.pop(context);
-              });
             },
             child: Row(
               mainAxisAlignment: MainAxisAlignment.end,
@@ -499,7 +556,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   BoxShadow(
                                     color: Colors.grey.withOpacity(0.5),
                                     //spreadRadius: 3,
-                                    blurRadius: 5,
+                                    blurRadius: 3,
                                     offset: Offset(3, 3),
                                   ),
                                 ],
@@ -733,14 +790,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           Container(
                             margin: EdgeInsets.symmetric(
                                 vertical: 10.0, horizontal: 10.0),
-                            padding: EdgeInsets.symmetric(
-                                vertical: 15.0, horizontal: 0.0),
+                            padding: EdgeInsets.only(
+                                bottom: 15.0, top: 10.0),
                             decoration: BoxDecoration(
                                 boxShadow: [
                                   BoxShadow(
                                     color: Colors.grey.withOpacity(0.5),
                                     //spreadRadius: 3,
-                                    blurRadius: 5,
+                                    blurRadius: 3,
                                     offset: Offset(3, 3),
                                   ),
                                 ],
@@ -751,7 +808,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               children: [
                                 Padding(
                                   padding: EdgeInsets.only(
-                                      left: 25.0, right: 25.0, top: 10.0),
+                                      left: 25.0, right: 25.0, top: 0.0),
                                   child: Row(
                                     mainAxisAlignment:
                                         MainAxisAlignment.spaceBetween,
@@ -1506,7 +1563,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   BoxShadow(
                                     color: Colors.grey.withOpacity(0.5),
                                     //spreadRadius: 3,
-                                    blurRadius: 5,
+                                    blurRadius: 3,
                                     offset: Offset(3, 3),
                                   ),
                                 ],
@@ -1917,8 +1974,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
           newProfile.photoUrl = downloadUrl.toString();
         }
 
-        await RepositoryUserData().setProfile(_currentUser.uid, newProfile);
-        await RepositoryUserData().fetchUserData(context).then((value) async {
+        await RepositoryFirestoreUserData().getSetProfile(_currentUser.uid, newProfile).then((value) async {
+          await GoogleAnalytics().setAnalyticsUserProfile(context, Provider.of<ProfileUpdate>(context, listen: false).userProfile);
+        });
+
+        // if (Provider.of<ProfileUpdate>(context, listen: false).userProfile != UserProfile.emptyUserProfile) {
+        //   await GoogleAnalytics().setAnalyticsUserProfile(context, Provider.of<ProfileUpdate>(context, listen: false).userProfile);
+        // } // 수정된 프로필로 애널리틱스 사용자 속성 업데이트
+
+        await RepositoryFirestoreUserData().getFetchUserData(context).then((value) async {
           //setState(() {
           isEditing = false;
           //});
@@ -1931,7 +1995,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
           await Provider.of<LoginStatusUpdate>(context, listen: false)
               .trueIsLoggedIn();
-          print('profile screen 저장 버튼 클릭');
+          // print('profile screen 저장 버튼 클릭');
 
           String message = '';
 
@@ -1944,11 +2008,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
           }
 
           LaunchUrl().alertFunc(context, '알림', message, '확인', () {
-            setState(() {
+            //setState(() {
+              //toggleLoading(false, context);
+
+              //Navigator.of(context, rootNavigator: true).pop();
+
+            if (message == '수정이 완료되었습니다') {
+              Navigator.pop(context);
+
               toggleLoading(false, context);
               Navigator.pop(context);
+
+              //toggleLoading(false, context);
+            } else if (message == '수정이 완료되었습니다') {
+
               Navigator.pop(context);
-            });
+
+              toggleLoading(false, context);
+              Navigator.pop(context);
+
+              toggleLoading(false, context);
+            }
+
+            //});
           });
         });
       });

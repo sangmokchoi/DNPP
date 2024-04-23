@@ -1,5 +1,4 @@
 import 'package:dnpp/constants.dart';
-import 'package:dnpp/repository/moveToOtherScreen.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
@@ -10,6 +9,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../statusUpdate/profileUpdate.dart';
 import '../view/chatList_Screen.dart';
 import '../view/chat_screen.dart';
+import 'moveToOtherScreen.dart';
 
 class LaunchUrl {
 
@@ -25,6 +25,49 @@ class LaunchUrl {
       String okText, VoidCallback? onOkPressed) {
     showDialog(
         context: context,
+        //barrierDismissible: false,
+        builder: (builder) {
+          return AlertDialog(
+            insetPadding:
+            EdgeInsets.only(left: 10.0, right: 10.0),
+            shape: kRoundedRectangleBorder,
+            title: Text(
+              titleText,
+              textAlign: TextAlign.center,
+            ),
+            content: Text(
+              contentText,
+              style: TextStyle(
+                fontSize: 16.0,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            actions: [
+              TextButton(
+                style: TextButton.styleFrom(
+                  textStyle: Theme.of(context).textTheme.labelLarge,
+                ),
+                child: Center(
+                    child: Text(
+                      okText,
+                    )),
+                onPressed: () {
+                  if (onOkPressed != null) {
+                    onOkPressed(); // 콜백 함수 실행
+                  }
+
+                },
+              ),
+            ],
+          );
+        });
+  }
+
+  void alertFuncFalseBarrierDismissible(BuildContext context, String titleText, String contentText,
+      String okText, VoidCallback? onOkPressed) {
+    showDialog(
+        context: context,
+        barrierDismissible: false,
         builder: (builder) {
           return AlertDialog(
             insetPadding:
@@ -67,6 +110,7 @@ class LaunchUrl {
 
     showDialog(
         context: context,
+        barrierDismissible: false,
         builder: (builder) {
           return AlertDialog(
             insetPadding:

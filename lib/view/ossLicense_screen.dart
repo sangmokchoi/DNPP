@@ -2,8 +2,11 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '../repository/launchUrl.dart';
+import '../models/launchUrl.dart';
+import '../statusUpdate/googleAnalytics.dart';
+import '../statusUpdate/CurrentPageProvider.dart';
 import '/oss_licenses.dart';
 
 
@@ -37,10 +40,28 @@ class OssLicenseScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await Provider.of<GoogleAnalyticsNotifier>(context, listen: false)
+          .startTimer('SettingScreen');
+      await Provider.of<CurrentPageProvider>(context, listen: false).setCurrentPage('OssLicenseScreen');
+      await GoogleAnalytics().trackScreen(context, 'OssLicenseScreen');
+    });
     return SafeArea(
       child: Scaffold(
           appBar: AppBar(
             title: const Text('Open Source Licenses'),
+            leading: IconButton(
+              onPressed: () async{
+                Future.microtask(() async {
+                  Provider.of<GoogleAnalyticsNotifier>(context, listen: false)
+                      .startTimer('OssLicenseScreen');
+                }).then((value) {
+                    Navigator.pop(context);
+                });
+              },
+              icon: Icon(Icons.arrow_back),
+            ),
           ),
           body: FutureBuilder<List<Package>>(
               future: _licenses,
