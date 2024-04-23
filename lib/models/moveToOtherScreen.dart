@@ -2,7 +2,7 @@
 import 'dart:ffi';
 
 import 'package:dnpp/models/userProfile.dart';
-import 'package:dnpp/repository/repository_userData.dart';
+import 'package:dnpp/LocalDataSource/firebase_fireStore/DS_Local_userData.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -69,19 +69,24 @@ class MoveToOtherScreen {
     //getOneUserData
 
     showModalBottomSheet<void>(
+      enableDrag: false,
       context: context,
       builder: (BuildContext context) {
         return StreamBuilder(
-            stream: RepositoryUserData().getOneUserData(uid),//FirebaseFirestore.instance.collection('users').doc(data['id']).snapshots(),
+            stream: LocalDSUserData().oneUserData(uid),//FirebaseFirestore.instance.collection('users').doc(data['id']).snapshots(),
           builder: (context, snapshot) {
+              print('bottomProfileUp snapshot.data?.docs: ${snapshot.data?.docs}');
+              print('bottomProfileUp snapshot.hasData: ${snapshot.hasData}');
+              var docs = snapshot.data?.docs;
+
             if (snapshot.connectionState == ConnectionState.waiting) {
               return Center(child: kCustomCircularProgressIndicator); // 데이터 로딩 중에는 로딩 스피너 표시
             } else if (snapshot.hasError) {
               return Text('Error: ${snapshot.error}'); // 에러가 있는 경우 에러 메시지 표시
-            } else if (!snapshot.hasData) {
+            } else if (docs!.isEmpty) {
               return Center(child: Text('User not found')); // 데이터가 없는 경우 메시지 표시
             } else {
-              var docs = snapshot.data?.docs;
+
               final snapshotData = docs?.first.data();
               print('snapshotData: ${snapshotData}');
 
@@ -89,69 +94,78 @@ class MoveToOtherScreen {
                 children: [
                   Container(
                     height: 275,
-                    padding: EdgeInsets.fromLTRB(20.0, 15.0, 20.0, 15.0),
+                    padding: EdgeInsets.fromLTRB(20.0, 15.0, 20.0, 35.0),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: [
-                            Container(
-                              width: 80,
-                              height: 80,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.all(
-                                    Radius.circular(50.0)),
-                                image: DecorationImage(
-                                  fit: BoxFit.cover,
-                                  image: NetworkImage(
-                                      snapshotData?['photoUrl']) as ImageProvider<Object>,// ['imageUrl']) as ImageProvider<Object>,
-                                ), //가져온 이미지를 화면에 띄워주는 코드
+                            Flexible(
+                              flex: 1,
+                              child: Container(
+                                width: 80,
+                                height: 80,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.all(
+                                      Radius.circular(50.0)),
+                                  image: DecorationImage(
+                                    fit: BoxFit.cover,
+                                    image: NetworkImage(
+                                        snapshotData?['photoUrl']) as ImageProvider<Object>,// ['imageUrl']) as ImageProvider<Object>,
+                                  ), //가져온 이미지를 화면에 띄워주는 코드
+                                ),
                               ),
                             ),
-                            //SizedBox(width: 5.0,),
-                            Padding(
-                              padding: const EdgeInsets.only(right: 15.0),
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    snapshotData?['nickName'],
-                                    style: TextStyle(
-                                        fontSize: 20.0, fontWeight: FontWeight.bold),
-                                  ),
-                                  // Text(
-                                  //   snapshotData?['email'],
-                                  //   style: TextStyle(
-                                  //       fontSize: 16.0, fontWeight: FontWeight.normal),
-                                  // ),
-                                  SizedBox(
-                                    height: 5.0,
-                                  ),
-                                  Column(
-                                    mainAxisAlignment: MainAxisAlignment.start,
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        '연령대: ${snapshotData?['ageRange']}',
-                                        style: TextStyle(
-                                            fontSize: 14.0, fontWeight: FontWeight.normal),
-                                      ),
-                                      //SizedBox(width: 5.0,),
-                                      Text(
-                                        '성별: ${snapshotData?['gender']}',
-                                        style: TextStyle(
-                                            fontSize: 14.0, fontWeight: FontWeight.normal),
-                                      ),
-                                    ],
-                                  ),
-                                ],
+                            SizedBox(width: 10.0,),
+                            Flexible(
+                              flex: 2,
+                              child: Padding(
+                                padding: const EdgeInsets.only(right: 15.0),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                      snapshotData?['nickName'],
+                                      style: TextStyle(
+                                          fontSize: 20.0, fontWeight: FontWeight.bold),
+                                    ),
+                                    Text(
+                                      snapshotData?['selfIntroduction'],
+                                      maxLines: 2,
+                                      style: TextStyle(
+                                          fontSize: 12.0, fontWeight: FontWeight.normal, overflow: TextOverflow.ellipsis),
+                                    ),
+
+                                    // SizedBox(
+                                    //   height: 5.0,
+                                    // ),
+                                    // Column(
+                                    //   mainAxisAlignment: MainAxisAlignment.start,
+                                    //   crossAxisAlignment: CrossAxisAlignment.start,
+                                    //   children: [
+                                    //     Text(
+                                    //       '연령대: ${snapshotData?['ageRange']}',
+                                    //       style: TextStyle(
+                                    //           fontSize: 14.0, fontWeight: FontWeight.normal),
+                                    //     ),
+                                    //     //SizedBox(width: 5.0,),
+                                    //     Text(
+                                    //       '성별: ${snapshotData?['gender']}',
+                                    //       style: TextStyle(
+                                    //           fontSize: 14.0, fontWeight: FontWeight.normal),
+                                    //     ),
+                                    //   ],
+                                    // ),
+                                  ],
+                                ),
                               ),
                             ),
                           ],
                         ),
                         Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,

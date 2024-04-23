@@ -742,7 +742,7 @@ class CourtAppointmentUpdate extends ChangeNotifier {
     } else {
       print('court countHours isMyTime true');
       newMeetings = defaultMeetings;
-      print('court countHours newMeetings: $newMeetings');
+      //print('court countHours newMeetings: $newMeetings');
     }
 
     resetHourlyCounts();

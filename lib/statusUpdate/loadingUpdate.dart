@@ -1,17 +1,13 @@
+import 'package:dnpp/repository/firebase_firestore_userData.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:dnpp/repository/repository_userData.dart';
+import 'package:dnpp/LocalDataSource/firebase_fireStore/DS_Local_userData.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:provider/provider.dart';
 
-import 'courtAppointmentUpdate.dart';
-import 'loginStatusUpdate.dart';
-import 'personalAppointmentUpdate.dart';
-
-import '../constants.dart';
 
 class LoadingUpdate extends ChangeNotifier {
 
@@ -35,6 +31,7 @@ class LoadingUpdate extends ChangeNotifier {
   Map<String?, String?> urlMapMatchingScreen = {};
   Map<String, String> refStringListMatchingScreen = {};
 
+  ///////////
   Future<void> downloadAllImagesInMainScreen() async {
 
     final gsReference =
@@ -48,159 +45,198 @@ class LoadingUpdate extends ChangeNotifier {
     Reference howToUseImageReference = gsReference.child("howToUse_images");
     Reference howToUseTextReference = gsReference.child("howToUse_text");
 
-    // ListResult의 items를 통해 해당 폴더에 있는 파일들을 가져옵니다.
-    ListResult imageListResult = await imageReference.list(); // 광고배너 이미지
-    ListResult urlListResult = await urlReference.list(); // 광고배너 링크
-    ListResult announcementResult = await announcementReference.list(); // 공지사항 이미지
-    ListResult announcementUrlResult = await announcementUrlReference.list(); // 공지사항 링크
-    ListResult announcementTextResult = await announcementTextReference.list(); // 공지사항 텍스트
-
-    ListResult howToUseImageResult = await howToUseImageReference.list(); // 이용안내 이미지
-    ListResult howToUseTextResult = await howToUseTextReference.list(); // 이용안내 텍스트
-
-    int mainBannerCount = 0;
-    int adBannerCount = 0;
+    // int mainBannerCount = 0;
+    // int adBannerCount = 0;
 
     try {
-      for (Reference imageRef in imageListResult.items) {
-        try {
-          print('main_screen imageRef.fullPath: ${imageRef.fullPath}');
-          List<String> parts = imageRef.fullPath.split('/');
-          String result = parts.last.substring(0, parts.last.length - 4);
-          print('imageListResult Result: $result');
-          const oneMegabyte = 1024 * 1024;
-          final Uint8List? imageData = await imageRef.getData(oneMegabyte);
+      // ListResult의 items를 통해 해당 폴더에 있는 파일들을 가져옵니다.
+      ListResult imageListResult = await imageReference.list(); // 광고배너 이미지
+      ListResult urlListResult = await urlReference.list(); // 광고배너 링크
+      ListResult announcementResult = await announcementReference.list(); // 공지사항 이미지
+      ListResult announcementUrlResult = await announcementUrlReference.list(); // 공지사항 링크
+      ListResult announcementTextResult = await announcementTextReference.list(); // 공지사항 텍스트
 
-          imageMapMain['$result'] = imageData;
-          refStringListMain['$mainBannerCount'] = result;
-          mainBannerCount++;
+      ListResult howToUseImageResult = await howToUseImageReference.list(); // 이용안내 이미지
+      ListResult howToUseTextResult = await howToUseTextReference.list(); // 이용안내 텍스트
 
-        } catch (e) {
-          // Handle any errors.
-          print("Error downloading image: $e");
-        }
+      try {
+
+        // 각 리스트를 위한 비동기 작업 시작
+        await Future.wait([
+          processMainImageListResult(imageListResult.items),
+          processMainUrlListResult(urlListResult.items),
+          processAnnouncementResult(announcementResult.items),
+          processAnnouncementUrlResult(announcementUrlResult.items),
+          processAnnouncementTextResult(announcementTextResult.items),
+          processHowToUseImageResult(howToUseImageResult.items),
+          processHowToUseTextResult(howToUseTextResult.items),
+        ]).then((value) {
+          notifyListeners();
+        });
+
+      } catch (e) {
+        print("Error in downloadAllImages Future.wait: $e");
       }
-
-      for (Reference urlRef in urlListResult.items) {
-        try {
-          print('Reference urlRef in urlListResult.items: ${urlRef.fullPath}');
-          List<String> parts = urlRef.fullPath.split('/');
-          String result = parts.last.substring(0, parts.last.length - 4);
-          print('urlListResult Result: $result');
-
-          final Uint8List? urlData = await urlRef.getData();
-          // Assuming the content of the text file is UTF-8 encoded
-          String? urlContent = utf8.decode(urlData!); // Convert bytes to string
-
-          urlMapMain['$result'] = urlContent;
-        } catch (e) {
-          // Handle any errors.
-          print("Error downloading image: $e");
-        }
-      }
-
-      for (Reference announcementRef in announcementResult.items) {
-        try {
-          print('announcementResult urlRef.fullPath: ${announcementRef.fullPath}');
-          List<String> parts = announcementRef.fullPath.split('/');
-          String result = parts.last.substring(0, parts.last.length - 4);
-          print('announcementResult Result: $result');
-
-          const oneMegabyte = 1024 * 1024;
-          final Uint8List? imageData = await announcementRef.getData(oneMegabyte);
-          print('announcementResult imageData: $imageData');
-
-          announcementMapMain['$result'] = imageData;
-          announcementString['$adBannerCount'] = result;
-          adBannerCount++;
-
-        } catch (e) {
-          // Handle any errors.
-          print("Error downloading image: $e");
-        }
-      }
-
-      for (Reference urlRef in announcementUrlResult.items) {
-        try {
-          print('Reference urlRef in announcementUrlResult.items: ${urlRef.fullPath}');
-          List<String> parts = urlRef.fullPath.split('/');
-          String result = parts.last.substring(0, parts.last.length - 4);
-          print('announcementUrlResult Result: $result');
-
-          final Uint8List? urlData = await urlRef.getData();
-          // Assuming the content of the text file is UTF-8 encoded
-          String? urlContent = utf8.decode(urlData!); // Convert bytes to string
-
-          urlMapAnnouncement['$result'] = urlContent;
-          print('urlMapAnnouncement[0]: ${urlMapAnnouncement['0']}');
-        } catch (e) {
-          // Handle any errors.
-          print("Error downloading image: $e");
-        }
-      }
-
-      for (Reference textRef in announcementTextResult.items) {
-        try {
-          print('Reference textRef in announcementTextResult.items: ${textRef.fullPath}');
-          List<String> parts = textRef.fullPath.split('/');
-          String result = parts.last.substring(0, parts.last.length - 4);
-          print('announcementTextResult Result: $result');
-
-          final Uint8List? urlData = await textRef.getData();
-          // Assuming the content of the text file is UTF-8 encoded
-          String? urlContent = utf8.decode(urlData!); // Convert bytes to string
-
-          textMapAnnouncement['$result'] = urlContent;
-          print('textMapAnnouncement[0]: ${textMapAnnouncement['0']}');
-        } catch (e) {
-          // Handle any errors.
-          print("Error downloading image: $e");
-        }
-      }
-
-      for (Reference imageRef in howToUseImageResult.items) {
-        try {
-          print('howToUseImageResult imageRef.fullPath: ${imageRef.fullPath}');
-          List<String> parts = imageRef.fullPath.split('/');
-          String result = parts.last.substring(0, parts.last.length - 4);
-          print('howToUseImageResult Result: $result');
-          const oneMegabyte = 1024 * 1024;
-          final Uint8List? imageData = await imageRef.getData(oneMegabyte);
-
-          howToUseMapMain['$result'] = imageData;
-
-        } catch (e) {
-          // Handle any errors.
-          print("Error downloading image: $e");
-        }
-      }
-
-      for (Reference textRef in howToUseTextResult.items) {
-        try {
-          print('howToUseTextResult textRef.fullPath: ${textRef.fullPath}');
-          List<String> parts = textRef.fullPath.split('/');
-          String result = parts.last.substring(0, parts.last.length - 4);
-          print('howToUseTextResult Result: $result');
-
-          final Uint8List? urlData = await textRef.getData();
-          // Assuming the content of the text file is UTF-8 encoded
-          String? urlContent = utf8.decode(urlData!); // Convert bytes to string
-
-          textMapHowToUse['$result'] = urlContent;
-          print('textMapHowToUse[result]: ${textMapHowToUse['$result']}');
-        } catch (e) {
-          // Handle any errors.
-          print("Error downloading image: $e");
-        }
-      }
-
     } catch (e) {
       print("Error in downloadAllImages: $e");
     }
 
-    notifyListeners();
-
   }
+
+  Future<void> processMainImageListResult(List<Reference> items) async {
+
+    int mainBannerCount = 0;
+
+    for (Reference imageRef in items) {
+      try {
+        print('main_screen imageRef.fullPath: ${imageRef.fullPath}');
+        List<String> parts = imageRef.fullPath.split('/');
+        String result = parts.last.substring(0, parts.last.length - 4);
+        print('imageListResult Result: $result');
+        const oneMegabyte = 1024 * 1024;
+        final Uint8List? imageData = await imageRef.getData(oneMegabyte);
+
+        imageMapMain['$result'] = imageData; // 메인 스크린에서 인덱스 순으로 이미지가 들어감
+        refStringListMain['$mainBannerCount'] = result;
+        mainBannerCount++;
+
+      } catch (e) {
+        // Handle any errors.
+        print("Error downloading image: $e");
+      }
+    }
+  }
+  Future<void> processMainUrlListResult(List<Reference> items) async {
+
+    for (Reference urlRef in items) {
+      try {
+        print('Reference urlRef in urlListResult.items: ${urlRef.fullPath}');
+        List<String> parts = urlRef.fullPath.split('/');
+        String result = parts.last.substring(0, parts.last.length - 4);
+        print('urlListResult Result: $result');
+
+        final Uint8List? urlData = await urlRef.getData();
+        // Assuming the content of the text file is UTF-8 encoded
+        String? urlContent = utf8.decode(urlData!); // Convert bytes to string
+
+        urlMapMain['$result'] = urlContent;
+      } catch (e) {
+        // Handle any errors.
+        print("Error downloading image: $e");
+      }
+    }
+  }
+  Future<void> processAnnouncementResult(List<Reference> items) async {
+
+    int adBannerCount = 0;
+
+    for (Reference announcementRef in items) {
+      try {
+        print('announcementResult urlRef.fullPath: ${announcementRef.fullPath}');
+        List<String> parts = announcementRef.fullPath.split('/');
+        String result = parts.last.substring(0, parts.last.length - 4);
+        print('announcementResult Result: $result');
+
+        const oneMegabyte = 1024 * 1024;
+        final Uint8List? imageData = await announcementRef.getData(oneMegabyte);
+        print('announcementResult imageData: $imageData');
+
+        announcementMapMain['$result'] = imageData;
+        announcementString['$adBannerCount'] = result;
+        adBannerCount++;
+
+      } catch (e) {
+        // Handle any errors.
+        print("Error downloading image: $e");
+      }
+    }
+  }
+  Future<void> processAnnouncementUrlResult(List<Reference> items) async {
+
+    for (Reference urlRef in items) {
+      try {
+        print('Reference urlRef in announcementUrlResult.items: ${urlRef.fullPath}');
+        List<String> parts = urlRef.fullPath.split('/');
+        String result = parts.last.substring(0, parts.last.length - 4);
+        print('announcementUrlResult Result: $result');
+
+        final Uint8List? urlData = await urlRef.getData();
+        // Assuming the content of the text file is UTF-8 encoded
+        String? urlContent = utf8.decode(urlData!); // Convert bytes to string
+
+        urlMapAnnouncement['$result'] = urlContent;
+        print('urlMapAnnouncement[0]: ${urlMapAnnouncement['0']}');
+      } catch (e) {
+        // Handle any errors.
+        print("Error downloading image: $e");
+      }
+    }
+  }
+  Future<void> processAnnouncementTextResult(List<Reference> items) async {
+
+    for (Reference textRef in items) {
+      try {
+        print('Reference textRef in announcementTextResult.items: ${textRef.fullPath}');
+        List<String> parts = textRef.fullPath.split('/');
+        String result = parts.last.substring(0, parts.last.length - 4);
+        print('announcementTextResult Result: $result');
+
+        final Uint8List? urlData = await textRef.getData();
+        // Assuming the content of the text file is UTF-8 encoded
+        String? urlContent = utf8.decode(urlData!); // Convert bytes to string
+
+        textMapAnnouncement['$result'] = urlContent;
+        print('textMapAnnouncement[0]: ${textMapAnnouncement['0']}');
+      } catch (e) {
+        // Handle any errors.
+        print("Error downloading image: $e");
+      }
+    }
+  }
+  Future<void> processHowToUseImageResult(List<Reference> items) async {
+
+
+    for (Reference imageRef in items) {
+      try {
+        print('howToUseImageResult imageRef.fullPath: ${imageRef.fullPath}');
+        List<String> parts = imageRef.fullPath.split('/');
+        String result = parts.last.substring(0, parts.last.length - 4);
+        print('howToUseImageResult Result: $result');
+        const oneMegabyte = 1024 * 1024;
+        final Uint8List? imageData = await imageRef.getData(oneMegabyte);
+
+        howToUseMapMain['howToUse$result'] = imageData;
+        print('imageRef imageData: $imageData');
+
+      } catch (e) {
+        // Handle any errors.
+        print("Error downloading image: $e");
+      }
+    }
+  }
+  Future<void> processHowToUseTextResult(List<Reference> items) async {
+
+    for (Reference textRef in items) {
+      try {
+        print('howToUseTextResult textRef.fullPath: ${textRef.fullPath}');
+        List<String> parts = textRef.fullPath.split('/');
+        String result = parts.last.substring(0, parts.last.length - 4);
+        print('howToUseTextResult Result: $result');
+
+        final Uint8List? urlData = await textRef.getData();
+        // Assuming the content of the text file is UTF-8 encoded
+        String? urlContent = utf8.decode(urlData!); // Convert bytes to string
+
+        textMapHowToUse['howToUse$result'] = urlContent;
+        print('textMapHowToUse[result]: ${textMapHowToUse['howToUse$result']}');
+      } catch (e) {
+        // Handle any errors.
+        print("Error downloading image: $e");
+      }
+    }
+  }
+
+  ///////////
 
   Future<void> downloadAllImagesInMatchingScreen() async {
 
@@ -210,94 +246,124 @@ class LoadingUpdate extends ChangeNotifier {
     Reference imageReference = gsReference.child("matchingScreen_images");
     Reference urlReference = gsReference.child("matchingScreen_urls");
 
-    // ListResult의 items를 통해 해당 폴더에 있는 파일들을 가져옵니다.
-    ListResult imageListResult = await imageReference.list();
-    ListResult urlListResult = await urlReference.list();
-
-    print('imageListResult: $imageListResult');
-    print('urlListResult: $urlListResult');
-
-    int count = 0;
-
     try {
-      for (Reference imageRef in imageListResult.items) {
-        try {
-          print('matching_screen imageRef.fullPath: ${imageRef.fullPath}');
-          List<String> parts = imageRef.fullPath.split('/');
-          String result = parts.last.substring(0, parts.last.length - 4);
-          print('Result: $result');
-          const oneMegabyte = 1024 * 1024;
-          final Uint8List? imageData = await imageRef.getData(oneMegabyte);
 
-          imageMapMatchingScreen['$result'] = imageData;
+      // ListResult의 items를 통해 해당 폴더에 있는 파일들을 가져옵니다.
+      ListResult imageListResult = await imageReference.list();
+      ListResult urlListResult = await urlReference.list();
 
-          refStringListMatchingScreen['$count'] = result;
-          count++;
-        } catch (e) {
-          // Handle any errors.
-          print("Error downloading image: $e");
-        }
+      try {
+        // 각 리스트를 위한 비동기 작업 시작
+        await Future.wait([
+          processMatchingImageListResult(imageListResult.items),
+          processMatchingUrlListResult(urlListResult.items),
+        ]).then((value) {
+          notifyListeners();
+        });
+      } catch (e) {
+        print("Error in downloadAllImagesInMatchingScreen Future.wait: $e");
       }
 
-      for (Reference urlRef in urlListResult.items) {
-        try {
-          print('urlRef.fullPath: ${urlRef.fullPath}');
-          List<String> parts = urlRef.fullPath.split('/');
-          String result = parts.last.substring(0, parts.last.length - 4);
-          print('Result: $result');
-
-          final Uint8List? urlData = await urlRef.getData();
-          // Assuming the content of the text file is UTF-8 encoded
-          String? urlContent = utf8.decode(urlData!); // Convert bytes to string
-
-          urlMapMatchingScreen['$result'] = urlContent;
-        } catch (e) {
-          // Handle any errors.
-          print("Error downloading image: $e");
-        }
-      }
     } catch (e) {
-      print("Error in downloadAllImages: $e");
+      print("Error in downloadAllImagesInMatchingScreen: $e");
     }
 
-    notifyListeners();
-
   }
+
+  Future<void> processMatchingImageListResult(List<Reference> items) async {
+
+    int matchingBannerCount = 0;
+
+    for (Reference imageRef in items) {
+      try {
+        print('matching_screen imageRef.fullPath: ${imageRef.fullPath}');
+        List<String> parts = imageRef.fullPath.split('/');
+        String result = parts.last.substring(0, parts.last.length - 4);
+        print('matching_screen Result: $result');
+        const oneMegabyte = 1024 * 1024;
+        final Uint8List? imageData = await imageRef.getData(oneMegabyte);
+
+        imageMapMatchingScreen['$result'] = imageData;
+
+        refStringListMatchingScreen['$matchingBannerCount'] = result;
+        matchingBannerCount++;
+      } catch (e) {
+        // Handle any errors.
+        print("Error downloading image: $e");
+      }
+    }
+  }
+  Future<void> processMatchingUrlListResult(List<Reference> items) async {
+
+    for (Reference urlRef in items) {
+      try {
+        print('matching_screen urlRef.fullPath: ${urlRef.fullPath}');
+        List<String> parts = urlRef.fullPath.split('/');
+        String result = parts.last.substring(0, parts.last.length - 4);
+        print('matching_screen Result: $result');
+
+        final Uint8List? urlData = await urlRef.getData();
+        // Assuming the content of the text file is UTF-8 encoded
+        String? urlContent = utf8.decode(urlData!); // Convert bytes to string
+
+        urlMapMatchingScreen['$result'] = urlContent;
+      } catch (e) {
+        // Handle any errors.
+        print("Error downloading image: $e");
+      }
+    }
+  }
+
+  //////////////////////////
 
   Future<void> loadData(
       BuildContext context, bool isPersonal, String courtTitle, String courtRoadAddress) async {
 
     try {
-      await downloadAllImagesInMainScreen();
-      await downloadAllImagesInMatchingScreen();
-      print('await downloadAllImagesInMainScreen(); completed');
-      print('await downloadAllImagesInMatchingScreen(); completed');
 
-      if (Provider.of<LoginStatusUpdate>(context, listen: false).isLoggedIn) {
-        await RepositoryUserData().fetchUserData(context);
+      await Future.wait([
+        downloadAllImagesInMainScreen(),
+        downloadAllImagesInMatchingScreen(),
+      ]).then((value) async {
 
-        // await Provider.of<CourtAppointmentUpdate>(context, listen: false)
-        //     .daywiseDurationsCalculate(
-        //     false, false, courtTitle, courtRoadAddress);
-        // print(1);
-        // await Provider.of<CourtAppointmentUpdate>(context, listen: false)
-        //     .courtCountHours(false, false, courtTitle, courtRoadAddress);
-        //
-        // await Provider.of<PersonalAppointmentUpdate>(context, listen: false)
-        //     .daywiseDurationsCalculate(
-        //     false, isPersonal, courtTitle, courtRoadAddress);
-        // await Provider.of<PersonalAppointmentUpdate>(context, listen: false)
-        //     .personalCountHours(
-        //     false, isPersonal, courtTitle, courtRoadAddress);
+        try {
+          //if (Provider.of<LoginStatusUpdate>(context, listen: false).isLoggedIn) {
+          if (FirebaseAuth.instance.currentUser?.uid != '' || FirebaseAuth.instance.currentUser?.uid != null) {
+            await RepositoryFirestoreUserData().getFetchUserData(context);
 
-      } else {
+            // await Provider.of<CourtAppointmentUpdate>(context, listen: false)
+            //     .daywiseDurationsCalculate(
+            //     false, false, courtTitle, courtRoadAddress);
+            // print(1);
+            // await Provider.of<CourtAppointmentUpdate>(context, listen: false)
+            //     .courtCountHours(false, false, courtTitle, courtRoadAddress);
+            //
+            // await Provider.of<PersonalAppointmentUpdate>(context, listen: false)
+            //     .daywiseDurationsCalculate(
+            //     false, isPersonal, courtTitle, courtRoadAddress);
+            // await Provider.of<PersonalAppointmentUpdate>(context, listen: false)
+            //     .personalCountHours(
+            //     false, isPersonal, courtTitle, courtRoadAddress);
 
-      }
+          } else {
 
-      print('await fetchUserData(); completed');
-      notifyListeners();
+          }
+
+          print('await fetchUserData(); completed');
+
+          notifyListeners();
+
+        } catch (e) {
+          print('loadData Future.wait after e: $e');
+        }
+
+        print('await downloadAllImagesInMainScreen(); completed');
+        print('await downloadAllImagesInMatchingScreen(); completed');
+
+      });
+
     } catch (e) {
-      print(e);
+      print('loadData e: $e');
     }
 
   }

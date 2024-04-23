@@ -2,7 +2,7 @@
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
-class Search {
+class NaverMapSearch {
   //MapGeocode(this.url);
 
   final String url = "https://openapi.naver.com/v1/search/local.json?query=";

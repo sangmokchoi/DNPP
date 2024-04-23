@@ -1,3 +1,4 @@
+import 'dart:core';
 import 'package:dnpp/view/main_screen.dart';
 import 'package:dnpp/view/matching_screen.dart';
 import 'package:dnpp/view/setting_screen.dart';
@@ -5,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:persistent_bottom_nav_bar/persistent_tab_view.dart';
 import 'package:provider/provider.dart';
+import '../statusUpdate/googleAnalytics.dart';
 import '../statusUpdate/profileUpdate.dart';
 import 'calendar_screen.dart';
 
@@ -22,6 +24,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   PersistentTabController _controller =
       PersistentTabController(initialIndex: 0);
+
+  //Timer? _timer; // 타이머를 저장할 변수
 
   late bool _hideNavBar;
 
@@ -54,7 +58,7 @@ class _HomeScreenState extends State<HomeScreen> {
           CupertinoIcons.calendar_today,
           size: 30,
         ),
-        title: ("캘린더"),
+        title: ("Calendar"),
         textStyle: TextStyle(fontSize: 15.0),
         activeColorPrimary: Colors.white,
         inactiveColorPrimary: Colors.white,
@@ -70,7 +74,7 @@ class _HomeScreenState extends State<HomeScreen> {
           CupertinoIcons.person_2_fill,//Icons.people,//CupertinoIcons.group,
           size: 30,
         ),
-        title: ("매칭"),
+        title: ("Matching"),
         textStyle: TextStyle(
           fontSize: 15.0,
         ),
@@ -82,7 +86,7 @@ class _HomeScreenState extends State<HomeScreen> {
           CupertinoIcons.ellipsis,
           size: 30,
         ),
-        title: ("설정"),
+        title: ("Setting"),
         textStyle: TextStyle(fontSize: 15.0),
         activeColorPrimary: Colors.white,
         inactiveColorPrimary: Colors.white,
@@ -98,6 +102,26 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    _controller = PersistentTabController(initialIndex: 0);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<GoogleAnalyticsNotifier>(context, listen: false).startTimer('MainScreen');
+    });
+
+  }
+
+  int clickedTab = -1;
+
+  @override
+  void dispose() {
+    print('homeScreen dispose!!!');
+    //_timer?.cancel(); // 위젯이 제거되면 타이머도 취소
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Consumer<ProfileUpdate>(
         builder: (context, currentUserUpdate, child) {
@@ -105,25 +129,40 @@ class _HomeScreenState extends State<HomeScreen> {
             //key: homePageKey,
             context,
             controller: _controller,
-            onItemSelected: (int) {
-              setState(() {
-                switch (int) {
+            onItemSelected: (itemInt) async {
+
+              String screenName = '';
+              print('clickedTab: $clickedTab');
+              // 맨 처음 진입시에 곧장 매칭 스크린, 채팅 리스트, 채팅 뷰로 넘어가면 매칭 스크린이 ga에서 추적이 안됨
+
+              if (clickedTab != -1) {
+
+                switch (clickedTab) {
                   case 0:
-                    return print('$int');
+                    screenName = 'MainScreen';
                   case 1:
-                    return print('$int');
+                    screenName = 'CalendarScreen';
                   case 2:
-                    return print('$int');
+                    screenName = 'MatchingScreen';
                   case 3:
-                    return print('$int');
-                  case 4:
-                    return print('$int');
-                  case 5:
-                    return print('$int');
-                  default:
-                    return print('$int');
+                    screenName = 'SettingScreen';
                 }
+                print('screenName: $screenName');
+
+                await Provider.of<GoogleAnalyticsNotifier>(
+                    context, listen: false).startTimer(screenName);
+
+              } else {
+
+                await Provider.of<GoogleAnalyticsNotifier>(
+                    context, listen: false).startTimer('MainScreen'); // 맨 처음 값을 저장할 때는 mainScreen에서 시작하므로
+              }
+
+              setState(() {
+                clickedTab = itemInt;
+                return print('$itemInt');
               }); // This is required to update the nav bar if Android back button is pressed
+
             },
             screens: _buildScreens(),
             items: _navBarsItems(),

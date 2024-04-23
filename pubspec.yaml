@@ -26,6 +26,7 @@ dependencies:
   image_picker: ^1.0.4
   kpostal: ^0.5.1
   html_unescape: ^2.0.0
+  html: ^0.15.4
   custom_refresh_indicator: ^3.0.0
   animated_splash_screen: ^1.3.0
   shared_preferences: ^2.2.2
@@ -50,6 +51,8 @@ dependencies:
   cloud_firestore: ^4.13.2
   firebase_messaging: ^14.7.16
   flutter_local_notifications: ^16.3.2
+  firebase_remote_config: ^4.3.17
+  firebase_crashlytics: ^3.4.18
   # 파이어베이스 realtime_dataBase
   firebase_database: ^10.4.5
   firebase_analytics: ^10.8.9
@@ -59,11 +62,15 @@ dependencies:
   flutter_chat_ui: ^1.6.12
   flutter_chat_types: ^3.6.2
 
+  fluttertoast: ^8.2.5
+
   flutter_app_badger: ^1.5.0
   permission_handler: ^11.3.0
   app_settings: ^5.1.1
 
   device_info_plus: ^9.1.2
+
+  package_info_plus: ^5.0.1
 
 dev_dependencies:
   flutter_test:

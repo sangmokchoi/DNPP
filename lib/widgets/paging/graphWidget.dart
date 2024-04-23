@@ -30,33 +30,43 @@ class GraphsWidget extends StatelessWidget {
                 top: 10, // 조절 가능한 값
                 left: 15, // 조절 가능한 값
                 child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      titleText,
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
+                    ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxWidth: MediaQuery.of(context).size.width * 0.7,
+                      ),
+                      child: Text(
+                        titleText,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                     SizedBox(width: 5.0,),
-                    GestureDetector(
-                      onTapUp: (TapUpDetails tap){
-                        if (number == 0) {
-                          currentText(context);
-                        } else if (number == 1) {
-                          courtText(context);
-                        } else { // number == 2
-                          othersText(context);
-                        }
+                    Padding(
+                      padding: EdgeInsets.only(top: 2.0),
+                      child: GestureDetector(
+                        onTapUp: (TapUpDetails tap){
+                          if (number == 0) {
+                            currentText(context);
+                          } else if (number == 1) {
+                            courtText(context);
+                          } else { // number == 2
+                            othersText(context);
+                          }
 
-                      },
-                        child: Icon(
-                          size: 20.0,
-                          CupertinoIcons.question_circle,
-                          color: Colors.white,
-                        ),
+                        },
+                          child: Icon(
+                            size: 20.0,
+                            CupertinoIcons.question_circle,
+                            color: Colors.white,
+                          ),
+                      ),
                     ),
                   ],
                 ),
@@ -82,40 +92,43 @@ class GraphsWidget extends StatelessWidget {
             height: 250,
             child: Scrollbar(
               thumbVisibility: true,
-              child: SingleChildScrollView(
-                  child: Text.rich(
-                    TextSpan(
-                      children: [
-                        TextSpan(
-                            text: '이용자가 직접 등록한 일정을 보여주는 차트입니다\n\n',
-                          style: TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold),
-                        ),
-                        // TextSpan(
-                        //   text: '원하는 기간에 맞춰 한 눈에 일정을 살펴보세요.\n'
-                        // '("최근 7일", "최근 28일", "최근 3개월", "앞으로 1개월"으로 구분되어 있습니다)\n\n',
-                        //   //style: TextStyle(fontWeight: FontWeight.bold),
-                        // ),
-                        TextSpan(
-                          text: '1. 막대 차트는 기간별로 등록한 일정들의 시간을 모두 더하여 요일별로 나타냅니다.\n\n'
-                          //style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        TextSpan(
-                          text: '2. 직선 차트는 기간별로 등록한 일정들을 시간대별로 구분해서 나타냅니다\n\n'
-                          //style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        TextSpan(
-                          text: '3. 각 요일을 클릭하면, 요일별로 등록된 일정들의 시간만을 나타냅니다\n\n',
-                          //style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        TextSpan(
-                          text: '4. 요일을 재클릭하면, 선택한 요일이 해제되며, 모든 요일의 일정을 보여줍니다\n\n',
-                          //style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                      ],
-                      style: kAlertDialogContentTextStyle,
-                    ),
-                    maxLines: null,
-                  )
+              child: Padding(
+                padding: const EdgeInsets.only(right: 8.0),
+                child: SingleChildScrollView(
+                    child: Text.rich(
+                      TextSpan(
+                        children: [
+                          TextSpan(
+                              text: '이용자가 직접 등록한 일정을 보여주는 차트입니다\n\n',
+                            style: TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold),
+                          ),
+                          // TextSpan(
+                          //   text: '원하는 기간에 맞춰 한 눈에 일정을 살펴보세요.\n'
+                          // '("최근 7일", "최근 28일", "최근 3개월", "앞으로 1개월"으로 구분되어 있습니다)\n\n',
+                          //   //style: TextStyle(fontWeight: FontWeight.bold),
+                          // ),
+                          TextSpan(
+                            text: '1. 막대 차트는 기간별로 등록한 일정들의 시간을 모두 더하여 요일별로 나타냅니다.\n\n'
+                            //style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          TextSpan(
+                            text: '2. 직선 차트는 기간별로 등록한 일정들을 시간대별로 구분해서 나타냅니다\n\n'
+                            //style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          TextSpan(
+                            text: '3. 각 요일을 클릭하면, 요일별로 등록된 일정들의 시간만을 나타냅니다\n\n',
+                            //style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          TextSpan(
+                            text: '4. 요일을 재클릭하면, 선택한 요일이 해제되며, 모든 요일의 일정을 보여줍니다\n\n',
+                            //style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                        ],
+                        style: kAlertDialogContentTextStyle,
+                      ),
+                      maxLines: null,
+                    )
+                ),
               ),
             ),
           ),
@@ -147,31 +160,41 @@ class GraphsWidget extends StatelessWidget {
           title: Text('도움말', style: kAlertDialogTitleTextStyle,),
           content: SizedBox(
             height: 250,
-            child: SingleChildScrollView(
-                child: Text.rich(
-                  TextSpan(
-                    children: [
+            child: Scrollbar(
+              thumbVisibility: true,
+              child: Padding(
+                padding: const EdgeInsets.only(right: 8.0),
+                child: SingleChildScrollView(
+                    child: Text.rich(
                       TextSpan(
-                        text: '탁구장별 이용자들이 등록한 일정을 차트로 보여주는 위젯입니다\n\n',
-                        style: TextStyle(fontWeight: FontWeight.bold),
+                        children: [
+                          TextSpan(
+                            text: '탁구장별 이용자들이 등록한 일정을 차트로 보여주는 위젯입니다\n\n',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          TextSpan(
+                              text: '1. 막대 차트는 기간별로 등록한 일정들의 시간을 모두 더하여 요일별로 나타냅니다.\n\n'
+                            //style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          TextSpan(
+                              text: '2. 직선 차트는 기간별로 등록한 일정들을 시간대별로 구분해서 나타냅니다\n\n'
+                            //style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          TextSpan(
+                            text: '3. 각 요일을 클릭하면, 요일별로 등록된 일정들의 시간만을 나타냅니다\n\n',
+                            //style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          TextSpan(
+                            text: '4. 요일을 재클릭하면, 선택한 요일이 해제되며, 모든 요일의 일정을 보여줍니다\n\n',
+                            //style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                        ],
+                        style: kAlertDialogContentTextStyle,
                       ),
-                      TextSpan(
-                        text: '1. 설정한 기간 동안 등록한 일정의 시간을 총합하여 나타냅니다\n',
-                        //style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      TextSpan(
-                        text: '2. 요일을 클릭하면, 해당 요일에 등록된 일정들의 시간을 총합하여 나타냅니다\n',
-                        //style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      TextSpan(
-                        text: '3. 요일을 재클릭하면, 전체 기간의 일정들의 시간을 보여줍니다\n',
-                        style: TextStyle(fontWeight: FontWeight.normal),
-                      ),
-                    ],
-                    style: kAlertDialogContentTextStyle,
-                  ),
-                  maxLines: null,
-                )
+                      maxLines: null,
+                    )
+                ),
+              ),
             ),
           ),
           actions: [
@@ -204,31 +227,42 @@ class GraphsWidget extends StatelessWidget {
             height: 250,
             child: Scrollbar(
               thumbVisibility: true,
-              child: SingleChildScrollView(
-                  child: Text.rich(
-                    TextSpan(
-                      children: [
-                        TextSpan(
-                          text: '다른 이용자가 등록한 일정을 차트로 보여주는 위젯입니다\n',
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        TextSpan(
-                          text: '1. 설정한 기간 동안 등록한 일정의 시간을 총합하여 나타냅니다\n',
-                          //style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        TextSpan(
-                          text: '2. 요일을 클릭하면, 해당 요일에 등록된 일정들의 시간을 총합하여 나타냅니다\n',
-                          //style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        TextSpan(
-                          text: '3. 요일을 재클릭하면, 전체 기간의 일정들의 시간을 보여줍니다\n',
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                      ],
-                      style: kAlertDialogContentTextStyle,
-                    ),
-                    maxLines: null,
-                  )
+              child: Padding(
+                padding: const EdgeInsets.only(right: 8.0),
+                child: SingleChildScrollView(
+                    child: Text.rich(
+                      TextSpan(
+                        children: [
+                          TextSpan(
+                            text: '다른 이용자가 등록한 일정을 차트로 보여주는 위젯입니다\n',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          TextSpan(
+                            text: '(최근 28일 동안 등록한 일정만을 차트로 나타내줍니다)\n\n',
+                            style: TextStyle(fontWeight: FontWeight.normal),
+                          ),
+                          TextSpan(
+                              text: '1. 막대 차트는 기간별로 등록한 일정들의 시간을 모두 더하여 요일별로 나타냅니다.\n\n'
+                            //style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          TextSpan(
+                              text: '2. 직선 차트는 기간별로 등록한 일정들을 시간대별로 구분해서 나타냅니다\n\n'
+                            //style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          TextSpan(
+                            text: '3. 각 요일을 클릭하면, 요일별로 등록된 일정들의 시간만을 나타냅니다\n\n',
+                            //style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          TextSpan(
+                            text: '4. 요일을 재클릭하면, 선택한 요일이 해제되며, 모든 요일의 일정을 보여줍니다\n\n',
+                            //style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                        ],
+                        style: kAlertDialogContentTextStyle,
+                      ),
+                      maxLines: null,
+                    )
+                ),
               ),
             ),
           ),
