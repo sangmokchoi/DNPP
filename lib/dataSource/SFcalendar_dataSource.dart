@@ -34,6 +34,11 @@ class SFCalendarDataSource extends CalendarDataSource {
   }
 
   @override
+  String getId(int index) {
+    return appointments![index].id;
+  }
+
+  @override
   String getNotes(int index) {
     return appointments![index].notes;
   }

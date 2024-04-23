@@ -1,6 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
+import '../../constants.dart';
+
 class SelectableButton extends StatelessWidget {
   SelectableButton({
     super.key,
@@ -22,6 +24,7 @@ class SelectableButton extends StatelessWidget {
   @override
   void didUpdateWidget(SelectableButton oldWidget) {
     //super.didUpdateWidget(oldWidget);
+    print('didUpdateWidget 진입');
     if (selected != oldWidget.selected) {
       statesController.update(MaterialState.selected, selected);
     }
@@ -29,20 +32,37 @@ class SelectableButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: (){
-        print("object");
-      },
-      child: Container(
-        decoration: const BoxDecoration(
-          shape: BoxShape.circle,
+
+    return Container(
+      decoration: const BoxDecoration(
+        shape: BoxShape.circle,
+      ),
+      child: TextButton(
+        statesController: statesController,
+        style: ButtonStyle(
+          alignment: Alignment.topCenter,
+          shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+            kRoundedRectangleBorder.copyWith(
+                borderRadius: BorderRadius.circular(20)),
+          ),
+          backgroundColor: MaterialStateProperty.resolveWith<Color?>(
+                (Set<MaterialState> states) {
+              // 현재 버튼이 선택된 경우 배경색 지정, 아니면 null
+              if (states.contains(MaterialState.selected)) {
+                return Colors.indigo;
+              }
+              return null;
+            },
+          ),
+          // textStyle: MaterialStateProperty.all<TextStyle>(
+          //   TextStyle(
+          //     fontSize: 16.0, // Set your desired font size
+          //     fontWeight: FontWeight.bold, // Set your desired font weight
+          //   ),
+          // ),
         ),
-        child: TextButton(
-          statesController: statesController,
-          style: style,
-          onPressed: onPressed,
-          child: child,
-        ),
+        onPressed: onPressed,
+        child: child,
       ),
     );
   }

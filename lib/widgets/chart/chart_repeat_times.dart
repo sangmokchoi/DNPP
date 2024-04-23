@@ -32,7 +32,7 @@ class RepeatTimes extends StatelessWidget {
                 content: SingleChildScrollView(
                   child: Column(
                     children: [
-                      for (var n = 1; n < 51; n++)
+                      for (var n = 2; n < 51; n++)
                         TextButton(
                           onPressed: () async {
                             _repeatTimes = n;

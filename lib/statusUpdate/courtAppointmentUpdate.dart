@@ -187,37 +187,6 @@ class CourtAppointmentUpdate extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> updateRecurrenceRules(String repeatString, int value) async {
-    final weekday = DateFormat('EEE').format(fromDate).toUpperCase();
-    String twoWeekday = weekday.substring(0, 2);
-
-    if (repeatString == '매일') {
-      recurrenceRule = 'FREQ=DAILY;INTERVAL=1;COUNT=$value';
-      notifyListeners();
-      print('recurrenceRule: $recurrenceRule');
-    } else if (repeatString == '매주') {
-      recurrenceRule = 'FREQ=WEEKLY;INTERVAL=1;BYDAY=$twoWeekday;COUNT=$value';
-      notifyListeners();
-      print('recurrenceRule: $recurrenceRule');
-    } else if (repeatString == '매월') {
-      recurrenceRule =
-      'FREQ=MONTHLY;BYMONTHDAY=${fromDate.day};INTERVAL=1;COUNT=$value';
-      notifyListeners();
-      print('recurrenceRule: $recurrenceRule');
-    } else if (repeatString == '매년') {
-      recurrenceRule =
-      'FREQ=YEARLY;BYMONTHDAY=${fromDate.day};BYMONTH=${fromDate.month};INTERVAL=1;COUNT=$value';
-      notifyListeners();
-      print('recurrenceRule: $recurrenceRule');
-    } else if (repeatString == '반복 안 함') {
-      recurrenceRule = '';
-    }
-    repeatTimes = value;
-    notifyListeners();
-
-    print(repeatTimes);
-  }
-
   void updateIsOpened() {
     isOpened = !isOpened;
     notifyListeners();
@@ -261,7 +230,7 @@ class CourtAppointmentUpdate extends ChangeNotifier {
   Future<void> addPingpongCourtAddressList(String pingpongCourtAddress) async {
     if (!pingpongCourtAddressList.contains(pingpongCourtAddress)) {
       pingpongCourtAddressList.add(pingpongCourtAddress);
-      await Future.delayed(Duration.zero);
+
       notifyListeners();
     }
     //print('add pingpongCourtAddressList: $pingpongCourtAddressList');
@@ -282,7 +251,6 @@ class CourtAppointmentUpdate extends ChangeNotifier {
 
     //customAppointmentMeetings = customAppointmentMeetingsByCourt;
 
-    await Future.delayed(Duration.zero);
     notifyListeners();
   }
 
@@ -384,13 +352,6 @@ class CourtAppointmentUpdate extends ChangeNotifier {
     }
   }
 
-  // Future<void> setMeetingbyCourt() async {
-  //   meetings.where((element) => element. == oldMeeting.id);
-  //
-  //   await Future.delayed(Duration.zero);
-  //   notifyListeners();
-  // }
-
   Future<void> removeMeeting(Appointment oldMeeting) async {
     defaultMeetings.removeWhere((element) => element.id == oldMeeting.id);
     //meetings.remove(oldMeeting);
@@ -398,8 +359,8 @@ class CourtAppointmentUpdate extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> updateMeeting(
-      Appointment oldMeeting, Appointment newMeeting) async {
+  Future<void> updateMeeting(Appointment oldMeeting, Appointment newMeeting) async {
+
     defaultMeetings.removeWhere((element) => element.id == oldMeeting.id);
     await Future.delayed(Duration.zero); // 비동기적으로 처리하도록 함
     defaultMeetings.add(newMeeting);
@@ -413,7 +374,7 @@ class CourtAppointmentUpdate extends ChangeNotifier {
   Map<String, double> last3MonthsDurations = {};
   Map<String, double> next28daysDurations = {};
 
-  Map<int, double> courtHourlyCounts = {};
+  Map<int, double> hourlyCounts = {};
   Map<int, double> last7DaysHourlyCounts = {};
   Map<int, Map<int, double>> last7DaysHourlyCountsByDaysOfWeek = {};
 
@@ -432,42 +393,38 @@ class CourtAppointmentUpdate extends ChangeNotifier {
   }
 
   final isSelected = <bool>[true, false, false, false];
-  final isSelectedString = <String>['최근 7일', '최근 28일', '최근 90일', '1개월'];
+  final isSelectedString = <String>['최근 7일', '최근 28일', '최근 90일', '앞으로 1개월'];
 
   Future<void> updateLast7DaysHourlyCounts() async {
-    courtHourlyCounts = last7DaysHourlyCounts;
+    hourlyCounts = last7DaysHourlyCounts;
     //print('last7DaysHourlyCounts hourlyCounts: $hourlyCounts');
     notifyListeners();
   }
 
   Future<void> updateLast28DaysHourlyCounts() async {
-    courtHourlyCounts = last28DaysHourlyCounts;
+    hourlyCounts = last28DaysHourlyCounts;
     //print('last28DaysHourlyCounts hourlyCounts: $hourlyCounts');
     notifyListeners();
   }
 
   Future<void> updateLast3MonthsHourlyCounts() async {
-    courtHourlyCounts = last3MonthsHourlyCounts;
+    hourlyCounts = last3MonthsHourlyCounts;
     //print('last3MonthsHourlyCounts hourlyCounts: $hourlyCounts');
     notifyListeners();
   }
 
   Future<void> updateNext28daysHourlyCounts() async {
-    courtHourlyCounts = next28daysHourlyCounts;
+    hourlyCounts = next28daysHourlyCounts;
     //print('next28daysHourlyCounts hourlyCounts: $hourlyCounts');
-    notifyListeners();
-  }
-
-  void updateMainLineChart() {
     notifyListeners();
   }
 
   Future<void> updateLast7DaysHourlyCountsByDaysOfWeek(int value) async {
     int newValue = value + 1;
-    print('newValue: ${newValue}');
+    print('탁구장 newValue: ${newValue}');
     print(
-        'last7DaysHourlyCountsByDaysOfWeek: $last7DaysHourlyCountsByDaysOfWeek');
-    courtHourlyCounts = last7DaysHourlyCountsByDaysOfWeek[newValue] ?? {};
+        '탁구장 last7DaysHourlyCountsByDaysOfWeek: $last7DaysHourlyCountsByDaysOfWeek');
+    hourlyCounts = last7DaysHourlyCountsByDaysOfWeek[newValue] ?? {};
     //print(
     //    'updateLast7DaysHourlyCountsByDaysOfWeek hourlyCounts: $hourlyCounts');
     notifyListeners();
@@ -475,23 +432,23 @@ class CourtAppointmentUpdate extends ChangeNotifier {
 
   Future<void> updateLast28DaysHourlyCountsByDaysOfWeek(int value) async {
     int newValue = value + 1;
-    courtHourlyCounts = last28DaysHourlyCountsByDaysOfWeek[newValue] ?? {};
-    // print(
-    //     'updateLast28DaysHourlyCountsByDaysOfWeek hourlyCounts: $hourlyCounts');
+    hourlyCounts = last28DaysHourlyCountsByDaysOfWeek[newValue] ?? {};
+    print(
+         '탁구장 updateLast28DaysHourlyCountsByDaysOfWeek hourlyCounts: $hourlyCounts');
     notifyListeners();
   }
 
   Future<void> updateLast3MonthsHourlyCountsByDaysOfWeek(int value) async {
     int newValue = value + 1;
-    courtHourlyCounts = last3MonthsHourlyCountsByDaysOfWeek[newValue] ?? {};
-    // print(
-    //     'updateLast3MonthsHourlyCountsByDaysOfWeek hourlyCounts: $hourlyCounts');
+    hourlyCounts = last3MonthsHourlyCountsByDaysOfWeek[newValue] ?? {};
+     print(
+         '현재 유저 updateLast3MonthsHourlyCountsByDaysOfWeek hourlyCounts: $hourlyCounts');
     notifyListeners();
   }
 
   Future<void> updateNext28daysHourlyCountsByDaysOfWeek(int value) async {
     int newValue = value + 1;
-    courtHourlyCounts = next28daysHourlyCountsByDaysOfWeek[newValue] ?? {};
+    hourlyCounts = next28daysHourlyCountsByDaysOfWeek[newValue] ?? {};
     // print(
     //     'updateNext28daysHourlyCountsByDaysOfWeek hourlyCounts: $hourlyCounts');
     notifyListeners();
@@ -507,7 +464,7 @@ class CourtAppointmentUpdate extends ChangeNotifier {
 
     //print('calculateAverageY hourlyCounts: $hourlyCounts');
 
-    courtHourlyCounts.forEach((hour, counts) {
+    hourlyCounts.forEach((hour, counts) {
       sum += counts;
       if (counts >= max) {
         max = counts;
@@ -580,14 +537,17 @@ class CourtAppointmentUpdate extends ChangeNotifier {
       updateRecentDays(index);
 
     }
+
   }
 
   int recentDays = 0;
 
   Future<void> resetMeetings() async {
     customAppointmentMeetings.clear();
+    customAppointmentMeetingsByCourt.clear();
     newMeetings.clear();
     defaultMeetings.clear();
+    notifyListeners();
   }
 
   Future<void> resetDaywiseDurations() async {
@@ -596,11 +556,12 @@ class CourtAppointmentUpdate extends ChangeNotifier {
     last28DaysDurations.clear();
     last3MonthsDurations.clear();
     next28daysDurations.clear();
+    notifyListeners();
   }
 
   Future<void> resetHourlyCounts() async {
 
-    courtHourlyCounts.clear();
+    hourlyCounts.clear();
     last7DaysHourlyCounts.clear();
     last28DaysHourlyCounts.clear();
     last3MonthsHourlyCounts.clear();
@@ -610,9 +571,10 @@ class CourtAppointmentUpdate extends ChangeNotifier {
     last28DaysHourlyCountsByDaysOfWeek.clear();
     last3MonthsHourlyCountsByDaysOfWeek.clear();
     next28daysHourlyCountsByDaysOfWeek.clear();
+    notifyListeners();
   }
 
-  Future<void> courtDaywiseDurationsCalculate(
+  Future<void> daywiseDurationsCalculate(
       bool isInitial, bool isMyTime, String title, String roadAddress) async {
 
     if (isMyTime != true) {
@@ -775,7 +737,7 @@ class CourtAppointmentUpdate extends ChangeNotifier {
       newMeetings = extractedAppointments;
 
       print('court countHours isMyTime false');
-      print('court countHours newMeetings: ${newMeetings.length}');
+      print('court countHours newMeetings length: ${newMeetings.length}');
 
     } else {
       print('court countHours isMyTime true');
@@ -814,13 +776,13 @@ class CourtAppointmentUpdate extends ChangeNotifier {
             );
           //print('dayOfWeek: ${dayOfWeek}');
           //print('last7DaysHourlyCountsByDaysOfWeek[dayOfWeek]: ${last7DaysHourlyCountsByDaysOfWeek[dayOfWeek]}');
-          courtHourlyCounts = last7DaysHourlyCounts;
+          hourlyCounts = last7DaysHourlyCounts;
 
           startTime = startTime.add(Duration(hours: 1));
         }
 
         if (isInitial == true) {
-          courtHourlyCounts = last7DaysHourlyCounts;
+          hourlyCounts = last7DaysHourlyCounts;
         }
 
       }
@@ -849,13 +811,13 @@ class CourtAppointmentUpdate extends ChangeNotifier {
             );
           //print('last28DaysHourlyCountsByDaysOfWeek[dayOfWeek]: ${last28DaysHourlyCountsByDaysOfWeek[dayOfWeek]}');
 
-          courtHourlyCounts = last28DaysHourlyCounts;
+          hourlyCounts = last28DaysHourlyCounts;
           startTime = startTime.add(Duration(hours: 1));
         }
 
-        // if (isInitial == true) {
-        //   hourlyCounts = last28DaysHourlyCounts;
-        // }
+        if (isInitial == true) {
+          hourlyCounts = last7DaysHourlyCounts;
+        }
 
       }
 
@@ -883,13 +845,13 @@ class CourtAppointmentUpdate extends ChangeNotifier {
             );
           //print('last3MonthsHourlyCountsByDaysOfWeek[dayOfWeek]: ${last3MonthsHourlyCountsByDaysOfWeek[dayOfWeek]}');
 
-          courtHourlyCounts = last3MonthsHourlyCounts;
+          hourlyCounts = last3MonthsHourlyCounts;
           startTime = startTime.add(Duration(hours: 1));
         }
       }
-      // if (isInitial == true) {
-      //   hourlyCounts = last3MonthsHourlyCounts;
-      // }
+      if (isInitial == true) {
+        hourlyCounts = last7DaysHourlyCounts;
+      }
 
       if (appointment.startTime
           .isAfter(currentDate) &&
@@ -915,13 +877,13 @@ class CourtAppointmentUpdate extends ChangeNotifier {
             );
           //print('next28daysHourlyCountsByDaysOfWeek[dayOfWeek]: ${next28daysHourlyCountsByDaysOfWeek[dayOfWeek]}');
 
-          courtHourlyCounts = next28daysHourlyCounts;
+          hourlyCounts = next28daysHourlyCounts;
           startTime = startTime.add(Duration(hours: 1));
         }
       }
-      // if (isInitial == true) {
-      //   hourlyCounts = next28daysHourlyCounts;
-      // }
+      if (isInitial == true) {
+        hourlyCounts = last7DaysHourlyCounts;
+      }
 
     }
 

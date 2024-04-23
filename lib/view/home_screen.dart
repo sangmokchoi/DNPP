@@ -1,23 +1,14 @@
 import 'package:dnpp/view/main_screen.dart';
 import 'package:dnpp/view/matching_screen.dart';
-import 'package:dnpp/view/profile_screen.dart';
 import 'package:dnpp/view/setting_screen.dart';
-import 'package:dnpp/view/signup_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:persistent_bottom_nav_bar/persistent_tab_view.dart';
 import 'package:provider/provider.dart';
-
-import '../models/search.dart';
-import '../statusUpdate/loginStatusUpdate.dart';
-import '../statusUpdate/personalAppointmentUpdate.dart';
 import '../statusUpdate/profileUpdate.dart';
-import 'map_screen.dart';
 import 'calendar_screen.dart';
 
-import 'package:firebase_storage/firebase_storage.dart';
-
-GlobalKey<_HomeScreenState> homePageKey = GlobalKey<_HomeScreenState>();
+// GlobalKey<_HomeScreenState> homePageKey = GlobalKey<_HomeScreenState>();
 
 class HomeScreen extends StatefulWidget {
   static String id = '/HomeScreenID';
@@ -27,10 +18,11 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-
   int _selectedIndex = 0;
 
-  PersistentTabController _controller = PersistentTabController(initialIndex: 0);
+  PersistentTabController _controller =
+      PersistentTabController(initialIndex: 0);
+
   late bool _hideNavBar;
 
   List<Widget> _buildScreens() {
@@ -48,16 +40,24 @@ class _HomeScreenState extends State<HomeScreen> {
   List<PersistentBottomNavBarItem> _navBarsItems() {
     return [
       PersistentBottomNavBarItem(
-        icon: Icon(CupertinoIcons.home),
+        icon: Icon(
+          CupertinoIcons.home,//CupertinoIcons.chart_bar_circle,
+          size: 30,
+        ),
         title: ("Home"),
-        activeColorPrimary: CupertinoColors.activeBlue,
-        inactiveColorPrimary: CupertinoColors.systemGrey,
+        textStyle: TextStyle(fontSize: 15.0),
+        activeColorPrimary: Colors.white,
+        inactiveColorPrimary: Colors.white,
       ),
       PersistentBottomNavBarItem(
-        icon: Icon(CupertinoIcons.chart_bar_circle),
+        icon: Icon(
+          CupertinoIcons.calendar_today,
+          size: 30,
+        ),
         title: ("캘린더"),
-        activeColorPrimary: CupertinoColors.activeBlue,
-        inactiveColorPrimary: CupertinoColors.systemGrey,
+        textStyle: TextStyle(fontSize: 15.0),
+        activeColorPrimary: Colors.white,
+        inactiveColorPrimary: Colors.white,
       ),
       // PersistentBottomNavBarItem(
       //   icon: Icon(CupertinoIcons.settings),
@@ -66,27 +66,31 @@ class _HomeScreenState extends State<HomeScreen> {
       //   inactiveColorPrimary: CupertinoColors.systemGrey,
       // ),
       PersistentBottomNavBarItem(
-        icon: Icon(CupertinoIcons.chat_bubble_2),
+        icon: Icon(
+          CupertinoIcons.person_2_fill,//Icons.people,//CupertinoIcons.group,
+          size: 30,
+        ),
         title: ("매칭"),
-        activeColorPrimary: CupertinoColors.activeBlue,
-        inactiveColorPrimary: CupertinoColors.systemGrey,
+        textStyle: TextStyle(
+          fontSize: 15.0,
+        ),
+        activeColorPrimary: Colors.white,
+        inactiveColorPrimary: Colors.white,
       ),
       PersistentBottomNavBarItem(
-        icon: Icon(CupertinoIcons.ellipsis),
-        title: ("더보기"),
-        activeColorPrimary: CupertinoColors.activeBlue,
-        inactiveColorPrimary: CupertinoColors.systemGrey,
+        icon: Icon(
+          CupertinoIcons.ellipsis,
+          size: 30,
+        ),
+        title: ("설정"),
+        textStyle: TextStyle(fontSize: 15.0),
+        activeColorPrimary: Colors.white,
+        inactiveColorPrimary: Colors.white,
       ),
     ];
   }
 
-  @override
-  void initState() {
-    super.initState();
-    _controller = PersistentTabController();
-    _hideNavBar = false;
-  }
-
+  // @override
   void onItemSelected(int index) {
     _controller.jumpToTab(index);
     // 추가로 수행해야 할 로직이 있다면 여기에 추가
@@ -97,75 +101,64 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Consumer<ProfileUpdate>(
         builder: (context, currentUserUpdate, child) {
-        return SafeArea(
-          child: PersistentTabView(
-            key: homePageKey,
+          return PersistentTabView(
+            //key: homePageKey,
             context,
             controller: _controller,
             onItemSelected: (int) {
               setState(() {
                 switch (int) {
                   case 0:
-                    return setState(() {
-                      print('$int');
-                    });
+                    return print('$int');
                   case 1:
-                    return setState(() {
-                      print('$int');
-                    });
+                    return print('$int');
                   case 2:
-                    return setState(() {
-                      print('$int');
-                    });
+                    return print('$int');
                   case 3:
-                    return setState(() {
-                      print('$int');
-                    });
+                    return print('$int');
                   case 4:
-                    return setState(() {
-                      print('$int');
-                    });
+                    return print('$int');
                   case 5:
-                    return setState(() {
-                      print('$int');
-                    });
+                    return print('$int');
                   default:
-                    return setState(() {
-                      print('$int');
-                    });
+                    return print('$int');
                 }
               }); // This is required to update the nav bar if Android back button is pressed
             },
             screens: _buildScreens(),
             items: _navBarsItems(),
             navBarHeight: 65,
-            confineInSafeArea: true,
-            backgroundColor: Colors.white70, // Default is Colors.white.
-            handleAndroidBackButtonPress: true, // Default is true.
-            resizeToAvoidBottomInset: true, // This needs to be true if you want to move up the screen when keyboard appears. Default is true.
-            stateManagement: true, // Default is true.
-            hideNavigationBarWhenKeyboardShows: true, // Recommended to set 'resizeToAvoidBottomInset' as true while using this argument. Default is true.
+            //confineInSafeArea: true,
+            backgroundColor: Theme.of(context).secondaryHeaderColor,
+            //Colors.white70, // Default is Colors.white.
+            handleAndroidBackButtonPress: true,
+            // Default is true.
+            resizeToAvoidBottomInset: true,
+            // This needs to be true if you want to move up the screen when keyboard appears. Default is true.
+            stateManagement: true,
+            // Default is true.
+            hideNavigationBarWhenKeyboardShows: true,
+            // Recommended to set 'resizeToAvoidBottomInset' as true while using this argument. Default is true.
             decoration: NavBarDecoration(
-              borderRadius: BorderRadius.circular(10.0),
-              colorBehindNavBar: Colors.white,
+              borderRadius: BorderRadius.only(topLeft: Radius.circular(15.0), topRight: Radius.circular(15.0)),
+              colorBehindNavBar: Colors.transparent,
             ),
             popAllScreensOnTapOfSelectedTab: true,
             popActionScreens: PopActionScreensType.all,
-            itemAnimationProperties: ItemAnimationProperties( // Navigation Bar's items animation properties.
+            itemAnimationProperties: ItemAnimationProperties(
+              // Navigation Bar's items animation properties.
               duration: Duration(milliseconds: 200),
               curve: Curves.ease,
             ),
-            screenTransitionAnimation: ScreenTransitionAnimation( // Screen transition animation on change of selected tab.
+            screenTransitionAnimation: ScreenTransitionAnimation(
+              // Screen transition animation on change of selected tab.
               animateTabTransition: true,
               curve: Curves.ease,
               duration: Duration(milliseconds: 200),
             ),
-            navBarStyle: NavBarStyle.style1, // Choose the nav bar style with this property.
-          ),
-        );
-      }
-    );
-
+            navBarStyle:
+            NavBarStyle.style1, // Choose the nav bar style with this property.
+          );
+        });
   }
 }
-

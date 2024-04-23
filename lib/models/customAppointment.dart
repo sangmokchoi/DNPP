@@ -17,6 +17,7 @@ class CustomAppointment {
     required this.userUid,
   });
 
+
   factory CustomAppointment.fromFirestore(
     DocumentSnapshot<Map<String, dynamic>> snapshot,
     SnapshotOptions? options,
@@ -32,10 +33,13 @@ class CustomAppointment {
                 startTime: appointmentData['startTime'],
                 endTime: appointmentData['endTime'],
                 subject: appointmentData['subject'],
-                //color: appointmentData['color'],
+                color: Color(appointmentData['color']).withOpacity(1),
+                id: appointmentData['id'],
                 isAllDay: appointmentData['isAllDay'],
                 notes: appointmentData['notes'],
                 recurrenceRule: appointmentData['recurrenceRule'],
+                recurrenceId: appointmentData['recurrenceId'],
+                recurrenceExceptionDates: appointmentData?['recurrenceExceptionDates'],
               ))
           .toList(),
     );
@@ -53,10 +57,13 @@ class CustomAppointment {
                   'startTime': appointment.startTime,
                   'endTime': appointment.endTime,
                   'subject': appointment.subject,
-                  //'color': appointment.color,
+                  'color': appointment.color.value,
+                  'id': appointment.id,
                   'isAllDay': appointment.isAllDay,
                   'notes': appointment.notes,
                   'recurrenceRule': appointment.recurrenceRule,
+                  'recurrenceId': appointment.recurrenceId,
+                  'recurrenceExceptionDates': appointment.recurrenceExceptionDates,
                 })
             .toList(),
     };
