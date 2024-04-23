@@ -138,7 +138,7 @@ class UserProfile {
     photoUrl: 'https://firebasestorage.googleapis.com/v0/b/dnpp-402403.appspot.com/o/profile_photos%2Fempty_profile_6.png?alt=media&token=545efdd6-5b89-4cd6-953a-4c1a66f96f96',
     gender: '밝히지 않음',
     ageRange: '20대',
-    playedYears: 'playedYears',
+    playedYears: '미정',
     address: ['동네를 추가해주세요'],
     pingpongCourt: [],
     playStyle: '공격',
