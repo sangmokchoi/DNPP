@@ -5,29 +5,28 @@ import 'package:provider/provider.dart';
 import '../../constants.dart';
 import '../../statusUpdate/personalAppointmentUpdate.dart';
 import '../../statusUpdate/profileUpdate.dart';
-import 'main_graphs.dart';
+import 'graphWidget.dart';
 
 class MainPersonalChartPageView extends StatelessWidget {
-  final PageController pageController;
-  //_currentPersonal
-
-  bool isPersonal = false;
-  int currentPersonal;
-  int indexPersonal;
-
-  //bool isLoading = false;
-  bool isRefresh = false;
-
-  String courtTitle;
-  String courtRoadAddress;
 
   MainPersonalChartPageView({
     required this.pageController,
     required this.currentPersonal,
     required this.indexPersonal,
     required this.courtTitle,
-    required this.courtRoadAddress,
+    required this.courtRoadAddress
   });
+
+  final PageController pageController;
+
+  bool isPersonal = false;
+  int currentPersonal;
+  int indexPersonal;
+
+  bool isRefresh = false;
+
+  String courtTitle;
+  String courtRoadAddress;
 
   @override
   Widget build(BuildContext context) {
@@ -35,19 +34,15 @@ class MainPersonalChartPageView extends StatelessWidget {
       children: [
         Container(
           height: 400,
-          //color: Colors.red,
           child: PageView.builder(
             onPageChanged: (int newPage) async {
-
 
               if (newPage != currentPersonal) {
                 currentPersonal = newPage;
                 print('_currentPersonal: $currentPersonal');
 
                 // 요일 버튼 눌린 것이 초기화 되어야 함
-                Provider.of<PersonalAppointmentUpdate>(context, listen: false)
-                    .resetSelectedList();
-
+                Provider.of<PersonalAppointmentUpdate>(context, listen: false).resetSelectedList();
 
                 if (currentPersonal != 0) {
                   indexPersonal = currentPersonal - 1;
@@ -58,41 +53,22 @@ class MainPersonalChartPageView extends StatelessWidget {
                   isPersonal = true;
                 }
 
-                courtTitle = Provider.of<ProfileUpdate>(context, listen: false)
-                    .userProfile
-                    .pingpongCourt?[indexPersonal]
-                    .title ??
-                    '';
-                courtRoadAddress = Provider.of<ProfileUpdate>(context, listen: false)
-                    .userProfile
-                    .pingpongCourt?[indexPersonal]
-                    .roadAddress ??
-                    '';
+                courtTitle = Provider.of<ProfileUpdate>(context, listen: false).userProfile.pingpongCourt?[indexPersonal]
+                    .title ?? '';
+                courtRoadAddress = Provider.of<ProfileUpdate>(context, listen: false).userProfile.pingpongCourt?[indexPersonal]
+                    .roadAddress ?? '';
 
-                await Provider.of<PersonalAppointmentUpdate>(context, listen: false)
-                    .personalDaywiseDurationsCalculate(
+                await Provider.of<PersonalAppointmentUpdate>(context, listen: false).daywiseDurationsCalculate(
                     false, isPersonal, courtTitle, courtRoadAddress);
-                await Provider.of<PersonalAppointmentUpdate>(context, listen: false)
-                    .personalCountHours(
+                await Provider.of<PersonalAppointmentUpdate>(context, listen: false).personalCountHours(
                     false, isPersonal, courtTitle, courtRoadAddress);
 
-                // Provider.of<AppointmentUpdate>(context, listen: false)
-                //     .updateRecentDays(0);
-
-                //setState(() {});
               }
             },
 
             controller: pageController,
-            itemCount: (Provider.of<ProfileUpdate>(context, listen: false)
-                        .userProfile
-                        .pingpongCourt
-                        ?.length != 0)
-                ? Provider.of<ProfileUpdate>(context, listen: false)
-                        .userProfile
-                        .pingpongCourt!
-                        .length +
-                    1
+            itemCount: (Provider.of<ProfileUpdate>(context, listen: false).userProfile.pingpongCourt?.length != 0)
+                ? Provider.of<ProfileUpdate>(context, listen: false).userProfile.pingpongCourt!.length + 1
                 : 1,
             itemBuilder: (context, index) {
               if (index == 0) {
@@ -103,17 +79,13 @@ class MainPersonalChartPageView extends StatelessWidget {
                   ),
                   child: GraphsWidget(
                     //index: index, // index == 0
-                    titleText: '나의 훈련 시간',
+                    titleText: '전체 연습 일정',
                     backgroundColor:
                         kMainColor,
-                      isCourt: false, isMine: true, // isCourt: false 이면 개인화된 차트 제공, isMine: false이면 다른 유저의 내용 보여줌
+                      number: 0, // 0은 currentuser, 1은 탁구장별 데이터, 2은 다른 유저의 데이터
                   ),
                 );
-              } else if (index + 1 ==
-                  Provider.of<ProfileUpdate>(context, listen: false)
-                      .userProfile
-                      .pingpongCourt
-                      ?.length) {
+              } else if (index + 1 == Provider.of<ProfileUpdate>(context, listen: false).userProfile.pingpongCourt?.length) {
                 return Container(
                   decoration: ShapeDecoration(
                     shape: kRoundedRectangleBorder,
@@ -121,15 +93,11 @@ class MainPersonalChartPageView extends StatelessWidget {
                   ),
                   child: GraphsWidget(
                     //index: index,
-                    titleText:
-                        Provider.of<ProfileUpdate>(context, listen: false)
-                            .userProfile
-                            .pingpongCourt![index - 1]
-                            .title,
+                    titleText: Provider.of<ProfileUpdate>(context, listen: false).userProfile.pingpongCourt![index - 1].title,
                     //ChartBasicList[index].text,
                     backgroundColor:
                         Colors.lightBlue,
-                      isCourt: false, isMine: true, // isCourt: false 이면 개인화된 차트 제공, isMine: false이면 다른 유저의 내용 보여줌
+                    number: 0, // 0은 currentuser, 1은 탁구장별 데이터, 2은 다른 유저의 데이터
                   ),
                 );
               } else {
@@ -137,15 +105,11 @@ class MainPersonalChartPageView extends StatelessWidget {
                   //color: Colors.grey,
                   child: GraphsWidget(
                     //index: index,
-                    titleText:
-                        Provider.of<ProfileUpdate>(context, listen: false)
-                            .userProfile
-                            .pingpongCourt![index - 1]
-                            .title,
+                    titleText: Provider.of<ProfileUpdate>(context, listen: false).userProfile.pingpongCourt![index - 1].title,
                     //ChartBasicList[index].text,
                     backgroundColor:
                         Colors.lightBlue,
-                    isCourt: false, isMine: true, // isCourt: false 이면 개인화된 차트 제공, isMine: false이면 다른 유저의 내용 보여줌
+                    number: 0, // 0은 currentuser, 1은 탁구장별 데이터, 2은 다른 유저의 데이터
                   ),
                 );
               }

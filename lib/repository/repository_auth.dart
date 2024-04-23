@@ -4,6 +4,10 @@ import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:crypto/crypto.dart';
 import 'package:dnpp/dataSource/firebase_auth_remote_data_source.dart';
+import 'package:dnpp/repository/chatBackgroundListen.dart';
+import 'package:dnpp/repository/launchUrl.dart';
+import 'package:dnpp/repository/repository_userData.dart';
+import 'package:dnpp/repository/repsitory_appointments.dart';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
@@ -21,7 +25,7 @@ import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import '../statusUpdate/profileUpdate.dart';
 
 class RepositoryAuth {
-  final _fireAuthInstance = FirebaseAuth.instance;
+  final _fireAuth = FirebaseAuth.instance;
 
   FirebaseFirestore db = FirebaseFirestore.instance;
 
@@ -42,7 +46,14 @@ class RepositoryAuth {
     print('deleteUserAccount start!');
 
     try {
+
+      await RepositoryUserData().deleteUser(_fireAuth.currentUser!.uid.toString());
+      await RepositoryAppointments().deleteUserAppointment(_fireAuth.currentUser!.uid.toString());
+      await ChatBackgroundListen().deleteUsersData(_fireAuth.currentUser!.uid.toString());
+      await ChatBackgroundListen().deleteChatData(_fireAuth.currentUser!.uid.toString());
+      await ChatBackgroundListen().adjustOpponentBadgeCount(_fireAuth.currentUser!.uid.toString());
       await FirebaseAuth.instance.currentUser!.delete();
+
       print('deleteUserAccount 완료');
       print('여기서 유저 데이터 삭제 및 해당 유저의 Appointment 문서 모두 삭제 필요');
     } on FirebaseAuthException catch (e) {
@@ -53,6 +64,7 @@ class RepositoryAuth {
         await _reauthenticateAndDelete();
       } else {
         // Handle other Firebase exceptions
+
       }
     } catch (e) {
       print(e);
@@ -60,6 +72,7 @@ class RepositoryAuth {
   }
 
   Future<void> linkWithCredential(AuthCredential credential) async {
+
     try {
       final userCredential = await FirebaseAuth.instance.currentUser
           ?.linkWithCredential(credential);
@@ -175,19 +188,21 @@ class RepositoryAuth {
     print('id: ${user!.id}');
     print('name: ${user!.kakaoAccount!.profile!.nickname!}'); //
     print('email: ${user!.kakaoAccount!.email!}');
-    //print('profile: ${user!.kakaoAccount!.profile}');
+    print('profile: ${user!.kakaoAccount!.profile}');
     print('profileImageUrl: ${user!.kakaoAccount!.profile?.profileImageUrl}');
 
     final token = await _firebaseAuthDataSource.createCustomToken({
       'uid': user!.id.toString(),
-      //'displayName': user!.kakaoAccount!.profile!.nickname,
+      'displayName': user!.kakaoAccount!.profile!.nickname,
       'email': user!.kakaoAccount!.email!,
-      //'photoURL': user!.kakaoAccount!.profile!.profileImageUrl!,
+      'photoURL': user!.kakaoAccount!.profile!.profileImageUrl!,
     });
-    //print('token: ${token}');
+    print('token: ${token}');
     print('새로 만든 로그인 함수 거의 완료');
     final credential = await FirebaseAuth.instance.signInWithCustomToken(token);
     //await linkWithCredential(credential);
+    print('UserCredential credential: ${credential}');
+
     print('socialLogin 완료');
 
     await Provider.of<ProfileUpdate>(context, listen: false)
@@ -202,51 +217,71 @@ class RepositoryAuth {
     print('유저에게 사진 및 프로필 정보를 가져올지 말지 이때 문의 필요');
   }
 
-  Future<void> signInWithGoogle(BuildContext context) async {
-    // Trigger the authentication flow
-    final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+  Future<bool> signInWithGoogle(BuildContext context) async {
 
-    // Obtain the auth details from the request
-    final GoogleSignInAuthentication? googleAuth =
-        await googleUser?.authentication;
+    try {
 
-    // Create a new credential
-    final credential = GoogleAuthProvider.credential(
-      accessToken: googleAuth?.accessToken,
-      idToken: googleAuth?.idToken,
-    );
+      // Trigger the authentication flow
+      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
 
-    //await linkWithCredential(credential);
+      if (googleUser == null) {
+        String errorMessage = 'error is PlatformException && error.code == "CANCELED"';
+        throw Exception(errorMessage);
+      }
 
-    UserCredential _credential =
-        await FirebaseAuth.instance.signInWithCredential(credential);
+      // Obtain the auth details from the request
+      final GoogleSignInAuthentication? googleAuth =
+          await googleUser?.authentication;
 
-    if (_credential.user != null) {
-      //User? user = _credential.user;
-      var user = _credential.user;
+      // Create a new credential
+      final credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth?.accessToken,
+        idToken: googleAuth?.idToken,
+      );
+      print('OAuthCredential credential: ${credential}');
+      //await linkWithCredential(credential);
 
-      await Provider.of<ProfileUpdate>(context, listen: false)
-          .updateName(user?.displayName ?? '');
-      await Provider.of<ProfileUpdate>(context, listen: false)
-          .updateId(user?.uid ?? '');
-      await Provider.of<ProfileUpdate>(context, listen: false)
-          .updateEmail(user?.email ?? '');
-      await Provider.of<ProfileUpdate>(context, listen: false)
-          .updateImageUrl(user?.photoURL ?? '');
+      UserCredential _credential =
+          await FirebaseAuth.instance.signInWithCredential(credential);
+      print('UserCredential _credential: ${_credential}');
 
-      // print('id: ${Provider.of<ProfileUpdate>(context, listen: false).id}');
-      // print(
-      //     'email: ${Provider.of<ProfileUpdate>(context, listen: false).email}');
-      // print(
-      //     'imageUrl: ${Provider.of<ProfileUpdate>(context, listen: false).imageUrl}');
+      if (_credential.user != null) {
+        //User? user = _credential.user;
+        var user = _credential.user;
 
-      //logger.e(user);
-      print('signInWithGoogle user: $user');
-      print('유저에게 사진 및 프로필 정보를 가져올지 말지 이때 문의 필요');
+        await Provider.of<ProfileUpdate>(context, listen: false)
+            .updateName(user?.displayName ?? '');
+        await Provider.of<ProfileUpdate>(context, listen: false)
+            .updateId(user?.uid ?? '');
+        await Provider.of<ProfileUpdate>(context, listen: false)
+            .updateEmail(user?.email ?? '');
+        await Provider.of<ProfileUpdate>(context, listen: false)
+            .updateImageUrl(user?.photoURL ?? '');
+
+        // print('id: ${Provider.of<ProfileUpdate>(context, listen: false).id}');
+        // print(
+        //     'email: ${Provider.of<ProfileUpdate>(context, listen: false).email}');
+        // print(
+        //     'imageUrl: ${Provider.of<ProfileUpdate>(context, listen: false).imageUrl}');
+
+        //logger.e(user);
+        print('signInWithGoogle user: $user');
+        print('유저에게 사진 및 프로필 정보를 가져올지 말지 이때 문의 필요');
+
+      }
+      return true;
+
+    } catch (error) {
+      print('signInGoogle error: ${error}');
+      if (error is PlatformException && error.code == 'CANCELED') { // 유저가 취소함
+        print('error is PlatformException && error.code == "CANCELED"');
+
+      }
+      return false;
     }
   }
 
-  Future<void> signInWithApple(BuildContext context) async {
+  Future<bool> signInWithApple(BuildContext context) async {
     print('signInWithApple 시작');
     try {
       final rawNonce = generateNonce();
@@ -258,7 +293,7 @@ class RepositoryAuth {
         ],
         nonce: nonce,
       );
-      print('appleCredential: $appleCredential');
+      print('AuthorizationCredentialAppleID appleCredential: $appleCredential');
       //appleCredential: AuthorizationAppleID(000715.26ba164a2958469190db193831ed1504.0425, null, null, null, null)
       print('appleCredential.givenName: ${appleCredential.givenName}');
       print('appleCredential.familyName: ${appleCredential.familyName}');
@@ -274,13 +309,13 @@ class RepositoryAuth {
         accessToken: appleCredential.authorizationCode,
         rawNonce: rawNonce,
       );
-
+      print('OAuthCredential credential: ${credential}');
       //await linkWithCredential(credential);
 
       final authResult =
           await FirebaseAuth.instance.signInWithCredential(credential);
 
-      print('signInWithApple: $authResult');
+      print('UserCredential authResult: $authResult');
       print('signInWithApple user: ${authResult.user}');
       print(
           'signInWithApple additionalUserInfo: ${authResult.additionalUserInfo}');
@@ -290,9 +325,26 @@ class RepositoryAuth {
         print('user != null');
         var user = authResult.user;
         print('user: $user');
+        String nickName = '';
+
+        if (user!.displayName == null) {
+
+          if (appleCredential.givenName == null) {
+            nickName = '';
+            print('"" nickName: $nickName');
+          } else {
+            nickName = appleCredential.givenName!;
+            print('appleCredential.givenName! nickName: $nickName');
+          }
+
+        } else {
+          nickName = user!.displayName!;
+          print('user!.displayName! nickName: $nickName');
+
+        }
 
         await Provider.of<ProfileUpdate>(context, listen: false)
-            .updateName(user!.displayName ?? '');
+            .updateName(nickName);
         await Provider.of<ProfileUpdate>(context, listen: false)
             .updateId(user!.uid);
         await Provider.of<ProfileUpdate>(context, listen: false)
@@ -310,50 +362,83 @@ class RepositoryAuth {
       }
 
       print('유저에게 사진 및 프로필 정보를 가져올지 말지 이때 문의 필요');
+
       //setUser(authResult.user);
       //return Future<void>.value();
+      return true;
     } catch (error) {
-      print('error: $error');
+      print('signinWithApple error: ${error}');
       //setUser(null);
-      //return Future<void>.value();
+      if (error.toString().contains('canceled')) {
+        print('Apple 로그인이 사용자에 의해 취소되었습니다.');
+      }
+      return false;
     }
 
   }
 
-  Future<void> kakaoLogin(BuildContext context) async {
-    if (await kakao.isKakaoTalkInstalled()) {
-      print('isKakaoTalkInstalled yes');
-      try {
-        await kakao.UserApi.instance.loginWithKakaoTalk();
-        print('카카오톡으로 로그인 성공1');
-        await kakaoLoginFirebaseRegister(context);
-      } catch (error) {
-        print('카카오톡으로 로그인 실패1 $error');
+  Future<bool> kakaoLogin(BuildContext context) async {
+    try {
 
-        // 사용자가 카카오톡 설치 후 디바이스 권한 요청 화면에서 로그인을 취소한 경우,
-        // 의도적인 로그인 취소로 보고 카카오계정으로 로그인 시도 없이 로그인 취소로 처리 (예: 뒤로 가기)
-        if (error is PlatformException && error.code == 'CANCELED') {
-          return;
+      if (await kakao.isKakaoTalkInstalled()) {
+        print('isKakaoTalkInstalled yes');
+
+        try {
+          await kakao.UserApi.instance.loginWithKakaoTalk();
+          print('카카오톡으로 로그인 성공1');
+          await kakaoLoginFirebaseRegister(context);
+          return true;
+
+        } catch (error) {
+          print('카카오톡으로 로그인 실패1 $error');
+
+          // 사용자가 카카오톡 설치 후 디바이스 권한 요청 화면에서 로그인을 취소한 경우,
+          // 의도적인 로그인 취소로 보고 카카오계정으로 로그인 시도 없이 로그인 취소로 처리 (예: 뒤로 가기)
+          if (error is PlatformException && error.code == 'CANCELED') {
+            print('error is PlatformException && error.code == "CANCELED"');
+            throw Exception(error);
+          }
+          // 카카오톡에 연결된 카카오계정이 없는 경우, 카카오계정으로 로그인
+          try {
+            await kakao.UserApi.instance.loginWithKakaoAccount();
+            print('카카오계정으로 로그인 성공2');
+            await kakaoLoginFirebaseRegister(context);
+            return true;
+
+          } catch (error) {
+            print('카카오계정으로 로그인 실패2 $error');
+            if (error is PlatformException && error.code == 'CANCELED') {
+              print('error is PlatformException && error.code == "CANCELED"');
+            }
+            throw Exception(error);
+          }
         }
-        // 카카오톡에 연결된 카카오계정이 없는 경우, 카카오계정으로 로그인
+      } else {
+        print('isKakaoTalkInstalled NO');
+
         try {
           await kakao.UserApi.instance.loginWithKakaoAccount();
-          print('카카오계정으로 로그인 성공2');
+          print('카카오계정으로 로그인 성공3');
           await kakaoLoginFirebaseRegister(context);
+
+          return true;
+
         } catch (error) {
-          print('카카오계정으로 로그인 실패2 $error');
+          print('카카오계정으로 로그인 실패3 $error');
+          if (error is PlatformException && error.code == 'CANCELED') {
+            print('error is PlatformException && error.code == "CANCELED"');
+          }
+          throw Exception(error);
         }
       }
-    } else {
-      print('isKakaoTalkInstalled NO');
 
-      try {
-        await kakao.UserApi.instance.loginWithKakaoAccount();
-        print('카카오계정으로 로그인 성공3');
-        await kakaoLoginFirebaseRegister(context);
-      } catch (error) {
-        print('카카오계정으로 로그인 실패3 $error');
+    } catch (error) {
+      print('카카오 로그인 $error');
+      if (error is PlatformException && error.code == 'CANCELED') {
+        print('error is PlatformException && error.code == "CANCELED"');
+        return false;
       }
+      return false;
     }
   }
 

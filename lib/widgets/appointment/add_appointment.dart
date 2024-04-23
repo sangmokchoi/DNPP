@@ -1,5 +1,7 @@
+import 'package:bottom_picker/bottom_picker.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dnpp/constants.dart';
+import 'package:dnpp/models/colorType.dart';
 import 'package:dnpp/models/pingpongList.dart';
 import 'package:dnpp/repository/launchUrl.dart';
 import 'package:dnpp/widgets/chart/chart_repeat_appointment.dart';
@@ -11,13 +13,19 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:syncfusion_flutter_calendar/calendar.dart';
 import '../../models/customAppointment.dart';
-
+import '../../models/userProfile.dart';
 import '../../repository/repository_userData.dart';
+import '../../repository/repsitory_appointments.dart';
 import '../../statusUpdate/courtAppointmentUpdate.dart';
 import '../../statusUpdate/personalAppointmentUpdate.dart';
 import '../../statusUpdate/loginStatusUpdate.dart';
 import '../../statusUpdate/profileUpdate.dart';
+import '../../statusUpdate/courtAppointmentUpdate.dart';
+import '../../statusUpdate/personalAppointmentUpdate.dart';
+import '../../statusUpdate/profileUpdate.dart';
+import '../../viewModel/MainScreen_ViewModel.dart';
 import '../chart/chart_repeat_times.dart';
+import 'package:uuid/uuid.dart';
 
 class AddAppointment extends StatefulWidget {
   AddAppointment({required this.userCourt});
@@ -32,7 +40,7 @@ class _AddAppointmentState extends State<AddAppointment> {
   TextEditingController _eventNametextController = TextEditingController();
   TextEditingController _memoTextController = TextEditingController();
 
-  String chosenCourtRoadAddress = '';
+  String chosenCourtRoadAddress = '탁구장을 등록해주세요';
 
   PingpongList? foundCourt;
 
@@ -42,11 +50,27 @@ class _AddAppointmentState extends State<AddAppointment> {
     //setState(() {
       if (isLoading) {
         // 로딩 바를 화면에 표시
+        Future.delayed(Duration(seconds: 3));
         showDialog(
           context: context,
           builder: (context) {
             return Center(
-              child: CircularProgressIndicator(), // 로딩 바 표시
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircularProgressIndicator(),
+                  SizedBox(
+                    height: 20.0,
+                  ),
+                  Text(
+                    '데이터를 업로드하는 중입니다',
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 14.0
+                    ),
+                  ),
+                ],
+              ), // 로딩 바 표시
             );
           },
         );
@@ -58,60 +82,51 @@ class _AddAppointmentState extends State<AddAppointment> {
     //});
   }
 
-  Future<void> refreshData(BuildContext context) async {
-
-      await Provider.of<PersonalAppointmentUpdate>(context, listen: false)
-          .resetMeetings();
-      await Provider.of<PersonalAppointmentUpdate>(context, listen: false)
-          .resetDaywiseDurations();
-      await Provider.of<PersonalAppointmentUpdate>(context, listen: false)
-          .resetHourlyCounts();
-
-      await Provider.of<CourtAppointmentUpdate>(context, listen: false)
-          .resetMeetings();
-      await Provider.of<CourtAppointmentUpdate>(context, listen: false)
-          .resetDaywiseDurations();
-      await Provider.of<CourtAppointmentUpdate>(context, listen: false)
-          .resetHourlyCounts();
-
-  }
-
   @override
   void initState() {
     _eventNametextController.addListener(() {});
     _memoTextController.addListener(() {});
 
-    setState(() {
-      if (Provider.of<ProfileUpdate>(context, listen: false)
+
+    if (Provider.of<ProfileUpdate>(context, listen: false)
+        .userProfile
+        .pingpongCourt!
+        .isNotEmpty) {
+      print('pingpongCourt isNotEmpty');
+
+      foundCourt = Provider.of<ProfileUpdate>(context, listen: false)
           .userProfile
           .pingpongCourt!
-          .isNotEmpty) {
-        print('pingpongCourt isNotEmpty');
+          .first;
+      print('foundCourt: ${foundCourt?.title}');
 
-        foundCourt = Provider.of<ProfileUpdate>(context, listen: false)
-            .userProfile
-            .pingpongCourt!
-            .first;
+      chosenCourtRoadAddress =
+          Provider.of<ProfileUpdate>(context, listen: false)
+              .userProfile
+              .pingpongCourt![0]
+              .roadAddress;
+    } else {
+      print('pingpongCourt isEmpty');
+      print('여기에서 유저 프로필 생성으로 안내 필요');
 
-        chosenCourtRoadAddress =
-            Provider.of<ProfileUpdate>(context, listen: false)
-                .userProfile
-                .pingpongCourt![0]
-                .roadAddress;
-      } else {
-        print('pingpongCourt isEmpty');
-        print('여기에서 유저 프로필 생성으로 안내 필요');
+      chosenCourtRoadAddress = '탁구장을 등록해주세요';
+    }
 
-        chosenCourtRoadAddress = '';
-      }
-    });
+
     super.initState();
   }
+
+  int colorNum = 5;
+  bool colorShows = false;
 
   @override
   void dispose() {
     _eventNametextController.dispose();
     _memoTextController.dispose();
+
+    colorNum = 5;
+
+    //Provider.of<PersonalAppointmentUpdate>(context, listen: false).notifyListeners();
     super.dispose();
   }
 
@@ -121,7 +136,7 @@ class _AddAppointmentState extends State<AddAppointment> {
         Provider.of<LoginStatusUpdate>(defaultContext, listen: false).currentUser;
     return SafeArea(
       child: Scaffold(
-        body: Container(
+        body: SingleChildScrollView(
           child: Padding(
             padding:
                 EdgeInsets.only(left: 20.0, right: 20.0, top: 5.0, bottom: 10.0),
@@ -167,81 +182,106 @@ class _AddAppointmentState extends State<AddAppointment> {
                               alignment: Alignment.centerRight,
                             ),
                             onPressed: () async {
-                              toggleLoading(true, defaultContext);
+                              if (chosenCourtRoadAddress != '탁구장을 등록해주세요' && chosenCourtRoadAddress != '') {
 
-                              Appointment meeting = Appointment(
-                                startTime: Provider.of<PersonalAppointmentUpdate>(
+                                LaunchUrl().alertOkAndCancelFunc(
+                                    context,
+                                    '알림',
+                                    '작성한 내용을 토대로 일정을 저장합니다',
+                                    '취소',
+                                    '확인',
+                                    kMainColor,
+                                    kMainColor, () {
+                                  Navigator.pop(context);
+                                }, () async {
+                                  Navigator.pop(context);
+
+                                  toggleLoading(true, defaultContext);
+
+                                  Appointment meeting = Appointment(
+                                    startTime: Provider
+                                        .of<PersonalAppointmentUpdate>(
                                         defaultContext,
                                         listen: false)
-                                    .fromDate,
-                                endTime: Provider.of<PersonalAppointmentUpdate>(
+                                        .fromDate,
+                                    endTime: Provider
+                                        .of<PersonalAppointmentUpdate>(
                                         defaultContext,
                                         listen: false)
-                                    .toDate,
-                                subject: _eventNametextController.text,
-                                //Provider.of<AppointmentUpdate>(context, listen: false).subject,//
+                                        .toDate,
+                                    subject: _eventNametextController.text,
+                                    //Provider.of<AppointmentUpdate>(context, listen: false).subject,//
 
-                                // color: Provider.of<AppointmentUpdate>(context,
-                                //         listen: false)
-                                //     .color,
+                                    color: Provider
+                                        .of<PersonalAppointmentUpdate>(context,
+                                        listen: false)
+                                        .color,
 
-                                //Provider.of<AppointmentUpdate>(context, listen: false).isLesson,
-                                isAllDay: Provider.of<PersonalAppointmentUpdate>(
+                                    //Provider.of<AppointmentUpdate>(context, listen: false).isLesson,
+                                    id: const Uuid().v4(),
+                                    isAllDay: Provider
+                                        .of<PersonalAppointmentUpdate>(
                                         defaultContext,
                                         listen: false)
-                                    .isAllDay,
-                                notes: _memoTextController.text,
-                                //Provider.of<AppointmentUpdate>(context, listen: false).notes,//
-                                recurrenceRule:
-                                    Provider.of<PersonalAppointmentUpdate>(defaultContext,
-                                            listen: false)
+                                        .isAllDay,
+                                    notes: _memoTextController.text,
+                                    //Provider.of<AppointmentUpdate>(context, listen: false).notes,//
+                                    recurrenceRule:
+                                    Provider
+                                        .of<PersonalAppointmentUpdate>(
+                                        defaultContext,
+                                        listen: false)
                                         .recurrenceRule,
-                              );
+                                  );
 
-                              await Provider.of<PersonalAppointmentUpdate>(defaultContext,
+                                  await Provider.of<PersonalAppointmentUpdate>(
+                                      defaultContext,
                                       listen: false)
-                                  .addMeeting(meeting);
+                                      .addMeeting(meeting);
 
-                              // 여기에서 서버에 일정 등록 필요
-                              final docRef = db
-                                  .collection("Appointments")
-                                  .withConverter(
-                                    fromFirestore: CustomAppointment.fromFirestore,
-                                    toFirestore:
-                                        (CustomAppointment newCustomAppointment,
-                                                options) =>
-                                            newCustomAppointment.toFirestore(),
-                                  )
-                                  .doc();
-
-                              final newCustomAppointment = CustomAppointment(
-                                  appointments: [meeting],
-                                  pingpongCourtName: foundCourt?.title ?? '',
-                                  pingpongCourtAddress:
+                                  final newCustomAppointment = CustomAppointment(
+                                      appointments: [meeting],
+                                      pingpongCourtName: foundCourt?.title ??
+                                          '',
+                                      pingpongCourtAddress:
                                       foundCourt?.roadAddress ?? '',
-                                  userUid: _currentUser.uid);
+                                      userUid: _currentUser.uid);
 
-                              await docRef.set(newCustomAppointment);
-                              print('docRef.set done');
+                                  await RepositoryAppointments().addAppointment(
+                                      newCustomAppointment);
 
-                              await Provider.of<PersonalAppointmentUpdate>(defaultContext,
-                                      listen: false)
-                                  .clear();
+                                    await RepositoryUserData().fetchUserData(
+                                        context).then((value) async {
 
-                              await refreshData(defaultContext).then((value) async {
-                                print('await LoadData().refreshData(context);');
-                                //await LoadData().fetchUserData(context);
-                                await RepositoryUserData().fetchUserData(context).then((value) {
-                                  toggleLoading(false, defaultContext);
+                                      await Provider.of<
+                                          PersonalAppointmentUpdate>(context,
+                                          listen: false)
+                                          .updateChart(0); // 최근 일자 중 최근 7일 클릭한 상태로 변환
 
-                                  setState(() {
-                                    LaunchUrl().alertFunc(context, '알림', '일정이 등록되었습니다', '확인', () {
-                                      Navigator.pop(defaultContext);
+                                      await Provider.of<CourtAppointmentUpdate>(
+                                          context,
+                                          listen: false)
+                                          .updateChart(0); // 최근 일자 중 최근 7일 클릭한 상태로 변환
+
+                                      // await MainScreenViewModel().jumpToChartPageZero();
+
+                                      //setState(() {
+                                      LaunchUrl().alertFunc(
+                                          context, '알림', '일정이 등록되었습니다',
+                                          '확인', () {
+                                        toggleLoading(false, defaultContext);
+                                        Navigator.pop(context);
+                                      });
+
+                                      //});
+
                                     });
-                                  });
 
                                 });
-                              });
+
+                              } else {
+                                LaunchUrl().alertFunc(context, '알림', '탁구장 추가 및 등록이 필요합니다.\n"설정 > 프로필 수정 > 활동 탁구장"에서 추가 및 등록이 가능합니다', '확인', () { Navigator.pop(context); });
+                              }
 
                             },
                           ),
@@ -249,6 +289,7 @@ class _AddAppointmentState extends State<AddAppointment> {
                       ),
                       TextField(
                         controller: _eventNametextController,
+                        //autofocus: true,
                         autocorrect: false,
                         enableSuggestions: false,
                         decoration:
@@ -274,6 +315,7 @@ class _AddAppointmentState extends State<AddAppointment> {
                         ),
                         child: TextField(
                           controller: _memoTextController,
+                          //autofocus: true,
                           autocorrect: false,
                           enableSuggestions: false,
                           decoration: InputDecoration(
@@ -296,6 +338,97 @@ class _AddAppointmentState extends State<AddAppointment> {
                   padding: EdgeInsets.symmetric(vertical: 10.0),
                   child: Column(
                     children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '색상',
+                            style: kAppointmentTextStyle,
+                          ),
+                          Container(
+                            decoration: BoxDecoration(
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.grey.withOpacity(0.5),
+                                  spreadRadius: 1,
+                                  blurRadius: 1,
+                                  offset: Offset(0, 2), // changes position of shadow
+                                ),
+                              ],
+                              shape: BoxShape.circle,
+                            ),
+                            child: GestureDetector(
+                              onTap: (){
+                                setState(() {
+                                  colorShows = !colorShows;
+                                });
+                              },
+                              child: CircleAvatar(
+                                backgroundColor: ColorType().colorList[colorNum],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 5.0,),
+                      AnimatedContainer(
+                        duration: Duration(milliseconds: 250),
+                        // Adjust the duration as needed
+                        height: colorShows ? 50 : 0,
+                        child: SingleChildScrollView(
+                          child: Container(
+                            width: MediaQuery.of(context).size.width,
+                            height: 50,
+                            decoration: BoxDecoration(
+                              color: Colors.transparent.withOpacity(0.05),
+                              borderRadius: BorderRadius.all(
+                                Radius.circular(15),
+                              ),
+                            ),
+                            child: Center(
+                              child: ListView.builder(
+                                scrollDirection: Axis.horizontal,
+                                itemCount: ColorType().colorList.length,
+                                shrinkWrap: true,
+                                itemBuilder: (context, int index) {
+                                  return Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 3.0),
+                                    child: GestureDetector(
+                                      onTap: () async {
+                                        setState(() {
+                                          colorNum = index;
+                                        });
+
+                                        await Provider.of<PersonalAppointmentUpdate>(context, listen: false)
+                                            .updateColor(ColorType().colorList[colorNum]).then((value) => {
+                                        });
+                                      },
+                                      child: Container(
+                                        decoration: BoxDecoration(
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: Colors.grey.withOpacity(0.5),
+                                              spreadRadius: 1,
+                                              blurRadius: 1,
+                                              offset: Offset(0, 2), // changes position of shadow
+                                            ),
+                                          ],
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: CircleAvatar(
+                                          backgroundColor: ColorType().colorList[index],
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                },
+
+                              ),
+                            ),
+                          )
+                        ),
+                      ),
                       Visibility(
                         visible:
                             Provider.of<PersonalAppointmentUpdate>(defaultContext).isAllDay
@@ -344,101 +477,102 @@ class _AddAppointmentState extends State<AddAppointment> {
                                 style: ButtonStyle(
                                   alignment: Alignment.centerRight,
                                 ),
-                                onPressed: () async {
-                                  List<DateTime>? dateTimeList =
-                                      await showOmniDateTimeRangePicker(
-                                    context: defaultContext,
-                                    startInitialDate:
-                                        Provider.of<PersonalAppointmentUpdate>(
-                                                defaultContext,
-                                                listen: false)
-                                            .fromDate,
-                                    startFirstDate: DateTime(2000),
-                                    startLastDate: DateTime.now().add(
-                                      const Duration(days: 10956),
-                                    ),
-                                    endInitialDate:
-                                        Provider.of<PersonalAppointmentUpdate>(
-                                                defaultContext,
-                                                listen: false)
-                                            .toDate,
-                                    endFirstDate: DateTime(2000),
-                                    endLastDate: DateTime.now().add(
-                                      const Duration(days: 10956),
-                                    ),
-                                    is24HourMode: false,
-                                    isShowSeconds: false,
-                                    minutesInterval: 5,
-                                    secondsInterval: 1,
-                                    borderRadius:
-                                        const BorderRadius.all(Radius.circular(16)),
-                                    constraints: const BoxConstraints(
-                                      maxWidth: 350,
-                                      maxHeight: 650,
-                                    ),
-                                    transitionBuilder:
-                                        (context, anim1, anim2, child) {
-                                      return FadeTransition(
-                                        opacity: anim1.drive(
-                                          Tween(
-                                            begin: 0,
-                                            end: 1,
-                                          ),
-                                        ),
-                                        child: child,
-                                      );
-                                    },
-                                    transitionDuration:
-                                        const Duration(milliseconds: 200),
-                                    barrierDismissible: true,
-                                  );
-
-                                  if (dateTimeList != null) {
-                                    print(dateTimeList); // 여기에 시작 시간과 종료시간이 담김
-
-                                    if (dateTimeList.first
-                                        .isAfter(dateTimeList.last)) {
-                                      // 시작일이 종료일보다 느린 상태이므로 에러임.
-                                      print('시작일이 종료일보다 느린 상태이므로 에러임');
-
-                                      showDialog(
-                                          context: defaultContext,
-                                          builder: (context) {
-                                            return AlertDialog(
-                                              insetPadding: EdgeInsets.only(
-                                                  left: 10.0, right: 10.0),
-                                              shape: kRoundedRectangleBorder,
-                                              content: Text('시작일은 종료일보다 늦어야 합니다'),
-                                              actions: [
-                                                TextButton(
-                                                  onPressed: () {
-                                                    Navigator.pop(context);
-                                                  },
-                                                  child: Text('확인'),
-                                                )
-                                              ],
-                                            );
-                                          });
-                                    } else {
-                                      print('시작일이 종료일보다 빠린 상태이므로 에러 아님');
-                                      Provider.of<PersonalAppointmentUpdate>(
-                                              defaultContext,
-                                              listen: false)
-                                          .updateFromDate(dateTimeList.first);
-                                      Provider.of<PersonalAppointmentUpdate>(
-                                              defaultContext,
-                                              listen: false)
-                                          .updateToDate(dateTimeList.last);
-                                    }
-                                  } else {
-                                    // dateTimeList가 null인 경우에 대한 오류 처리
-                                    print('No date/time selected.');
-                                  }
-                                },
                                 child: Text(
                                   '변경',
                                   style: kAppointmentTextButtonStyle,
                                 ),
+                                  onPressed: () async { // ok 버튼 클릭시
+
+                                    List<DateTime>? dateTimeList =
+                                    await showOmniDateTimeRangePicker(
+                                      context: defaultContext,
+                                      startInitialDate:
+                                      Provider.of<PersonalAppointmentUpdate>(
+                                          defaultContext,
+                                          listen: false)
+                                          .fromDate,
+                                      startFirstDate: DateTime(2000),
+                                      startLastDate: DateTime.now().add(
+                                        const Duration(days: 10956),
+                                      ),
+                                      endInitialDate:
+                                      Provider.of<PersonalAppointmentUpdate>(
+                                          defaultContext,
+                                          listen: false)
+                                          .toDate,
+                                      endFirstDate: DateTime(2000),
+                                      endLastDate: DateTime.now().add(
+                                        const Duration(days: 10956),
+                                      ),
+                                      is24HourMode: false,
+                                      isShowSeconds: false,
+                                      minutesInterval: 5,
+                                      secondsInterval: 1,
+                                      borderRadius:
+                                      const BorderRadius.all(Radius.circular(16)),
+                                      constraints: const BoxConstraints(
+                                        maxWidth: 350,
+                                        maxHeight: 650,
+                                      ),
+                                      transitionBuilder:
+                                          (context, anim1, anim2, child) {
+                                        return FadeTransition(
+                                          opacity: anim1.drive(
+                                            Tween(
+                                              begin: 0,
+                                              end: 1,
+                                            ),
+                                          ),
+                                          child: child,
+                                        );
+                                      },
+                                      transitionDuration:
+                                      const Duration(milliseconds: 200),
+                                      barrierDismissible: true,
+                                    );
+
+                                    if (dateTimeList != null) {
+                                      print(dateTimeList); // 여기에 시작 시간과 종료시간이 담김
+
+                                      if (dateTimeList.first
+                                          .isAfter(dateTimeList.last)) {
+                                        // 시작일이 종료일보다 느린 상태이므로 에러임.
+                                        print('시작일이 종료일보다 느린 상태이므로 에러임');
+
+                                        showDialog(
+                                            context: defaultContext,
+                                            builder: (context) {
+                                              return AlertDialog(
+                                                insetPadding: EdgeInsets.only(
+                                                    left: 10.0, right: 10.0),
+                                                shape: kRoundedRectangleBorder,
+                                                content: Text('시작일은 종료일보다 늦어야 합니다'),
+                                                actions: [
+                                                  TextButton(
+                                                    onPressed: () {
+                                                      Navigator.pop(context);
+                                                    },
+                                                    child: Text('확인'),
+                                                  )
+                                                ],
+                                              );
+                                            });
+                                      } else {
+                                        print('시작일이 종료일보다 빠린 상태이므로 에러 아님');
+                                        Provider.of<PersonalAppointmentUpdate>(
+                                            defaultContext,
+                                            listen: false)
+                                            .updateFromDate(dateTimeList.first);
+                                        Provider.of<PersonalAppointmentUpdate>(
+                                            defaultContext,
+                                            listen: false)
+                                            .updateToDate(dateTimeList.last);
+                                      }
+                                    } else {
+                                      // dateTimeList가 null인 경우에 대한 오류 처리
+                                      print('No date/time selected.');
+                                    }
+                                  },
                               ),
                             ],
                           ),
@@ -473,38 +607,49 @@ class _AddAppointmentState extends State<AddAppointment> {
                           ),
                           DropdownButtonHideUnderline(
                             child: DropdownButton(
-                              value: (chosenCourtRoadAddress != '') ? chosenCourtRoadAddress : null,
-                              items: (chosenCourtRoadAddress != '')
+                              padding: EdgeInsets.symmetric(horizontal: 8.0),
+                              value: (chosenCourtRoadAddress != '탁구장을 등록해주세요') ? chosenCourtRoadAddress : null,
+                              items: (chosenCourtRoadAddress != '탁구장을 등록해주세요')
                                   ? Provider.of<ProfileUpdate>(defaultContext, listen: false)
                                       .userProfile
                                       .pingpongCourt
                                       ?.map((element) => DropdownMenuItem(
                                             value: element.roadAddress,
-                                            child: Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                Text(
-                                                  element.title,
-                                                  style: kAppointmentCourtTextButtonStyle,
-                                                ),
-                                                Text(
-                                                  element.roadAddress,
-                                                  style: kAppointmentCourtTextButtonStyle
-                                                      .copyWith(
-                                                    fontSize: 10.0,
+                                            child: ConstrainedBox(
+                                                constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.7),
+                                                child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  Text(
+                                                    element.title,
+                                                    style: kAppointmentCourtTextButtonStyle,
+                                                    overflow: TextOverflow.ellipsis,
                                                   ),
-                                                ),
-                                              ],
+                                                  Text(
+                                                    element.roadAddress,
+                                                    style: kAppointmentCourtTextButtonStyle
+                                                        .copyWith(
+                                                      fontSize: 8.0,
+                                                      overflow: TextOverflow.fade
+                                                    ),
+                                                    overflow: TextOverflow.ellipsis,
+                                                  ),
+                                                ],
+                                              ),
                                             ),
                                           ))
                                       .toList()
                                   : [
                                       DropdownMenuItem(
                                         value: chosenCourtRoadAddress,
-                                        child: Text(
-                                          chosenCourtRoadAddress,
-                                          style: kAppointmentTextButtonStyle,
+                                        child: ConstrainedBox(
+                                          constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.7),
+                                          child: Text(
+                                            chosenCourtRoadAddress,
+                                            style: kAppointmentTextButtonStyle,
+                                              overflow: TextOverflow.fade
+                                          ),
                                         ),
                                       ),
                                     ],
@@ -523,6 +668,7 @@ class _AddAppointmentState extends State<AddAppointment> {
                                           chosenCourtRoadAddress);
                                 });
                               },
+
                             ),
                           ),
                         ],
@@ -553,7 +699,7 @@ class _AddAppointmentState extends State<AddAppointment> {
                             '반복',
                             style: kAppointmentTextStyle,
                           ),
-                          RepeatAppointment(),
+                          RepeatAppointment(editAppointment: true),
                         ],
                       ),
                       Visibility(
