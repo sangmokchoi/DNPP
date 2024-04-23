@@ -6,6 +6,10 @@ import '../../statusUpdate/personalAppointmentUpdate.dart';
 
 class RepeatAppointment extends StatelessWidget {
 
+  RepeatAppointment({required this.editAppointment});
+
+  bool editAppointment;
+
   @override
   Widget build(BuildContext context) {
     return TextButton(
@@ -116,7 +120,7 @@ class RepeatAppointment extends StatelessWidget {
       child: Text(
         Provider.of<PersonalAppointmentUpdate>(context, listen: false)
             .repeatString,
-        style: kAppointmentTextButtonStyle,
+        style: editAppointment ? kAppointmentTextButtonStyle : kAppointmentTextButtonStyle.copyWith(color: Colors.grey),
       ),
     );
   }

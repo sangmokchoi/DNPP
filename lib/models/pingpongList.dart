@@ -21,6 +21,17 @@ class PingpongList {
   final double mapx;
   final double mapy;
 
+  static PingpongList emptyPingpongList = PingpongList(
+     title: '',
+    link: '',
+    description: '',
+    telephone: '',
+    address: '',
+    roadAddress: '',
+    mapx: 0.0,
+    mapy: 0.0,
+  );
+
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||

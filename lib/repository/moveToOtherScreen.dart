@@ -1,9 +1,14 @@
 
 import 'dart:ffi';
 
+import 'package:dnpp/models/userProfile.dart';
+import 'package:dnpp/repository/repository_userData.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:persistent_bottom_nav_bar/persistent_tab_view.dart';
 
+import '../constants.dart';
 import '../view/chatList_Screen.dart';
 import '../view/chat_screen.dart';
 
@@ -51,9 +56,204 @@ class MoveToOtherScreen {
     return PersistentNavBarNavigator.pushNewScreen(
       context,
       screen: screen,
-      withNavBar: withNavBar,
-      // OPTIONAL VALUE. True by default.
+      withNavBar: withNavBar,    // OPTIONAL VALUE. True by default.
+
       pageTransitionAnimation: animation,
+    );
+  }
+
+  void bottomProfileUp(BuildContext context, String uid) {
+    // data = types.User
+
+    print('bottomProfileUp data: $uid');
+    //getOneUserData
+
+    showModalBottomSheet<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return StreamBuilder(
+            stream: RepositoryUserData().getOneUserData(uid),//FirebaseFirestore.instance.collection('users').doc(data['id']).snapshots(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return Center(child: kCustomCircularProgressIndicator); // 데이터 로딩 중에는 로딩 스피너 표시
+            } else if (snapshot.hasError) {
+              return Text('Error: ${snapshot.error}'); // 에러가 있는 경우 에러 메시지 표시
+            } else if (!snapshot.hasData) {
+              return Center(child: Text('User not found')); // 데이터가 없는 경우 메시지 표시
+            } else {
+              var docs = snapshot.data?.docs;
+              final snapshotData = docs?.first.data();
+              print('snapshotData: ${snapshotData}');
+
+              return Stack(
+                children: [
+                  Container(
+                    height: 275,
+                    padding: EdgeInsets.fromLTRB(20.0, 15.0, 20.0, 15.0),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          children: [
+                            Container(
+                              width: 80,
+                              height: 80,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.all(
+                                    Radius.circular(50.0)),
+                                image: DecorationImage(
+                                  fit: BoxFit.cover,
+                                  image: NetworkImage(
+                                      snapshotData?['photoUrl']) as ImageProvider<Object>,// ['imageUrl']) as ImageProvider<Object>,
+                                ), //가져온 이미지를 화면에 띄워주는 코드
+                              ),
+                            ),
+                            //SizedBox(width: 5.0,),
+                            Padding(
+                              padding: const EdgeInsets.only(right: 15.0),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    snapshotData?['nickName'],
+                                    style: TextStyle(
+                                        fontSize: 20.0, fontWeight: FontWeight.bold),
+                                  ),
+                                  // Text(
+                                  //   snapshotData?['email'],
+                                  //   style: TextStyle(
+                                  //       fontSize: 16.0, fontWeight: FontWeight.normal),
+                                  // ),
+                                  SizedBox(
+                                    height: 5.0,
+                                  ),
+                                  Column(
+                                    mainAxisAlignment: MainAxisAlignment.start,
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        '연령대: ${snapshotData?['ageRange']}',
+                                        style: TextStyle(
+                                            fontSize: 14.0, fontWeight: FontWeight.normal),
+                                      ),
+                                      //SizedBox(width: 5.0,),
+                                      Text(
+                                        '성별: ${snapshotData?['gender']}',
+                                        style: TextStyle(
+                                            fontSize: 14.0, fontWeight: FontWeight.normal),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        Column(
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('특징', style: TextStyle(fontSize: 14.0),),
+                                SizedBox(
+                                  height: 3.0,
+                                ),
+                                SizedBox(
+                                  height: 35.0,
+                                  child: ListView.builder(
+                                    scrollDirection: Axis.horizontal,
+                                    itemCount: 4,
+                                    itemBuilder: (context, index) {
+                                      final features = [
+                                        '플레이스타일: ${snapshotData?['playStyle']}',
+                                        '경력: ${snapshotData?['playedYears']}',
+                                        '라켓: ${snapshotData?['racket']}',
+                                        '러버: ${snapshotData?['rubber']}',
+                                      ];
+
+                                      return Container(
+                                        height: 30,
+                                        margin: EdgeInsets.only(right: 7.0),
+                                        padding: EdgeInsets.symmetric(horizontal: 10.0, vertical: 5.0),
+                                        decoration: BoxDecoration(
+                                          border: Border.all(color: kMainColor),
+                                          borderRadius: BorderRadius.circular(20.0),
+                                        ),
+                                        child: Text(
+                                          features[index],
+                                          style: TextStyle(fontSize: 14.0, fontWeight: FontWeight.normal, color: Theme.of(context).colorScheme.primary),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ],
+                            ),
+                            SizedBox(
+                              height: 10,
+                            ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  '활동 지역', style: TextStyle(fontSize: 14.0),
+                                ),
+                                SizedBox(
+                                  height: 3.0,
+                                ),
+                                SizedBox(
+                                  height: 35,
+                                  child: ListView.builder(
+                                    scrollDirection: Axis.horizontal,
+                                    shrinkWrap: true,
+                                    itemCount: snapshotData?['address'].length,
+                                    itemBuilder: (context, index) {
+                                      return Container(
+                                        height: 30,
+                                        margin: EdgeInsets.only(right: 7.0),
+                                        padding: EdgeInsets.only(left: 10.0, right: 10.0, top: 5.0, bottom: 5.0),
+                                        decoration: BoxDecoration(
+                                          border:
+                                          Border.all(color: Theme.of(context).colorScheme.primary),
+                                          borderRadius:
+                                          BorderRadius.circular(20.0),
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            Text(
+                                              snapshotData?['address'][index],
+                                              style:
+                                              TextStyle(fontSize: 14.0, color: Theme.of(context).colorScheme.primary),
+                                            ),
+                                          ],
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  Positioned(
+                    top: 5.0,
+                      right: 1.0,
+                      child: IconButton(
+                          onPressed: (){
+                            Navigator.pop(context);
+                          },
+                          icon: Icon(Icons.close, color: Colors.grey,),),),
+                ],
+              );
+            }
+          }
+        );
+      },
     );
   }
 

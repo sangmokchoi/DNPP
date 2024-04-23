@@ -1,4 +1,6 @@
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -6,8 +8,14 @@ import 'package:syncfusion_flutter_calendar/calendar.dart';
 
 import '../constants.dart';
 import '../models/customAppointment.dart';
+import '../statusUpdate/loginStatusUpdate.dart';
 
 class CalendarScreenViewModel extends ChangeNotifier {
+
+  FirebaseFirestore db = FirebaseFirestore.instance;
+  FirebaseAuth auth = FirebaseAuth.instance;
+
+  List<Appointment> appointments = [];
 
   final List<String> _list = ['전체', '월', '주', '일'];
 
@@ -17,10 +25,10 @@ class CalendarScreenViewModel extends ChangeNotifier {
         borderRadius: BorderRadius.circular(30),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.3),
+            color: Theme.of(context).colorScheme.secondary,
             //spreadRadius: 5,
-            blurRadius: 5,
-            offset: Offset(0, 3), // changes position of shadow
+            blurRadius: 1,
+            offset: Offset(0, 2), // changes position of shadow
           ),
         ],
       ),
@@ -29,7 +37,7 @@ class CalendarScreenViewModel extends ChangeNotifier {
           ButtonSegment<String>(
               value: _list[0],
               label: Text(_list[0]),
-              icon: Icon(Icons.schedule)),
+              icon: Icon(Icons.calendar_today_rounded)),// icon: Icon(Icons.schedule)),
           ButtonSegment<String>(
               value: _list[1],
               label: Text(_list[1]),
@@ -51,13 +59,12 @@ class CalendarScreenViewModel extends ChangeNotifier {
 
           await updateSegmentedButtonTitle(newSelection.first);
           await updateCalendarView(newSelection.first);
-          notifyListeners();
+          //notifyListeners();
         },
         style: ButtonStyle(
           textStyle: MaterialStateProperty.all<TextStyle>(
             TextStyle(
-              fontSize: 16, // Adjust the font size as needed
-              // Other text style properties...
+              fontSize: 16,
             ),
           ),
           //backgroundColor: MaterialStateProperty.all(Colors.blue),
@@ -68,7 +75,7 @@ class CalendarScreenViewModel extends ChangeNotifier {
                   return kMainColor;
                 }
                 // Default text color for unselected state
-                return Colors.grey;
+                return Theme.of(context).colorScheme.secondary;
               }),
           foregroundColor: MaterialStateProperty.all(Colors.white),
           elevation: MaterialStateProperty.all(8),
@@ -114,4 +121,69 @@ class CalendarScreenViewModel extends ChangeNotifier {
     }
     notifyListeners();
   }
+
+  Future<void> notify() async {
+    notifyListeners();
+    print('notify');
+  }
+
+  Future<void> resetAppointments() async {
+    appointments.clear();
+    notifyListeners();
+  }
+
+  Stream<List<Appointment>> calendarListener(BuildContext context) {
+
+    print('calendarListener 진입');
+
+    final currentUser = auth.currentUser;
+
+    if (currentUser != null) {
+    // if (Provider
+    //     .of<LoginStatusUpdate>(context, listen: false)
+    //     .currentUser != null) {
+      final docRef = db.collection("Appointments").where("userUid",
+          isEqualTo: currentUser.uid);
+
+      return docRef.snapshots().map((snapshot) {
+
+        // List<Appointment>
+        appointments = [];
+
+        snapshot.docs.forEach((doc) {
+          Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+
+          // 예약된 모든 약속을 가져와서 리스트에 추가합니다.
+          List<dynamic> appointmentsData = data['appointments'];
+
+          appointmentsData.forEach((appointmentData) {
+
+            List<DateTime> recurrenceExceptionDates = (appointmentData['recurrenceExceptionDates'] as List<dynamic>?)
+                ?.cast<Timestamp>()
+                ?.map((timestamp) => timestamp.toDate())
+                ?.toList() ?? [];
+
+            Appointment appointment = Appointment(
+              startTime: appointmentData['startTime'].toDate(),
+              endTime: appointmentData['endTime'].toDate(),
+              isAllDay: appointmentData['isAllDay'] as bool,
+              id: appointmentData['id'] as Object?,
+              color: Color(appointmentData['color']).withOpacity(1),
+              notes: appointmentData['notes'] as String,
+              recurrenceId: appointmentData['recurrenceId'] as String?,
+              recurrenceRule: appointmentData['recurrenceRule'] as String?,
+              subject: appointmentData['subject'] as String,
+              recurrenceExceptionDates: recurrenceExceptionDates,//appointmentData['recurrenceExceptionDates'] as List<DateTime>?,
+            );
+            appointments.add(appointment);
+          });
+
+        });
+        return appointments;
+      });
+    } else {
+      return Stream.empty();
+    }
+  }
+
 }

@@ -9,79 +9,53 @@ import '../../statusUpdate/othersPersonalAppointmentUpdate.dart';
 import '../../statusUpdate/personalAppointmentUpdate.dart';
 
 class MainLineChart extends StatelessWidget {
-  MainLineChart({required this.isCourt, required this.isMine});
 
-  //final int index; //0이면 나의 훈련시간
-  final bool isCourt;
-  bool isMine;
+  MainLineChart({required this.number});
+
+  final int number;
+
+  late dynamic basicData;
+
+  late PersonalAppointmentUpdate personalData; // CurrentUser 데이터
+  late CourtAppointmentUpdate courtData; // 탁구장 별 데이터
+  late OthersPersonalAppointmentUpdate othersPersonalData; // 다른 유저의 데이터
 
   @override
   Widget build(BuildContext context) {
-    //print('MainLineChart isMine: $isMine');
+
+    basicData = null;
+
+    if (number == 1) {
+      basicData = Provider.of<CourtAppointmentUpdate>(context, listen: false);
+    } else if (number == 2) {
+      basicData =
+          Provider.of<OthersPersonalAppointmentUpdate>(context, listen: false);
+    } else {
+      basicData = Provider.of<PersonalAppointmentUpdate>(context, listen: false);
+    }
+    print('line number: $number');
+    print('line basicData.hourlyCounts: ${basicData.hourlyCounts}');
+
     return Padding(
-      padding: const EdgeInsets.only(top: 4.0, bottom: 4.0, left: 5.0, right: 5.0),
+      padding:
+          const EdgeInsets.only(top: 4.0, bottom: 4.0, left: 5.0, right: 5.0),
       child: Container(
         height: 100,
         child: Align(
-          alignment: Alignment.bottomCenter,
-          child: Stack(children: [
-            FutureBuilder(
-              future: Future.delayed(Duration(milliseconds: 0)),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.done) {
-                  if (isCourt) {
-
-                    if (Provider.of<CourtAppointmentUpdate>(context, listen: false)
-                        .courtHourlyCounts //personalHourlyCounts
-                        .isEmpty) {
-                      return Center(
-                        child: Text(
-                          '완료된 일정이 없습니다',
-                          //style: TextStyle(color: Colors.black),
-                        ),
-                      );
-                    }
-
-                    else {
-                      return LineChart(mainLineChartDataCourt(context));
-                    }
-
-                  } else {
-
-                    if (Provider.of<PersonalAppointmentUpdate>(context, listen: false)
-                        .personalHourlyCounts
-                        .isEmpty) {
-                      return Center(
-                        child: Text(
-                          '완료된 개인 일정이 없습니다',
-                          //style: TextStyle(color: Colors.black),
-                        ),
-                      );
-                    } else {
-                      if (isMine == true) { // 유저 본인의 개인 일정인 경우
-                        return LineChart(mainLineChartDataPersonal(context));
-                      } else { // 다른 유저의 개인 일정인 경우
-                        return LineChart(mainLineChartDataPersonal(context));
-                      }
-                    }
-                  }
-
-                } else {
-                  // 로딩 상태 등을 표시하거나 다른 처리를 할 수 있습니다.
-                  return const Center(
-                      child: CircularProgressIndicator(
-                        color: Colors.grey,
-                      ));
-                }
-              },
-            ),
-          ]),
-        ),
+            alignment: Alignment.bottomCenter,
+            child: (basicData.hourlyCounts.isEmpty)
+                ? Center(
+                    child: Text(
+                      '등록된 일정이 없습니다',
+                      //style: TextStyle(color: Colors.black),
+                    ),
+                  )
+                : LineChart(mainLineChartData(context))),
       ),
     );
   }
 
-  LineChartData mainLineChartDataCourt(BuildContext context) {
+  LineChartData mainLineChartData(BuildContext context) {
     return LineChartData(
       gridData: FlGridData(
         show: true,
@@ -121,12 +95,10 @@ class MainLineChart extends StatelessWidget {
       minX: 0,
       maxX: 23,
       minY: 0,
-      maxY: Provider.of<CourtAppointmentUpdate>(context, listen: false)
-                  .calculateAverageY() *
-              1.5,
+      maxY: basicData.calculateAverageY() * 1.5,
       lineBarsData: [
         LineChartBarData(
-          spots: showingGroupsCourt(context),
+          spots: showingGroups(context),
           isCurved: true,
           barWidth: 2,
           curveSmoothness: 0.1,
@@ -158,111 +130,12 @@ class MainLineChart extends StatelessWidget {
     );
   }
 
-  LineChartData mainLineChartDataPersonal(BuildContext context) {
-    return LineChartData(
-      gridData: FlGridData(
-        show: true,
-        drawVerticalLine: true,
-        getDrawingHorizontalLine: (value) {
-          return const FlLine(
-            color: Colors.transparent,
-            strokeWidth: 1,
-          );
-        },
-        getDrawingVerticalLine: (value) {
-          return const FlLine(
-            color: Colors.transparent,
-            strokeWidth: 1,
-          );
-        },
-      ),
-      lineTouchData: const LineTouchData(enabled: false),
-      titlesData: FlTitlesData(
-        show: true,
-        leftTitles: const AxisTitles(
-            sideTitles: SideTitles(reservedSize: 44, showTitles: false)),
-        rightTitles: const AxisTitles(
-            sideTitles: SideTitles(reservedSize: 44, showTitles: false)),
-        topTitles: const AxisTitles(
-            sideTitles: SideTitles(reservedSize: 44, showTitles: false)),
-        bottomTitles: AxisTitles(
-            sideTitles: SideTitles(
-                reservedSize: 25,
-                showTitles: true,
-                getTitlesWidget: bottomTitleWidgets)),
-      ),
-      borderData: FlBorderData(
-        show: false,
-        border: Border.all(color: const Color(0xff37434d), width: 1),
-      ),
-      minX: 0,
-      maxX: 23,
-      minY: 0,
-      maxY: isMine ?
-        Provider.of<PersonalAppointmentUpdate>(context, listen: false)
-          .calculateAverageY() *
-          1.5 :
-      Provider.of<OthersPersonalAppointmentUpdate>(context, listen: false)
-          .calculateAverageY() *
-          1.5
-      ,
-      lineBarsData: [
-        LineChartBarData(
-          spots: showingGroupsPersonal(context),
-          isCurved: true,
-          barWidth: 2,
-          curveSmoothness: 0.1,
-          isStrokeCapRound: true,
-          dotData: FlDotData(
-            show: true,
-            getDotPainter: (spot, percent, barData, index) {
-              return FlDotCirclePainter(
-                color: kMainColor,
-                radius: 2.5,
-                strokeWidth: 3.0,
-                strokeColor: Colors.transparent,
-              );
-            },
-          ),
-          belowBarData: BarAreaData(
-            show: true,
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                kMainColor.withOpacity(0.5),
-                kMainColor.withOpacity(0.1),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  List<FlSpot> showingGroupsPersonal(BuildContext context) => List.generate(
+  List<FlSpot> showingGroups(BuildContext context) => List.generate(
         24,
         (i) {
           return FlSpot(
               i.toDouble(),
-              isMine ?
-              Provider.of<PersonalAppointmentUpdate>(context, listen: false)
-                      .personalHourlyCounts[i] ??
-                  0.0 :
-              Provider.of<OthersPersonalAppointmentUpdate>(context, listen: false)
-                  .personalHourlyCounts[i] ??
-                  0.0
-          );
-        },
-      );
-
-  List<FlSpot> showingGroupsCourt(BuildContext context) => List.generate(
-        24,
-        (i) {
-          return FlSpot(
-              i.toDouble(),
-              Provider.of<CourtAppointmentUpdate>(context, listen: false)
-                      .courtHourlyCounts[i] ??
+              basicData.hourlyCounts[i] ??
                   0.0);
         },
       );
