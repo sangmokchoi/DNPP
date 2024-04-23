@@ -1,6 +1,9 @@
 import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:dnpp/LocalDataSource/firebase_fireStore/DS_Local_appointments.dart';
+import 'package:dnpp/repository/firebase_firestore_appointments.dart';
+import 'package:dnpp/repository/firebase_firestore_userData.dart';
 import 'package:dnpp/statusUpdate/profileUpdate.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -11,9 +14,7 @@ import '../constants.dart';
 import '../models/customAppointment.dart';
 import '../models/pingpongList.dart';
 import '../models/userProfile.dart';
-import '../repository/chatBackgroundListen.dart';
-import '../repository/repository_userData.dart';
-import '../repository/repsitory_appointments.dart';
+import '../LocalDataSource/firebase_fireStore/DS_Local_userData.dart';
 import '../statusUpdate/othersPersonalAppointmentUpdate.dart';
 
 class MatchingScreenViewModel extends ChangeNotifier {
@@ -285,13 +286,13 @@ class MatchingScreenViewModel extends ChangeNotifier {
   Stream<QuerySnapshot<Map<String, dynamic>>> appointmentsStream = Stream.empty();
 
   Future<void> updateUsersNeighborhoodStream(String value) async {
-    usersNeighborhoodStream = RepositoryUserData().constructNeighborhoodUsersStream(value);
+    usersNeighborhoodStream = RepositoryFirestoreUserData().getConstructNeighborhoodUsersStream(value);
     //notifyListeners();
     //return;
   }
 
   Future<void> updateUsersCourtStream(PingpongList value) async {
-    usersCourtStream = RepositoryUserData().constructCourtUsersStream(value);
+    usersCourtStream = RepositoryFirestoreUserData().getConstructCourtUsersStream(value);
     //notifyListeners();
     //return;
   }
@@ -310,7 +311,7 @@ class MatchingScreenViewModel extends ChangeNotifier {
     similarUsersCourtSubscription = similarUsersCourtStream.listen((data) { });
     usersNeighborhoodSubscription = usersNeighborhoodStream.listen((data) { });
 
-    appointmentsStream = RepositoryAppointments().allAppointments(); // usersCourtStream;//
+    appointmentsStream = RepositoryFirestoreAppointments().getAllAppointments(); // usersCourtStream;//
     appointmentsSubscription = appointmentsStream.listen((data) {
       print('appointmentsStream 시작');
       for (var doc in data.docs) {
@@ -365,7 +366,7 @@ class MatchingScreenViewModel extends ChangeNotifier {
       print('if (currentUserProfile != null) {');
 
       usersCourtStream =
-          RepositoryUserData().usersCourtStream(currentUserProfile);
+          RepositoryFirestoreUserData().getUsersCourtStream(currentUserProfile);
 
       // if (currentUserProfile.pingpongCourt!.isNotEmpty) {
       //   print(' if (currentUserProfile.pingpongCourt!.isNotEmpty) {');
@@ -377,7 +378,7 @@ class MatchingScreenViewModel extends ChangeNotifier {
       if (currentUserProfile.address.isNotEmpty) {
         print('if (currentUserProfile.address.isNotEmpty) {');
         usersNeighborhoodStream =
-            RepositoryUserData().usersNeighborhoodStream(currentUserProfile);
+            RepositoryFirestoreUserData().getUsersNeighborhoodStream(currentUserProfile);
         //updateUsersNeighborhoodStream(currentUserProfile.address.first);
         // 첫 동네 이름으로 세팅
       }

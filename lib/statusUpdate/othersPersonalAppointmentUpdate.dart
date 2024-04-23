@@ -475,7 +475,7 @@ class OthersPersonalAppointmentUpdate extends ChangeNotifier {
 
     }
     print('others personl daywiseDurationsCalculate 이제 시작');
-    print('newMeetings: $newMeetings');
+    //print('newMeetings: $newMeetings');
 
     resetDaywiseDurations();
 

@@ -1,8 +1,22 @@
+import 'dart:convert';
 import 'dart:io';
+
+import 'package:dnpp/statusUpdate/googleAnalytics.dart';
+import 'package:dnpp/statusUpdate/CurrentPageProvider.dart';
+import 'package:dnpp/view/chat_screen.dart';
+import 'package:dnpp/view/home_screen.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:firebase_remote_config/firebase_remote_config.dart';
+import 'package:flutter_app_badger/flutter_app_badger.dart';
+import 'package:http/http.dart' as http;
+// import 'package:html/dom.dart';
+// import 'package:html/dom_parsing.dart';
+// import 'package:html/html_escape.dart';
+// import 'package:html/parser.dart';
+
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:dnpp/constants.dart';
-import 'package:dnpp/repository/chatBackgroundListen.dart';
-import 'package:dnpp/repository/launchUrl.dart';
-import 'package:dnpp/repository/moveToOtherScreen.dart';
+
 import 'package:dnpp/view/chatList_Screen.dart';
 import 'package:dnpp/view/loading_screen.dart';
 import 'package:dnpp/viewModel/CalendarScreen_ViewModel.dart';
@@ -36,7 +50,12 @@ import 'package:persistent_bottom_nav_bar/persistent_tab_view.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_naver_map/flutter_naver_map.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'LocalDataSource/firebase_realtime/users/DS_Local_FCMToken.dart';
+import 'LocalDataSource/firebase_realtime/users/DS_Local_badge.dart';
+import 'LocalDataSource/firebase_realtime/users/DS_Local_isUserInApp.dart';
 import 'firebase_options.dart';
+import 'models/moveToOtherScreen.dart';
 import 'norification.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -110,6 +129,9 @@ Future<void> setupFlutterNotifications() async {
             'high_importance_channel',
             'high_importance_notification',
             importance: Importance.max,
+            priority: Priority.max,
+            showWhen: false,
+
           ),
         ),
       );
@@ -139,6 +161,7 @@ Future<void> getToken() async {
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  print('백그라운드 _firebaseMessagingBackgroundHandler');
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
@@ -147,8 +170,8 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 }
 
 /// fcm 전경 처리 - 로컬 알림 보이기
-//@pragma('vm:entry-point')
-void showFlutterNotification(RemoteMessage message) {
+@pragma('vm:entry-point')
+void showFlutterNotification(RemoteMessage message) async {
   channel = const AndroidNotificationChannel(
     'high_importance_channel', // id
     'High Importance Notifications', // title
@@ -163,14 +186,13 @@ void showFlutterNotification(RemoteMessage message) {
       presentSound: true,
       badgeNumber: 1);
 
+  print('Message: ${message}');
   print('Message data: ${message.data}');
   print('Message messageId: ${message.messageId}');
   print('Message mutableContent: ${message.mutableContent}');
   print('Message category: ${message.category}');
   print('Message from: ${message.from}');
-  print('Message data: ${message.data}');
   print('Message hashCode: ${message.hashCode}');
-
   print('Message notification: ${message.notification}');
   print(
       'Message notification title: ${message.notification?.title}'); // 콘솔에서 보낸 메시지의 제목
@@ -179,9 +201,14 @@ void showFlutterNotification(RemoteMessage message) {
 
   RemoteNotification? notification = message.notification;
   AndroidNotification? android = message.notification?.android;
+
   print('notification: $notification');
-  print('notification apple: ${notification?.apple}');
+
+  print('notification apple?.badge: ${notification?.apple?.badge}');
+  print('notification apple?.subtitle: ${notification?.apple?.subtitle}');
+  print('notification apple?.imageUrl: ${notification?.apple?.imageUrl}');
   print('android: $android');
+
 
   //notification != null 이면 ios
   //notification == null android
@@ -204,42 +231,76 @@ void showFlutterNotification(RemoteMessage message) {
   //   );
   // }
 
+  if (isChatScreenActive) {
+    print('isChatScreenActive: $isChatScreenActive');
+  } else {
+    print('isChatScreenActive: $isChatScreenActive');
+  }
+
   if (notification?.apple == null) {
     // 안드로이드인 경우,
     print('안드로이드인 경우');
+
+    final myCurrentBadge = await LocalDSBadge().downloadMyBadge();
+    print('노티 수신 myCurrentBadge: $myCurrentBadge');
+    await LocalDSBadge().updateMyBadge(myCurrentBadge);
+
     flutterLocalNotificationsPlugin.show(
       message.hashCode,
       message.data['title'],
       message.data['body'],
-      NotificationDetails(
-        android: AndroidNotificationDetails(channel.id, channel.name,
-            channelDescription: channel.description,
-            // TODO add a proper drawable resource to android, for now using
-            //      one that already exists in example app.
-            icon: null //'launch_background',
+      const NotificationDetails(
+        android: AndroidNotificationDetails(
+          'ID',//channel.id,
+          '핑퐁플러스',//channel.name,
+          channelDescription: 'Pingpong Plus', //channelDescription: channel.description,
+            icon: null, //'launch_background',
+          //importance: Importance.max,
+          importance: Importance.high,
+          //priority: Priority.max,
+          //showWhen: false,
             ),
+        // android: AndroidNotificationDetails(
+        //   'high_importance_channel',
+        //   'high_importance_notification',
+        //   importance: Importance.max,
+        //   priority: Priority.max,
+        //   showWhen: false,
+        // ),
       ),
     );
   }
-  // if (notification?.apple != null) { // ios 인 경우 *** ios 인 경우에는 별도로 .show를 하지 않아도 알아서 노티를 수신함 ***
-  //   print('ios인 경우');
-  //     flutterLocalNotificationsPlugin.show(
-  //       notification.hashCode,
-  //       notification?.title,
-  //       notification?.body,
-  //       // const NotificationDetails(
-  //       //   iOS: DarwinNotificationDetails(
-  //       //       //presentAlert: true,
-  //       //       //presentBadge: true,
-  //       //       //presentSound: true,
-  //       //   )
-  //       // ),
-  //       null
-  //     );
-  // }
+
+  if (notification?.apple != null) { // ios 인 경우 *** ios 인 경우에는 별도로 .show를 하지 않아도 알아서 노티를 수신함 ***
+    print('ios인 경우');
+
+    await LocalDSBadge()
+        .updateMyBadge(int.parse(notification?.apple!.badge ?? '0'));
+
+      flutterLocalNotificationsPlugin.show(
+        notification.hashCode,
+        notification?.title,
+        notification?.body,
+        // const NotificationDetails(
+        //   iOS: DarwinNotificationDetails(
+        //       //presentAlert: true,
+        //       //presentBadge: true,
+        //       //presentSound: true,
+        //   )
+        // ),
+        null
+      );
+  }
+
+
+
 }
 
+bool isChatScreenActive = false; // 특정 뷰의 활성 여부를 추적하는 변수
+
+
 void main() async {
+
   WidgetsFlutterBinding.ensureInitialized();
 
   await NaverMapSdk.instance.initialize(
@@ -257,6 +318,9 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+
+  final bool isUpdateNeeded = await checkAppVersion();
+  print('runapp isUpdateNeeded: $isUpdateNeeded');
 
   if (!kDebugMode) {
     print('!kDebugMode');
@@ -297,15 +361,49 @@ void main() async {
 
   FirebaseMessaging.instance.onTokenRefresh.listen((String token) async {
     print("New token: $token");
-
-    await ChatBackgroundListen().uploadFcmToken(token);
+    await LocalDSFCMToken().uploadFcmToken(token);
   });
+
   // foreground 수신처리
+  //FirebaseMessaging.onMessage.listen(showFlutterNotification);
+  // FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+  //   print('Got a message whilst in the foreground!');
+  //   print('Message data: ${message.data}');
+  //
+  //   if (message.notification != null) {
+  //     print('Message also contained a notification: ${message.notification}');
+  //   }
+  //
+  //   return showFlutterNotification(message);
+  // });
   FirebaseMessaging.onMessage.listen(showFlutterNotification);
+
   // background 수신처리
+  // FirebaseMessaging.onBackgroundMessage((RemoteMessage message){
+  //   print('Got a message whilst in the background');
+  //   return _firebaseMessagingBackgroundHandler(message);
+  // });
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
   // 알림 클릭시
-  //FirebaseMessaging.onMessageOpenedApp.listen(_handleMessage);
+  FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message){ // 아이폰에서만 작동
+    return print('onMessageOpenedApp 열림');
+  });
+
+  LocalDSIsUserInApp().setIsCurrentUserInApp();
+
+  //FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
+  FlutterError.onError = (errorDetails) {
+    FirebaseCrashlytics.instance.recordFlutterFatalError(errorDetails);
+  };
+  // Pass all uncaught asynchronous errors that aren't handled by the Flutter framework to Crashlytics
+  PlatformDispatcher.instance.onError = (error, stack) {
+    FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+    return true;
+  };
+
+  if (FirebaseCrashlytics.instance.isCrashlyticsCollectionEnabled) {
+    print('crashlytics 사용가능');
+  }
 
   runApp(
     MultiProvider(
@@ -352,15 +450,197 @@ void main() async {
         ChangeNotifierProvider(
           create: (context) => LoadingUpdate(),
         ),
+        ChangeNotifierProvider(
+          create: (context) => GoogleAnalyticsNotifier(),
+        ),
+        ChangeNotifierProvider(
+          create: (context) => CurrentPageProvider(),
+        )
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
-        home: HomePage(),
+        //home: HomePage(isUpdateNeeded),
+        home: HomePage(isUpdateNeeded),
         theme: theme,
         darkTheme: darkTheme,
       ),
     ),
   );
+}
+
+// 파이어베이스 버전 확인
+Future<bool> checkAppVersion() async {
+
+  final remoteConfig = FirebaseRemoteConfig.instance;
+
+  // 데이터 가져오기 시간 간격 : 12시간
+  await remoteConfig.setConfigSettings(RemoteConfigSettings(
+    fetchTimeout: const Duration(minutes: 1),
+    minimumFetchInterval: const Duration(minutes: 5),
+  ));
+
+  await remoteConfig.fetchAndActivate();
+
+  // 앱 버전 정보 가져오기
+  PackageInfo packageInfo = await PackageInfo.fromPlatform();
+
+  String appName = packageInfo.appName;
+  String packageName = packageInfo.packageName;
+  String appVersion = packageInfo.version ?? '';
+  String buildNumber = packageInfo.buildNumber;
+
+  print('appName :$appName');
+  print('packageName :$packageName');
+  print('appVersion :$appVersion');
+  print('buildNumber :$buildNumber');
+
+  // 파이어베이스 버전 정보 가져오기 remote config
+  // (매개변수명 latest_version)
+
+  String firebaseVersion = '';
+
+  try {
+    firebaseVersion = remoteConfig.getString("latest_version");
+  } catch (e) {
+    print('firebaseVersion e: $e');
+  }
+
+  print('firebaseVersion: $firebaseVersion');
+  print('appVersion: $appVersion');
+
+  double doubleFirebaseVersion = 1.0;
+  double doubleAppVersion = 1.0;
+
+  if (firebaseVersion != '' || appVersion != '') { // 앱 버전 또는 파이어베이스에서 앱 버전을 가져오는동안 문제가 없을때
+
+    String truncatedFirebaseVersion = truncateVersion(firebaseVersion) ?? '';
+    String truncatedAppVersion = truncateVersion(appVersion) ?? '';
+
+    print('Truncated firebaseVersion: $truncatedFirebaseVersion'); // Truncated firebaseVersion: 1.0
+    print('Truncated appVersion: $truncatedAppVersion'); // Truncated appVersion: 1.0
+
+    doubleFirebaseVersion = double.parse(truncatedFirebaseVersion); // 1.0
+    doubleAppVersion = double.parse(truncatedAppVersion); // 1.0
+
+    print('if (firebaseVersion != '' || appVersion != '') doubleFirebaseVersion: $doubleFirebaseVersion');
+    print('if (firebaseVersion != '' || appVersion != '') doubleAppVersion: $doubleAppVersion');
+
+  } else { // 앱 버전 또는 파이어베이스에서 앱 버전을 가져오는동안 문제가 있는 경우,
+    //doubleAppVersion == doubleFirebaseVersion 로 되게끔 별도의 설정을 안함
+  }
+
+  bool isUpdateNeeded = false;
+
+  if (doubleAppVersion < doubleFirebaseVersion) { // 앱 업데이트 필요
+
+    if (firebaseVersion == '') {
+      isUpdateNeeded = false;
+    } else { // 스토어에서 업데이트 필요
+      isUpdateNeeded = true;
+    }
+
+  } else { // doubleAppVersion >= doubleFirebaseVersion
+    // 앱 업데이트 불필요 (또는 심사를 거치는 경우)
+    isUpdateNeeded = false;
+  }
+
+  print('firebaseVersion: $firebaseVersion');
+  print('appVersion: $appVersion');
+  print('isUpdateNeeded: $isUpdateNeeded');
+  return isUpdateNeeded;
+
+  // if (Platform.isAndroid) { // 앱 버전 체크
+  //
+  //
+  //   if (doubleAppVersion < doubleFirebaseVersion) { // 앱 업데이트 필요
+  //
+  //     if (firebaseVersion == '') {
+  //       isUpdateNeeded = false;
+  //     } else { // 스토어에서 업데이트 필요
+  //       isUpdateNeeded = true;
+  //     }
+  //
+  //   } else { // doubleAppVersion >= doubleFirebaseVersion
+  //     // 앱 업데이트 불필요 (또는 심사를 거치는 경우)
+  //     isUpdateNeeded = false;
+  //   }
+  //
+  //   print('firebaseVersion: $firebaseVersion');
+  //   print('appVersion: $appVersion');
+  //   print('isUpdateNeeded: $isUpdateNeeded');
+  //   return isUpdateNeeded;
+  //
+  // } else { // 앱 버전 체크 ios의 경우
+  //
+  //   if (firebaseVersion != appVersion) {
+  //     isUpdateNeeded = true;
+  //     // if (firebaseVersion == '') {
+  //     //   isUpdateNeeded = false;
+  //     // } else { // 스토어에서 업데이트 필요
+  //     //   //isUpdateNeeded = true;
+  //     //
+  //     //   final dnppAppId = '6478840964';
+  //     //   //final otherAppId = '6470111015';
+  //     //   final _url = "https://itunes.apple.com/kr/lookup?id=$dnppAppId";
+  //     //
+  //     //   try {
+  //     //     final response = await http.get(Uri.parse(_url));
+  //     //     if (response.statusCode == 200) {
+  //     //       // 서버가 JSON 형태로 응답을 보냈습니다.
+  //     //       var jsonResponse = jsonDecode(response.body);
+  //     //       print("jsonResponse: $jsonResponse");
+  //     //
+  //     //       if (jsonResponse['resultCount'] != 0) {
+  //     //         final result = jsonResponse['results'][0];
+  //     //         print("result version: ${result['version']}");
+  //     //         final appVersion = result['version']; //Stirng
+  //     //
+  //     //         print('appVersion: $appVersion');
+  //     //
+  //     //         if (appVersion != appVersion) {
+  //     //           print('앱 버전 업데이트가 필요합니다.');
+  //     //           isUpdateNeeded = true;
+  //     //
+  //     //         } else {
+  //     //           isUpdateNeeded = false;
+  //     //         }
+  //     //
+  //     //       } else { // 불러온 내용이 없음 {resultCount: 0, results: []}
+  //     //         isUpdateNeeded = false;
+  //     //       }
+  //     //
+  //     //     } else {
+  //     //       // 서버로부터 에러 응답을 받았을 경우 처리
+  //     //       print('앱 버전 체크 ios의 경우 Request failed with status: ${response.statusCode}.');
+  //     //       isUpdateNeeded = false;
+  //     //     }
+  //     //   } catch (e) {
+  //     //     // 네트워크 요청 실패 또는 JSON 파싱 실패 시 처리
+  //     //     print('앱 버전 체크 ios의 경우 Error: $e');
+  //     //     isUpdateNeeded = false;
+  //     //   }
+  //     // }
+  //
+  //   } else {
+  //
+  //   }
+  //
+  //   print('isUpdateNeeded: $isUpdateNeeded');
+  //   print('checkAppVersion 종료');
+  //
+  //   return isUpdateNeeded;
+  // }
+
+}
+
+String truncateVersion(String version) {
+  RegExp regex = RegExp(r'^(\d+\.\d+)');
+  Match? match = regex.firstMatch(version);
+  if (match != null) {
+    return match.group(1)!; // 첫 번째 그룹을 반환 (null 방지를 위해 non-null assertion 사용)
+  } else {
+    return version; // 정규 표현식과 매치되지 않는 경우, 원본 버전 반환
+  }
 }
 
 ThemeData theme = ThemeData(
@@ -476,62 +756,82 @@ ThemeData darkTheme = ThemeData.dark().copyWith(
 );
 
 class HomePage extends StatefulWidget {
+
+  HomePage(this.isUpdateNeeded);
+
+  bool isUpdateNeeded;
   @override
   State<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   static FirebaseAnalytics analytics = FirebaseAnalytics.instance;
   static FirebaseAnalyticsObserver observer =
       FirebaseAnalyticsObserver(analytics: analytics);
 
-  Future<void> setupInteractedMessage() async {
-    // Get any messages which caused the application to open from
-    // a terminated state.
-    RemoteMessage? initialMessage =
-        await FirebaseMessaging.instance.getInitialMessage().then((RemoteMessage? message) {
-          if (message != null) {
-            //_handleMessage(message);
-            MoveToOtherScreen().persistentNavPushNewScreen(
-                context, ChatListView(), false, PageTransitionAnimation.cupertino);
-          }
-        });
-
-    // If the message also contains a data property with a "type" of "chat",
-    // navigate to a chat screen
-    if (initialMessage != null) {
-      _handleMessage(initialMessage);
-    }
-
-    // Also handle any interaction when the app is in the background via a
-    // Stream listener
-    FirebaseMessaging.onMessageOpenedApp.listen(_handleMessage);
-  }
-
-  void _handleMessage(RemoteMessage message) {
-    // 내가 지정한 그 알람이면? 지정한 화면으로 이동
-    // if (message.data['data1'] == 'value1') {
-    //   Navigator.pushNamed(context, '/'); // main에서는 이동불가 Home에 들어와서 해줘야함
-    // }
-    print('_handleMessage message: $message');
-    print('_handleMessage message: ${message.data}');
-    print('_handleMessage message: ${message.from}');
-
-    MoveToOtherScreen().persistentNavPushNewScreen(
-        context, ChatListView(), false, PageTransitionAnimation.cupertino);
-    //Navigator.push(context, MoveToOtherScreen.createRouteChatListView());
-  }
-
   @override
   void initState() {
     setupInteractedMessage();
-
+    WidgetsBinding.instance.addObserver(this);
     super.initState();
   }
 
   @override
+  Future<void> didChangeAppLifecycleState(AppLifecycleState state) async {
+    super.didChangeAppLifecycleState(state);
+    switch (state) {
+      case AppLifecycleState.paused:
+        print('App is in background');
+        //WidgetsBinding.instance!.addPostFrameCallback((_) async {
+         // CurrentPageProvider().setCurrentPage('', 'main');
+        // ChatBackgroundListen().updateMyIsInRoom(FirebaseAuth.instance.currentUser?.uid.toString() ?? '', chatRoomId, messagesList.length ?? 0); // 채팅방에서 나감을 선언
+
+        Future.microtask(() async {
+          final currentPage = Provider.of<CurrentPageProvider>(context, listen: false).currentPage;
+          print('App is in background currentPage: $currentPage');
+          await Provider.of<GoogleAnalyticsNotifier>(context, listen: false)
+              .startTimer(currentPage);
+
+          Provider.of<CurrentPageProvider>(context, listen: false).setInitialCurrentPage();
+          final myCurrentBadge = await LocalDSBadge().downloadMyBadge();
+          print('노티 수신 myCurrentBadge: $myCurrentBadge');
+          await LocalDSBadge().updateMyBadge(myCurrentBadge);
+
+          // await Provider.of<GoogleAnalyticsNotifier>(context, listen: false)
+          //   .cancelAndLogBoardingTime(currentPage);
+
+        });
+
+        print('App is in background');
+        //});
+        break;
+      case AppLifecycleState.resumed:
+        print('App is in foreground');
+        break;
+      case AppLifecycleState.inactive:
+      // Not in use on Android, this is the state in which the app is not receiving user input and running in the background.
+        print('App is in inactive');
+        break;
+      case AppLifecycleState.detached:
+        print('App is in detached');
+      // The application is still hosted on a flutter engine but is detached from any host views.
+        break;
+      case AppLifecycleState.hidden:
+        print('App is in hidden');
+        break;
+    }
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
   Widget build(final BuildContext context) {
-    return GestureDetector(
+    return (widget.isUpdateNeeded == false) ? // 업데이트가 필요없는 경우
+    GestureDetector(
       onTap: () {
         FocusManager.instance.primaryFocus?.unfocus();
       },
@@ -554,8 +854,6 @@ class _HomePageState extends State<HomePage> {
         //   nextScreen: LoadingScreen(), //LoadingScreen(),//HomeScreen(),
         //   splashTransition: SplashTransition.fadeTransition,
         // ),
-
-
 
         // theme: ThemeData(
         //   primaryColor: kMainColor,//Colors.blueAccent,
@@ -586,6 +884,138 @@ class _HomePageState extends State<HomePage> {
           // Locale('es', ''), // Spanish, no country code
         ],
       ),
+    ) : // 업데이트가 필요한 경우
+    MaterialApp(
+      debugShowCheckedModeBanner: false,
+      navigatorObservers: [observer],
+      home: Container(
+        width: MediaQuery.of(context).size.width,
+        height: MediaQuery.of(context).size.height,
+        color: kMainColor,
+        child: FutureBuilder(
+            future: Future.delayed(Duration.zero), builder: (builder, snapshot){
+              return AlertDialog(
+                //insetPadding: EdgeInsets.only(left: 10.0, right: 10.0),
+                shape: kRoundedRectangleBorder,
+                title: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      "알림",
+                      style: TextStyle(fontWeight: FontWeight.normal),
+                    ),
+                  ],
+                ),
+                content: Text(
+                  "업데이트된 버전이 있습니다\n'확인' 버튼을 누르면 스토어로 이동합니다\n(업데이트 후에는 앱을 재실행해주세요)",
+                  //textAlign: TextAlign.start,
+                ),
+                actions: [
+                  TextButton(
+                      onPressed: (){
+                        setState(() {
+                          SettingViewModel().settingMoveToStore(context);
+                        });
+                  }, child: Text('확인'))
+                ],
+              );
+        },
+        ),
+      ),
+
+      theme: theme,
+      darkTheme: darkTheme,
+      localizationsDelegates: [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: [
+        Locale('ko', 'KR'),
+        // Locale('es', ''), // Spanish, no country code
+      ],
     );
   }
+
+  Future<void> setupInteractedMessage() async {
+    // Get any messages which caused the application to open from
+    // a terminated state.
+    print('setupInteractedMessage');
+    RemoteMessage? initialMessage =
+    await FirebaseMessaging.instance.getInitialMessage().then((RemoteMessage? message) {
+
+      if (message != null) {
+        //_handleMessage(message);
+        MoveToOtherScreen().persistentNavPushNewScreen(
+            context, ChatListView(), false, PageTransitionAnimation.cupertino);
+      }
+    });
+
+    // If the message also contains a data property with a "type" of "chat",
+    // navigate to a chat screen
+    if (initialMessage != null) {
+      _handleMessage(initialMessage);
+    }
+
+    // Also handle any interaction when the app is in the background via a
+    // Stream listener
+    FirebaseMessaging.onMessageOpenedApp.listen(_handleMessage);
+  }
+
+  void _handleMessage(RemoteMessage message) { // ios에서만 작동
+    // 내가 지정한 그 알람이면? 지정한 화면으로 이동
+    // if (message.data['data1'] == 'value1') {
+    //   Navigator.pushNamed(context, '/'); // main에서는 이동불가 Home에 들어와서 해줘야함
+    // }
+
+    //GoogleAnalytics().openNoti(seconds);
+    print('_handleMessage 열림');
+    print('_handleMessage message: $message');
+    print('_handleMessage message: ${message.data}');
+    print('_handleMessage message: ${message.from}');
+    print('_handleMessage message: ${message.data['From']}');
+
+    // WidgetsBinding.instance!.addPostFrameCallback((_) async {
+    // Provider.of<LoadingScreenViewModel>(context, listen: false).initibnalize(context);
+    // });
+
+    // 이렇게 들어오게 되면 GA에 잡히나?
+
+    final currentPage = Provider.of<CurrentPageProvider>(context, listen: false).currentPage;
+
+    print('main.dart currentPage: $currentPage');
+    print('message.data[From]: ${message.data['From']}');
+
+    if (message.data['From'] == 'server'){
+
+      // if (currentPage == 'HomeScreen' || currentPage == 'MainScreen' || currentPage == 'CalendarScreen' || currentPage == 'SettingScreen') {
+
+      if (currentPage == 'HomeScreen'){
+
+      } else {
+        MoveToOtherScreen().persistentNavPushNewScreen(
+            context, HomeScreen(), false, PageTransitionAnimation.cupertino);
+      }
+
+    } else {
+
+      if (currentPage == 'ChatListView') {
+        // 현재 페이지가 ChatListView인 경우에는 동작하지 않도록 처리
+      } else {
+        MoveToOtherScreen().persistentNavPushNewScreen(
+            context, ChatListView(), false, PageTransitionAnimation.cupertino);
+      }
+
+
+    // MoveToOtherScreen().persistentNavPushNewScreen(
+    //           context, ChatListView(), false, PageTransitionAnimation.cupertino);
+
+    }
+
+    //Navigator.push(context, MoveToOtherScreen.createRouteChatListView());
+
+    // 서버에서 보낸 메시지면 home으로?
+  } // 노티를 클릭했을때의 화면 전환 함수
+
+
 }

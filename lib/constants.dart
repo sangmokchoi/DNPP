@@ -36,7 +36,7 @@ const kAppointmentDateTextStyle = TextStyle(
 const kAppointmentTextButtonStyle = TextStyle(
   //
   //color: Colors.black,
-  color: kMainColor,
+  //color: kMainColor,
   fontSize: 16.0,
 );
 

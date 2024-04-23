@@ -1,5 +1,10 @@
+import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:dnpp/repository/chatBackgroundListen.dart';
+import 'package:dnpp/LocalDataSource/DS_Local_Auth.dart';
+import 'package:dnpp/constants.dart';
+import 'package:dnpp/models/DeviceInfo.dart';
+import 'package:dnpp/LocalDataSource/DS_Local_auth.dart';
 
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -11,6 +16,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../LocalDataSource/firebase_realtime/users/DS_Local_FCMToken.dart';
+import '../LocalDataSource/firebase_realtime/users/DS_Local_deviceId.dart';
+import '../LocalDataSource/firebase_realtime/users/DS_Local_recentVisit.dart';
+import '../repository/firebase_auth.dart';
+import '../repository/firebase_realtime_users.dart';
+import '../statusUpdate/ShowToast.dart';
 import '../statusUpdate/loginStatusUpdate.dart';
 
 class LoadingScreenViewModel extends ChangeNotifier {
@@ -19,6 +30,109 @@ class LoadingScreenViewModel extends ChangeNotifier {
 
   final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
   FirebaseFirestore db = FirebaseFirestore.instance;
+
+
+  late OverlayEntry lateOverlayEntry;
+  List<OverlayEntry> lateOverlayEntries = [];
+
+  insertOverlay(BuildContext context, String token, String uniqueDeviceId) {
+
+    OverlayEntry _overlay = OverlayEntry(builder: (_) => overlayBanner(token, uniqueDeviceId));
+
+    print('insertOverlay 진입');
+
+    if (lateOverlayEntries.isEmpty) {
+      lateOverlayEntries.add(_overlay);
+      print('lateOverlayEntries:${lateOverlayEntries.length}');
+
+    Navigator
+        .of(context)
+        .overlay!
+        .insert(_overlay);
+
+      //lateOverlayEntries.clear();
+
+    }
+
+  }
+
+  Widget overlayBanner(String token, String uniqueDeviceId) {
+    return Container(
+      width: double.infinity,
+      height: double.infinity,
+      color: Colors.black.withOpacity(0.7),
+      child: AlertDialog(
+        insetPadding:
+        EdgeInsets.only(left: 10.0, right: 10.0),
+        shape: kRoundedRectangleBorder,
+        title: Text(
+          '알림',
+          style: kAppointmentDateTextStyle,
+          textAlign: TextAlign.center,
+        ),
+        content: Text(
+          '다른 기기에서 로그인한 이력이 있습니다\n이 기기에서 핑퐁플러스를 이용하시겠습니까?',
+          style: TextStyle(
+            fontSize: 14.0,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        actions: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              TextButton(
+                // style: TextButton.styleFrom(
+                //   textStyle: Theme.of(context).textTheme.labelLarge,
+                // ),
+                child: Center(
+                    child: Text(
+                      '아니오',
+                      style: kAppointmentTextButtonStyle.copyWith(color: Colors.red),
+                    )),
+                onPressed: () async {
+                  await RepositoryFirebaseAuth().getSignOut().then((value) {
+                    // 종료 말고 로그아웃만 해도 괜찮을지도?
+                    return lateOverlayEntries.first.remove();
+                   //return exit(0);
+                  });
+
+                },
+              ),
+              TextButton(
+                // style: TextButton.styleFrom(
+                //   textStyle: Theme.of(context).textTheme.labelLarge,
+                // ),
+                child: Center(
+                    child: Text(
+                        '확인',
+                        style: kAppointmentTextButtonStyle.copyWith(color: kMainColor)
+                    )),
+                onPressed: () async {
+                  await RepositoryRealtimeUsers().getUploadFcmToken(token).then((value) async {
+                    ShowToast().showToast("로그인이 완료되었습니다");
+                    await RepositoryRealtimeUsers().getUploadMyDeviceId(uniqueDeviceId).then((value) async {
+                      await RepositoryRealtimeUsers().getUploadFcmToken(token!).then((value) {
+                        lateOverlayEntries.first.remove();
+                      });
+                    });
+
+
+                  });
+                  //overlayRemove;
+                  //Navigator.pop(context); // 다이얼로그 닫기는 여기서 호출
+                },
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  overlayRemove(OverlayEntry overlay) {
+    overlay.remove();
+  }
 
   Future<void> initialize(BuildContext context) async {
 
@@ -32,15 +146,115 @@ class LoadingScreenViewModel extends ChangeNotifier {
         print('신규유저 이므로 프로필 생성 필요 또는 로그아웃한 상태');
         await Provider.of<LoginStatusUpdate>(context, listen: false)
             .falseIsLoggedIn();
+
+
       } else {
         // user != null
         print('SignupScreen user isLoggedIn');
         print('SignupScreen user: ${user}');
+
         await FirebaseMessaging.instance.getToken().then((token) async {
           print('FirebaseAuth.instance.idTokenChanges().listen token: $token');
-          await ChatBackgroundListen().uploadFcmToken(token!);
+          await RepositoryRealtimeUsers().getCheckFcmToken(user.uid).then((loadedToken) async {
+            print('loadedToken == token: ${loadedToken == token}');
+
+            print('loadedToken: $loadedToken');
+            print('token: $token');
+
+            print('기존의 fcmtoken과 다른 경우에만 새로운 fcmtoken을 업로드');
+
+            await RepositoryRealtimeUsers().getCheckMyDeviceId(user.uid).then((deviceId) async {
+
+              final deviceInfo = await DeviceInfo().initPlatformState();
+              print('deviceInfo: $deviceInfo'); //identifierForVendor
+
+              String? uniqueDeviceId;
+
+              if (Platform.isIOS) {
+                uniqueDeviceId = deviceInfo['identifierForVendor'];
+                print('deviceInfo[identifierForVendor]: $uniqueDeviceId');
+
+              } else if (Platform.isAndroid) {
+                uniqueDeviceId = deviceInfo['id'];
+                print('deviceInfo[id]: $uniqueDeviceId');
+
+              } else {
+                uniqueDeviceId = 'null';
+              }
+
+              if (deviceId == 'deviceId') { // 디바이스 id가 기존에 없었던 상태
+                await RepositoryRealtimeUsers().getUploadMyDeviceId(uniqueDeviceId!);
+
+                if (loadedToken != token) { // 지금은 토큰을 이용했으나, 디바이스 id를 가져오는 것으로 변경 하기
+                  // LaunchUrl().alertOkAndCancelFunc(context, '알림', '다른 기기에서 로그인한 이력이 있습니다\n이 기기에서 핑퐁플러스를 이용하시겠습니까?', '아니오 (앱 종료)', '확인', Colors.red, kMainColor, () async {
+                  //   //Navigator.pop(context);
+                  //   // 앱 종료 함수
+                  //   await RepositoryAuth().signOut().then((value) => exit(0));
+                  //
+                  // }, () async {
+                  //
+                  //   await ChatBackgroundListen().uploadFcmToken(token!).then((value) {
+                  //     Navigator.pop(context);
+                  //
+                  //     //Navigator.of(context, rootNavigator: true).pop();
+                  //
+                  //   });
+                  //
+                  // });
+
+                  // insertOverlay(context, token!, uniqueDeviceId!);
+
+                  //ShowToast().showToast(); // 잘 작동됨
+
+                  await RepositoryRealtimeUsers().getUploadFcmToken(token!).then((value) {
+
+                  });
+                } else {
+
+                }
+
+              } else if (deviceId == uniqueDeviceId) { // 이미 동일한 디바이스 id가 db에 있으므로 굳이 업로드 안함
+                print('Device ID already exists in the database.');
+
+                if (loadedToken != token) { // 지금은 토큰을 이용했으나, 디바이스 id를 가져오는 것으로 변경 하기
+                  // LaunchUrl().alertOkAndCancelFunc(context, '알림', '다른 기기에서 로그인한 이력이 있습니다\n이 기기에서 핑퐁플러스를 이용하시겠습니까?', '아니오 (앱 종료)', '확인', Colors.red, kMainColor, () async {
+                  //   //Navigator.pop(context);
+                  //   // 앱 종료 함수
+                  //   await RepositoryAuth().signOut().then((value) => exit(0));
+                  //
+                  // }, () async {
+                  //
+                  //   await ChatBackgroundListen().uploadFcmToken(token!).then((value) {
+                  //     Navigator.pop(context);
+                  //
+                  //     //Navigator.of(context, rootNavigator: true).pop();
+                  //
+                  //   });
+                  //
+                  // });
+
+                  // insertOverlay(context, token!, uniqueDeviceId!);
+
+                  //ShowToast().showToast(); // 잘 작동됨
+
+                  await RepositoryRealtimeUsers().getUploadFcmToken(token!).then((value) {
+
+                  });
+                } else {
+
+                }
+
+              } else if (deviceId != uniqueDeviceId) { // 디바이스 id가 기존과 다른 경우
+                insertOverlay(context, token!, uniqueDeviceId!);
+              }
+
+
+            });
+
+          });
+
+
         });
-        print('1111');
 
         await Provider.of<LoginStatusUpdate>(context, listen: false)
             .updateCurrentUser(user);
@@ -85,7 +299,7 @@ class LoadingScreenViewModel extends ChangeNotifier {
               .updateIsAgreementChecked(true);
           await Provider.of<LoginStatusUpdate>(context, listen: false)
               .trueIsLoggedIn();
-          final recentVisit = await ChatBackgroundListen().updateMyRecentVisit();
+          final recentVisit = await RepositoryRealtimeUsers().getUpdateMyRecentVisit();
           print('recentVisit: $recentVisit');
           await Provider.of<LoginStatusUpdate>(context, listen: false).updateCurrentVisit(recentVisit);
 
@@ -96,8 +310,6 @@ class LoadingScreenViewModel extends ChangeNotifier {
           await Provider.of<LoginStatusUpdate>(context, listen: false)
               .updateIsUserDataExists(false);
           await prefs.setBool('isUserTried', true);
-
-
         }
 
         // 로그인 버튼 클릭 여부 초기화
@@ -105,8 +317,7 @@ class LoadingScreenViewModel extends ChangeNotifier {
             .updateIsLogInButtonClicked(false);
 
       }
-    }, onDone: () async {
-      print('!!리스너 onDone!!');
+
     });
   }
   

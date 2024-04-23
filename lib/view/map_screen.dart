@@ -1,15 +1,18 @@
 import 'dart:async';
 
-import 'package:dnpp/repository/launchUrl.dart';
 import 'package:dnpp/viewModel/MapScreen_ViewModel.dart';
 import 'package:dnpp/statusUpdate/profileUpdate.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-import 'package:dnpp/repository/search.dart';
+import 'package:dnpp/RemoteDataSource/naver_map_search.dart';
 import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
+import '../models/launchUrl.dart';
 import '../models/pingpongList.dart';
+import '../repository/naver_map.dart';
+import '../statusUpdate/googleAnalytics.dart';
+import '../statusUpdate/CurrentPageProvider.dart';
 import '../statusUpdate/mapWidgetUpdate.dart';
 import '../widgets/map/map_widget.dart';
 import '../widgets/map/map_pingpongList_element.dart';
@@ -32,7 +35,22 @@ class _MapScreenState extends State<MapScreen> {
   @override
   void initState() {
     _textFormFieldController.addListener(() {});
+    Provider.of<GoogleAnalyticsNotifier>(context, listen: false).startTimer('ProfileScreen');
+
     super.initState();
+  }
+
+  @override
+  void deactivate() {
+    super.deactivate();
+
+    Future.microtask(() {
+      //if (mounted) {
+        Provider.of<GoogleAnalyticsNotifier>(context, listen: false)
+            .startTimer('MapScreen');
+      //}
+    });
+
   }
 
   @override
@@ -48,6 +66,11 @@ class _MapScreenState extends State<MapScreen> {
   @override
   Widget build(BuildContext context) {
     _context = context;
+    WidgetsBinding.instance!.addPostFrameCallback((_) async {
+      await GoogleAnalytics().trackScreen(context, 'MapScreen');
+      await Provider.of<CurrentPageProvider>(context, listen: false).setCurrentPage('MapScreen');
+    });
+
     return Consumer<MapScreenViewModel>(
         builder: (context, currentUserUpdate, child) {
       return GestureDetector(
@@ -296,8 +319,8 @@ class _MapScreenState extends State<MapScreen> {
                   children: [
                     Center(child: Column(
                       children: [
-                        Text('우리 동네의 탁구장을 검색한다면, "OO동 탁구장"처럼 검색해주세요', style: _guideTextStyle),
-                        Text('검색 결과는 총 5개가 출력됩니다', style: _guideTextStyle),
+                        Text('우리 동네의 탁구장을 검색한다면,\n"OO동 탁구장"처럼 검색해주세요', style: _guideTextStyle),
+                        Text('검색 결과는 총 5개가 출력됩니다\n', style: _guideTextStyle),
                         Text('(지도 검색은 네이버 지도 API를 이용합니다)', style: _guideTextStyle),
                       ],
                     ),),
@@ -379,15 +402,14 @@ class _MapScreenState extends State<MapScreen> {
         Provider.of<MapWidgetUpdate>(context, listen: false);
     await mapWidgetUpdate.clearPPListElements();
 
-    Search search = Search();
     setState(() {
       MapScreenViewModel().toggleLoading(context, true);
     });
 
     try {
-      print('try');
+
       var searchResult =
-          await search.fetchSearchData(_textFormFieldController.text);
+          await RepositoryNaverMap().getFetchSearchData(_textFormFieldController.text);
       print('searchResult: $searchResult');
 
       await MapScreenViewModel().updatePPLocation(context, searchResult).then((value) {
