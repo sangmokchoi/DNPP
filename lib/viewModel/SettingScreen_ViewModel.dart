@@ -35,7 +35,7 @@ import '../view/ossLicense_screen.dart';
 import '../view/profile_screen.dart';
 import '../view/signup_screen.dart';
 
-class SettingViewModel extends ChangeNotifier {
+class SettingScreenViewModel extends ChangeNotifier {
 
   FirebaseFirestore db = FirebaseFirestore.instance;
   final _fireAuth = FirebaseAuth.instance;
@@ -86,7 +86,7 @@ class SettingViewModel extends ChangeNotifier {
         .persistentNavPushNewScreen(
             context, SignupScreen(3), false, PageTransitionAnimation.fade)
         .then((value) async {
-      print('로그인 완료 후 복귀 setState');
+      debugPrint('로그인 완료 후 복귀 setState');
 
       notifyListeners();
     });
@@ -120,14 +120,16 @@ class SettingViewModel extends ChangeNotifier {
 
     if (Platform.isAndroid || Platform.isIOS) {
       final appId = Platform.isAndroid ? 'com.simonwork.dnpp.dnpp' : '6478840964';
-
+      //final appId = Platform.isAndroid ? 'com.instagram.android' : '389801252';
       // final String url = Platform.isAndroid ?
       // "market://details?id=$appId" :
       // "https://apps.apple.com/app/id$appId";
 
       final url = Uri.parse(
         Platform.isAndroid
-            ? "market://details?id=$appId"
+            //? "market://details?id=$appId"
+        ? "https://play.google.com/store/apps/details?id=$appId"
+        //com.instagram.android
             : "https://apps.apple.com/app/id$appId",
         //: "https://apps.apple.com/app/id389801252", // 핑퐁플러스 app id : id6478840964
         //itms-apps://apps.apple.com/app/
@@ -283,20 +285,20 @@ class SettingViewModel extends ChangeNotifier {
                 notifyListeners();
               });
             } catch (e) {
-              print('initializeListeners 에러: $e');
+              debugPrint('initializeListeners 에러: $e');
             }
 
           } catch (e) {
-            print('CourtAppointmentUpdate signOut e: $e');
+            debugPrint('CourtAppointmentUpdate signOut e: $e');
           }
         } catch (e) {
-          print('OthersPersonalAppointmentUpdate signOut e: $e');
+          debugPrint('OthersPersonalAppointmentUpdate signOut e: $e');
         }
       } catch (e) {
-        print('PersonalAppointmentUpdate signOut e: $e');
+        debugPrint('PersonalAppointmentUpdate signOut e: $e');
       }
     } catch (e) {
-      print('ProfileUpdate signOut e: $e');
+      debugPrint('ProfileUpdate signOut e: $e');
       LaunchUrl().alertFunc(
           context, '오류', '로그아웃 중 에러가 발생했습니다\n이용에 불편을 드려 죄송합니다', '확인', () {
         Navigator.pop(context);
@@ -450,25 +452,25 @@ class SettingViewModel extends ChangeNotifier {
                     notifyListeners();
                   });
                 } catch (e) {
-                  print(
+                  debugPrint(
                       'CalendarScreenViewModel, MatchingScreenViewModel removeData e: $e');
                 }
               } catch (e) {
-                print('CourtAppointmentUpdate removeData e: $e');
+                debugPrint('CourtAppointmentUpdate removeData e: $e');
               }
             } catch (e) {
-              print('OthersPersonalAppointmentUpdate removeData e: $e');
+              debugPrint('OthersPersonalAppointmentUpdate removeData e: $e');
             }
 
           } catch (e) {
-            print('PersonalAppointmentUpdate removeData e: $e');
+            debugPrint('PersonalAppointmentUpdate removeData e: $e');
           }
         } catch (e) {
-          print('ProfileUpdate removeData e: $e');
+          debugPrint('ProfileUpdate removeData e: $e');
         }
       });
     } catch (e) {
-      print('removeData e: $e');
+      debugPrint('removeData e: $e');
       LaunchUrl().alertFunc(
           context, '오류', '회원탈퇴 중 에러가 발생했습니다\n이용에 불편을 드려 죄송합니다', '확인', () {
         Navigator.pop(context);

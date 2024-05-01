@@ -16,6 +16,7 @@ import '../models/pingpongList.dart';
 import '../models/userProfile.dart';
 import '../LocalDataSource/firebase_fireStore/DS_Local_userData.dart';
 import '../statusUpdate/othersPersonalAppointmentUpdate.dart';
+import '../statusUpdate/personalAppointmentUpdate.dart';
 
 class MatchingScreenViewModel extends ChangeNotifier {
 
@@ -168,8 +169,8 @@ class MatchingScreenViewModel extends ChangeNotifier {
 
       if (clickedIndex2 != -1) {
         Future.delayed(Duration(milliseconds: 250)).then((value) {
-          print('MediaQuery.of(context).size.height * 0.5: ${MediaQuery.of(context).size.height * 0.5}');
-          print('neighborhoodScrollController.offset: ${neighborhoodScrollController.offset}');
+          // debugPrint('MediaQuery.of(context).size.height * 0.5: ${MediaQuery.of(context).size.height * 0.5}');
+          // debugPrint('neighborhoodScrollController.offset: ${neighborhoodScrollController.offset}');
 
           if (index >= 1) {
 
@@ -197,9 +198,9 @@ class MatchingScreenViewModel extends ChangeNotifier {
 
     String selectedUserUid = user['uid'].toString();
 
-    print('otherUserAppointments: $otherUserAppointments');
-    print('otherUserAppointments.length: ${otherUserAppointments.length}');
-    print('selectedUserUid: $selectedUserUid');
+    debugPrint('otherUserAppointments: $otherUserAppointments');
+    debugPrint('otherUserAppointments.length: ${otherUserAppointments.length}');
+    debugPrint('selectedUserUid: $selectedUserUid');
 
     List<Appointment> filteredAppointments =
     otherUserAppointments //getOtherUserAppointments
@@ -207,7 +208,7 @@ class MatchingScreenViewModel extends ChangeNotifier {
         .expand((appointment) => appointment.appointments)
         .toList();
 
-    print('filteredAppointments: $filteredAppointments');
+    debugPrint('filteredAppointments: $filteredAppointments');
 
     await Provider.of<OthersPersonalAppointmentUpdate>(context, listen: false)
         .updateDefaultMeetings(filteredAppointments).then((value) async {
@@ -264,8 +265,8 @@ class MatchingScreenViewModel extends ChangeNotifier {
 //       Provider.of<PersonalAppointmentUpdate>(context, listen: false)
 //           .next28daysHourlyCountsByDaysOfWeek;
 //
-//   print('next28daysHourlyCounts: $next28daysHourlyCounts');
-//   print(
+//   debugPrint('next28daysHourlyCounts: $next28daysHourlyCounts');
+//   debugPrint(
 //       'next28daysHourlyCountsByDaysOfWeek: $next28daysHourlyCountsByDaysOfWeek');
 //   List<CustomAppointment> filteredAppointments = otherUserAppointments
 //       .where((appointment) => appointment.appointments.any((app) =>
@@ -305,7 +306,7 @@ class MatchingScreenViewModel extends ChangeNotifier {
   // }
 
   Future<void> addStreamListener(BuildContext context) async {
-    print('addStreamListener 시작');
+    debugPrint('addStreamListener 시작');
 
     usersCourtSubscription = usersCourtStream.listen((data) { });
     similarUsersCourtSubscription = similarUsersCourtStream.listen((data) { });
@@ -313,7 +314,7 @@ class MatchingScreenViewModel extends ChangeNotifier {
 
     appointmentsStream = RepositoryFirestoreAppointments().getAllAppointments(); // usersCourtStream;//
     appointmentsSubscription = appointmentsStream.listen((data) {
-      print('appointmentsStream 시작');
+      debugPrint('appointmentsStream 시작');
       for (var doc in data.docs) {
         var userDocs = doc.data();
 
@@ -339,10 +340,10 @@ class MatchingScreenViewModel extends ChangeNotifier {
         _customAppointment.id = doc.id;
 
         otherUserAppointments.add(_customAppointment);
-        // print('otherUserAppointments _customAppointment: $_customAppointment');
+        // debugPrint('otherUserAppointments _customAppointment: $_customAppointment');
         // if (_appointment != null || _appointment.isNotEmpty) {
         //   Provider.of<OthersPersonalAppointmentUpdate>(context, listen: false).addCustomMeeting(_customAppointment);
-        //   print('_customAppointment add 함');
+        //   debugPrint('_customAppointment add 함');
         //   for (int i = 0; i < _appointment.length; i++) {
         //     Provider.of<OthersPersonalAppointmentUpdate>(context, listen: false).addMeeting(_appointment[i]);
         //   }
@@ -361,22 +362,23 @@ class MatchingScreenViewModel extends ChangeNotifier {
 
     UserProfile? currentUserProfile =
         Provider.of<ProfileUpdate>(context, listen: false).userProfile;
+    debugPrint('setListener currentUserProfile: ${currentUserProfile}');
 
     if (currentUserProfile != UserProfile.emptyUserProfile) {
-      print('if (currentUserProfile != null) {');
+      debugPrint('if (currentUserProfile != null) {');
 
       usersCourtStream =
           RepositoryFirestoreUserData().getUsersCourtStream(currentUserProfile);
 
       // if (currentUserProfile.pingpongCourt!.isNotEmpty) {
-      //   print(' if (currentUserProfile.pingpongCourt!.isNotEmpty) {');
+      //   debugPrint(' if (currentUserProfile.pingpongCourt!.isNotEmpty) {');
       //   similarUsersCourtStream =
       //       RepositoryUserData().similarUsersCourtStream(context, currentUserProfile);
       //   //similarUsersCourtStream = RepositoryUserData().constructSimilarUsersCourtStream(context, value);
       // }
 
       if (currentUserProfile.address.isNotEmpty) {
-        print('if (currentUserProfile.address.isNotEmpty) {');
+        debugPrint('if (currentUserProfile.address.isNotEmpty) {');
         usersNeighborhoodStream =
             RepositoryFirestoreUserData().getUsersNeighborhoodStream(currentUserProfile);
         //updateUsersNeighborhoodStream(currentUserProfile.address.first);
@@ -393,8 +395,9 @@ class MatchingScreenViewModel extends ChangeNotifier {
     var userUids = await Provider.of<OthersPersonalAppointmentUpdate>(context,
         listen: false)
         .extractCustomAppointments(
-        chosenCourt.title, chosenCourt.roadAddress, false);
-    print('filterUsers userUids: $userUids');
+        chosenCourt.title, chosenCourt.roadAddress, false, Provider.of<PersonalAppointmentUpdate>(context,
+        listen: false).last28DaysHourlyCountsByDaysOfWeek);
+    debugPrint('filterUsers userUids: $userUids');
 
     var filteredUsers = userDocs.where((DocumentSnapshot document) {
       final finalUserUid = document.data() as Map<String, dynamic>;
@@ -403,11 +406,10 @@ class MatchingScreenViewModel extends ChangeNotifier {
     }).toList();
 
     yield filteredUsers;
-    // 매칭스크린 진입 후 맨 처음에 출력되는 유저 리스트 들을 저장했다가 다시 사용하는 식으로 바꾸는게 나을듯
   }
 
   Future<void> initializeListeners() async {
-    print('매칭스크린 초기화');
+    debugPrint('매칭스크린 초기화');
     similarUsersCourtSubscription.cancel();
     usersCourtSubscription.cancel();
     usersNeighborhoodSubscription.cancel();

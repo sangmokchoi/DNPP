@@ -36,14 +36,14 @@ class MapWidgetUpdate with ChangeNotifier {
       for (dynamic address in addresses) {
         roadAddress = address['roadAddress'];
         jibunAddress = address['jibunAddress'];
-        print(roadAddress);
-        print(jibunAddress);
+        debugPrint(roadAddress);
+        debugPrint(jibunAddress);
 
-        //print(address);
+        //debugPrint(address);
         x = address['x'];
         y = address['y'];
-        print(x);
-        print(y);
+        debugPrint(x);
+        debugPrint(y);
         final addressListElement = AddressListElement(
           roadAddress: roadAddress,
           jibunAddress: jibunAddress,
@@ -53,11 +53,11 @@ class MapWidgetUpdate with ChangeNotifier {
         addressListElements.add(addressListElement);
 
         dynamic addressElements = address['addressElements'];
-        print('주소 요소:');
+        debugPrint('주소 요소:');
         for (dynamic element in addressElements) {
           String longName = element['longName'];
           String shortName = element['shortName'];
-          print(' - ${element['types'][0]}: $longName ($shortName)');
+          debugPrint(' - ${element['types'][0]}: $longName ($shortName)');
         }
       }
     }
@@ -69,7 +69,7 @@ class MapWidgetUpdate with ChangeNotifier {
   }
 
   Future<void> overlayMake() async {
-    print('overlayMake 진입');
+    debugPrint('overlayMake 진입');
 
     double mapx = 0.0;
     double mapy = 0.0;
@@ -97,7 +97,7 @@ class MapWidgetUpdate with ChangeNotifier {
 
       naverController.addOverlay(nMarker);
       nMarker.setOnTapListener((NMarker marker) async {
-        print('마커가 터치되었습니다. id: ${marker}');
+        debugPrint('마커가 터치되었습니다. id: ${marker}');
 
         final onMarkerInfoWindow = NInfoWindow.onMarker(
             id: nMarker.info.id, text: pPListElement.title);
@@ -113,37 +113,37 @@ class MapWidgetUpdate with ChangeNotifier {
     final cameraMovelatlng = NLatLng(mapy/count, mapx/count);
 
     if (absMapY > 2 || absMapX > 2) {
-      print('absMapY > 2 || absMapX > 2');
-      print('absMapY: ${absMapY}');
-      print('absMapX: ${absMapX}');
+      debugPrint('absMapY > 2 || absMapX > 2');
+      debugPrint('absMapY: ${absMapY}');
+      debugPrint('absMapX: ${absMapX}');
       cameraMove(cameraMovelatlng, 5.0);
     } else if (absMapY > 1 || absMapX > 1) { // 탁구장
-      print('absMapY > 1 || absMapX > 1');
-      print('absMapY: ${absMapY}');
-      print('absMapX: ${absMapX}');
+      debugPrint('absMapY > 1 || absMapX > 1');
+      debugPrint('absMapY: ${absMapY}');
+      debugPrint('absMapX: ${absMapX}');
       cameraMove(cameraMovelatlng, 5.5);
     } else if (absMapY > 0.5 || absMapX > 0.5) {
-    print('absMapY > 0.5 || absMapX > 0.5');
-    print('absMapY: ${absMapY}');
-    print('absMapX: ${absMapX}');
+    debugPrint('absMapY > 0.5 || absMapX > 0.5');
+    debugPrint('absMapY: ${absMapY}');
+    debugPrint('absMapX: ${absMapX}');
     cameraMove(cameraMovelatlng, 5.75);
     } else if (absMapY > 0.2 || absMapX > 0.2) { // 온센
-      print('absMapY > 0.2 || absMapX > 0.2');
-      print('absMapY: ${absMapY}');
-      print('absMapX: ${absMapX}');
+      debugPrint('absMapY > 0.2 || absMapX > 0.2');
+      debugPrint('absMapY: ${absMapY}');
+      debugPrint('absMapX: ${absMapX}');
       cameraMove(cameraMovelatlng, 6.0);
     } else if (absMapY > 0.05 || absMapX > 0.05) { // 메가커피
-      print('absMapY > 0.05 || absMapX > 0.05');
-      print('absMapY: ${absMapY}');
-      print('absMapX: ${absMapX}');
+      debugPrint('absMapY > 0.05 || absMapX > 0.05');
+      debugPrint('absMapY: ${absMapY}');
+      debugPrint('absMapX: ${absMapX}');
       cameraMove(cameraMovelatlng, 7.5);
     } else if (absMapY > 0.01 || absMapX > 0.01) { //동작구 탁구장
-      print('absMapY > 0.01 || absMapX > 0.01');
-      print('absMapY: ${absMapY}');
-      print('absMapX: ${absMapX}');
+      debugPrint('absMapY > 0.01 || absMapX > 0.01');
+      debugPrint('absMapY: ${absMapY}');
+      debugPrint('absMapX: ${absMapX}');
       cameraMove(cameraMovelatlng, 12.0);
     } else {
-      print('absMapY, absMapX else');
+      debugPrint('absMapY, absMapX else');
       cameraMove(cameraMovelatlng, 14.0);
     }
 

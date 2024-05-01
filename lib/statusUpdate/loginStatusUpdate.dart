@@ -26,7 +26,7 @@ class LoginStatusUpdate with ChangeNotifier {
   DateTime currentVisit = DateTime.now();
 
   Stream<bool> isLoggedInStream() async* {
-    //print('isLoggedInStream isLoggedIn: $isLoggedIn');
+    //debugPrint('isLoggedInStream isLoggedIn: $isLoggedIn');
 
     //yield isLoggedIn;
     yield* RepositoryRealtimeUsers().getCheckIsCurrentUserInApp(currentUser.uid);
@@ -34,63 +34,63 @@ class LoginStatusUpdate with ChangeNotifier {
 
   Future<void> updateIsAgreementChecked(bool value) async {
     isAgreementChecked = value;
-    print('isAgreementChecked: $isAgreementChecked');
+    debugPrint('isAgreementChecked: $isAgreementChecked');
     notifyListeners();
   }
 
   Future<void> toggleIsAgreementChecked() async {
     isAgreementChecked = !isAgreementChecked;
-    print('isAgreementChecked: $isAgreementChecked');
+    debugPrint('isAgreementChecked: $isAgreementChecked');
     notifyListeners();
   }
 
   Future<void> toggleIsUnderstood() async {
     isUnderstood = !isUnderstood;
-    print('isUnderstood: $isUnderstood');
+    debugPrint('isUnderstood: $isUnderstood');
     notifyListeners();
   }
 
   Future<void> updateIsUserDataExists(bool value) async {
     isUserDataExists = value;
-    print('isUserDataExists: $isUserDataExists');
+    debugPrint('isUserDataExists: $isUserDataExists');
     notifyListeners();
   }
 
   Future<void> updateIsLogInButtonClicked(bool value) async {
     isLogInButtonClicked = value;
-    print('isLogInButtonClicked: $isLogInButtonClicked');
+    debugPrint('isLogInButtonClicked: $isLogInButtonClicked');
     notifyListeners();
   }
 
   Future<void> trueIsLoggedIn() async {
     isLoggedIn = true;
     notifyListeners();
-    print('trueIsLoggedIn isLoggedIn: $isLoggedIn');
+    debugPrint('trueIsLoggedIn isLoggedIn: $isLoggedIn');
   }
 
   Future<void> falseIsLoggedIn() async {
     isLoggedIn = false;
     notifyListeners();
-    print('falseIsLoggedIn isLoggedIn: $isLoggedIn');
+    debugPrint('falseIsLoggedIn isLoggedIn: $isLoggedIn');
   }
 
   Future<void> updateProviderId(String newProviderId) async {
     providerId = newProviderId;
-    print('updateProviderId 완료');
+    debugPrint('updateProviderId 완료');
     notifyListeners();
   }
 
   Future<void> updateCurrentUser(User newUser) async {
     currentUser = newUser;
-    print('updatecurrentUser 완료');
-    print('currentUser: $currentUser');
+    debugPrint('updatecurrentUser 완료');
+    debugPrint('currentUser: $currentUser');
     notifyListeners();
   }
 
   Future<void> updateCurrentVisit(DateTime value) async {
     currentVisit = value;
-    print('updateCurrentVisit 완료');
-    print('currentVisit: $currentVisit');
+    debugPrint('updateCurrentVisit 완료');
+    debugPrint('currentVisit: $currentVisit');
     notifyListeners();
   }
 

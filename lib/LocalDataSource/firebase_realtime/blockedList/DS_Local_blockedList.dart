@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter/cupertino.dart';
 
 class LocalDSBlockedList {
 
@@ -32,9 +33,9 @@ class LocalDSBlockedList {
 
         // forEach 대신 일반 for 루프를 사용하여 키 확인
         for (var key in finalData.keys) {
-          print('key: $key');
+          debugPrint('key: $key');
           if (key.toString().contains('${currentUser?.uid}')) {
-            print('상대방이 나를 차단해놨으므로, 알림을 보내선 안 됨');
+            debugPrint('상대방이 나를 차단해놨으므로, 알림을 보내선 안 됨');
             return true; // 여기서 함수 전체에서 바로 true를 반환
           }
         }
@@ -44,7 +45,7 @@ class LocalDSBlockedList {
       return false;
 
     } catch (e) {
-      print('checkIsOpponentBlockedMe e: $e');
+      debugPrint('checkIsOpponentBlockedMe e: $e');
       return false;
     }
 

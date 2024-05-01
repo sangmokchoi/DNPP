@@ -72,6 +72,8 @@ dependencies:
 
   package_info_plus: ^5.0.1
 
+  sizer: ^2.0.15
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -88,23 +90,6 @@ flutter:
     - fonts/
 
   fonts:
-    - family: NotoSansKR
-      fonts:
-        - asset: fonts/NotoSansKR-Black.ttf
-        - asset: fonts/NotoSansKR-Black.ttf
-        - asset: fonts/NotoSansKR-Bold.ttf
-        - asset: fonts/NotoSansKR-ExtraBold.ttf
-        - asset: fonts/NotoSansKR-ExtraLight.ttf
-        - asset: fonts/NotoSansKR-Light.ttf
-        - asset: fonts/NotoSansKR-Medium.ttf
-        - asset: fonts/NotoSansKR-Regular.ttf
-        - asset: fonts/NotoSansKR-SemiBold.ttf
-        - asset: fonts/NotoSansKR-Thin.ttf
-    - family: NanumMyeongjo
-      fonts:
-        - asset: fonts/NanumMyeongjo.ttf
-        - asset: fonts/NanumMyeongjoBold.ttf
-        - asset: fonts/NanumMyeongjoExtraBold.ttf
     - family: NanumSquare
       fonts:
         - asset: fonts/NanumSquare_acB.ttf

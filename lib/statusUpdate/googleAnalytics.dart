@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../models/userProfile.dart';
-import 'loadingUpdate.dart';
 import 'profileUpdate.dart';
 
 
@@ -25,7 +24,7 @@ class GoogleAnalyticsNotifier extends ChangeNotifier {
       if (durationInSeconds < 60) {
         durationInSeconds++; // 앱이 백그라운드에 들어가도 동작함
       }
-      //print('$screenName durationInSeconds: $durationInSeconds');
+      //debugPrint('$screenName durationInSeconds: $durationInSeconds');
       //GoogleAnalytics().onboardingScreen(context, durationInSeconds);
 
     });
@@ -45,7 +44,7 @@ class GoogleAnalyticsNotifier extends ChangeNotifier {
         },
       ).then((value) {
         durationInSeconds = 0;
-        print('cancelAndLogBoardingTime 완료');
+        debugPrint('cancelAndLogBoardingTime 완료');
       });
 
     }
@@ -97,7 +96,7 @@ class GoogleAnalytics {
     //   },
     // );
     await FirebaseAnalytics.instance.logScreenView(screenName: screenName);
-    print('trackScreen 완료');
+    debugPrint('trackScreen 완료');
   }
 
   Future<void> onboardingScreen(int seconds) async {
@@ -120,7 +119,7 @@ class GoogleAnalytics {
 
 
   Future<void> setAnalyticsUserProfile(BuildContext context, UserProfile userProfile) async {
-    print('setAnalyticsUserProfile 진입');
+    debugPrint('setAnalyticsUserProfile 진입');
 
     try {
       await setUserProperty(context, "userProfile_racket", userProfile.racket);
@@ -185,7 +184,7 @@ class GoogleAnalytics {
       }
 
     } catch (e) {
-      print('setAnalyticsUserProfile e: $e');
+      debugPrint('setAnalyticsUserProfile e: $e');
     }
 
   }
