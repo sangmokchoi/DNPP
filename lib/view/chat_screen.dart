@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:sizer/sizer.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dnpp/constants.dart';
 import 'package:dnpp/repository/firebase_realtime_blockedList.dart';
@@ -29,21 +30,21 @@ class ChatScreen extends StatefulWidget {
 
 class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
-  late Future<void> myFuture;
+  late Stream<void> myFuture;
 
   @override
   void initState() {
     //ChatBackgroundListen().setIsCurrentUserInChat();
 
-    print('widget.receivedData: ${widget.receivedData}');
-    print('widget.receivedData.values: ${widget.receivedData.values}');
+    debugPrint('widget.receivedData: ${widget.receivedData}');
+    debugPrint('widget.receivedData.values: ${widget.receivedData.values}');
     if (!widget.receivedData.values.contains(null)){
       String opponentUid = '';
 
     final fromChatList = widget.receivedData['id']; // 유저가 채팅 리스트에서 건너오는 경우
     final fromDirect = widget.receivedData['uid']; // 유저가 다이렉트로 채팅 보내는 경우
-    print('fromChatList: $fromChatList');
-    print('fromDirect: $fromDirect');
+    debugPrint('fromChatList: $fromChatList');
+    debugPrint('fromDirect: $fromDirect');
 
     if (fromChatList == null) {
       opponentUid = fromDirect;
@@ -63,7 +64,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       final _chatRoodID = widget.receivedData.keys.first;
       chatRoomId = _chatRoodID;
 
-      myFuture = Future.delayed(Duration.zero);
+      myFuture = Stream.empty();
     }
 
     loadMessages();
@@ -108,7 +109,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
   @override
   void dispose() {
-    print('dispose!!!');
+    debugPrint('dispose!!!');
     _lastMessagesSubscription.cancel(); // 리스너 취소
     // ChatBackgroundListen().disconnectIsCurrentUserInChat();
     //ChatBackgroundListen().setIsCurrentUserInChat(false);
@@ -118,18 +119,18 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
   @override
   Future<void> didChangeAppLifecycleState(AppLifecycleState state) async {
-    print('챗 뷰 didChangeAppLifecycleState');
+    debugPrint('챗 뷰 didChangeAppLifecycleState');
     if (state == AppLifecycleState.paused) {
-      print('챗 뷰에서 백그라운드로 들어감');
+      debugPrint('챗 뷰에서 백그라운드로 들어감');
       _lastMessagesSubscription.cancel();
 
       await RepositoryRealtimeMessages().getUpdateIsMeInRoom(
           FirebaseAuth.instance.currentUser?.uid.toString() ?? '', chatRoomId,
           messagesList.length ?? 0); // 채팅방에서 나감을 선언
     } else if (state == AppLifecycleState.resumed) {
-      print('챗 뷰에서 포그라운드로 들어서');
-      print('_lastMessagesSubscription.isPaused: ${_lastMessagesSubscription.isPaused}');
-      print('_lastMessagesSubscription == null : ${_lastMessagesSubscription == null}');
+      debugPrint('챗 뷰에서 포그라운드로 들어서');
+      debugPrint('_lastMessagesSubscription.isPaused: ${_lastMessagesSubscription.isPaused}');
+      debugPrint('_lastMessagesSubscription == null : ${_lastMessagesSubscription == null}');
       //if (_lastMessagesSubscription == null) {
         loadMessages();
       //}
@@ -146,74 +147,101 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           "gs://dnpp-402403.appspot.com/profile_photos/empty_profile_6.png");
       imageUrlFromStorage = await gsReference.getDownloadURL();
       //await ChatBackgroundListen().setIsCurrentUserInChat(true);
-      await Provider.of<CurrentPageProvider>(context, listen: false).setCurrentPage('ChatScreen');
-      await GoogleAnalytics().trackScreen(context, 'ChatScreen');
+      if (mounted) {
+        debugPrint('채팅 스크린 마운트됨');
+        await Provider.of<CurrentPageProvider>(context, listen: false)
+            .setCurrentPage('ChatScreen');
+        await GoogleAnalytics().trackScreen(context, 'ChatScreen');
+      }
     });
 
-    return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back),
-          onPressed: () async {
+    return PopScope(
+        onPopInvoked: (_) {
+
+          Future.microtask(() async {
             FocusScope.of(context).unfocus();
+            RepositoryRealtimeMessages().getUpdateIsMeInRoom(
+                FirebaseAuth.instance.currentUser?.uid.toString() ?? '', chatRoomId,
+                messagesList.length ?? 0); // 채팅방에서 나감을 선언
 
-            Future.microtask(() async {
-              RepositoryRealtimeMessages().getUpdateIsMeInRoom(
-                  FirebaseAuth.instance.currentUser?.uid.toString() ?? '', chatRoomId,
-                  messagesList.length ?? 0); // 채팅방에서 나감을 선언
+            await Provider.of<GoogleAnalyticsNotifier>(context, listen: false)
+                .startTimer('ChatScreen');
 
-              await Provider.of<GoogleAnalyticsNotifier>(context, listen: false)
-                  .startTimer('ChatScreen');
+          });
 
-            }).then((value) {
-              Navigator.pop(context);
-            });
+        },
+      child: GestureDetector(
+        onTap: (){
+          FocusManager.instance.primaryFocus?.unfocus();
+        },
+        child: Scaffold(
+          resizeToAvoidBottomInset: false,
+          key: const ValueKey("ChatScreen"),
+          appBar: AppBar(
+            leading: IconButton(
+              icon: Icon(Icons.arrow_back),
+              onPressed: () async {
+                FocusScope.of(context).unfocus();
+
+                Future.microtask(() async {
+                  RepositoryRealtimeMessages().getUpdateIsMeInRoom(
+                      FirebaseAuth.instance.currentUser?.uid.toString() ?? '', chatRoomId,
+                      messagesList.length ?? 0); // 채팅방에서 나감을 선언
+
+                  await Provider.of<GoogleAnalyticsNotifier>(context, listen: false)
+                      .startTimer('ChatScreen');
+
+                }).then((value) {
+                  Navigator.pop(context);
+                });
 
 
-          },
-        ),
-        backgroundColor: Theme.of(context).primaryColor,
-        title: Text(
-          opponentUser().firstName!,
-        ),
-      ),
-      body: FutureBuilder(
-        future: myFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.active || snapshot.connectionState == ConnectionState.done) {
-            return Chat(
-              messages: messages,
-              // onAttachmentPressed: _handleAttachmentPressed,
-              // onMessageTap: _handleMessageTap,
-              onMessageTap: handleMessageTap,
-              onPreviewDataFetched: handlePreviewDataFetched,
-              onSendPressed: handleSendPressed,
-              showUserAvatars: true,
-              showUserNames: true,
-              user: user(),
-              l10n: const ChatL10nEn(
-                attachmentButtonAccessibilityLabel: '미디어 전송',
-                emptyChatPlaceholder: '아직 받은 메시지가 없습니다',
-                fileButtonAccessibilityLabel: '파일',
-                inputPlaceholder: '채팅 입력',
-                sendButtonAccessibilityLabel: '보내기',
-                unreadMessagesLabel: '안 읽은 메시지',
-              ),
-              theme: const DefaultChatTheme(
-                primaryColor: kMainColor,
-                seenIcon: Text(
-                  'read',
-                  style: TextStyle(
-                    fontSize: 19.0,
+              },
+            ),
+            backgroundColor: Theme.of(context).primaryColor,
+            title: Text(
+              opponentUser().firstName!,
+            ),
+          ),
+          body: StreamBuilder(
+            stream: myFuture,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.active || snapshot.connectionState == ConnectionState.done) {
+                return Chat(
+                  messages: messages,
+                  // onAttachmentPressed: _handleAttachmentPressed,
+                  // onMessageTap: _handleMessageTap,
+                  onMessageTap: handleMessageTap,
+                  onPreviewDataFetched: handlePreviewDataFetched,
+                  onSendPressed: handleSendPressed,
+                  showUserAvatars: true,
+                  showUserNames: true,
+                  user: user(),
+                  l10n: const ChatL10nEn(
+                    attachmentButtonAccessibilityLabel: '미디어 전송',
+                    emptyChatPlaceholder: '아직 받은 메시지가 없습니다',
+                    fileButtonAccessibilityLabel: '파일',
+                    inputPlaceholder: '채팅 입력',
+                    sendButtonAccessibilityLabel: '보내기',
+                    unreadMessagesLabel: '안 읽은 메시지',
                   ),
-                ),
-              ),
-            );
-          } else {
-            return Center(child: kCustomCircularProgressIndicator);
-          }
+                  theme: const DefaultChatTheme(
+                    primaryColor: kMainColor,
+                    seenIcon: Text(
+                      'read',
+                      style: TextStyle(
+                        fontSize: 19.0,
+                      ),
+                    ),
+                  ),
+                );
+              } else {
+                return Center(child: kCustomCircularProgressIndicator);
+              }
 
-        }
+            }
+          ),
+        ),
       ),
     );
   }
@@ -286,7 +314,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
     if (opponent['uid'] != null) {
 
-      print('uid opponent: $opponent');
+      debugPrint('uid opponent: $opponent');
       id = opponent['uid'];
       imageUrl = opponent['photoUrl'];
       firstName = opponent['nickName'];
@@ -294,7 +322,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
     } else if (opponent['id'] != null) {
 
-      print('id opponent: $opponent');
+      debugPrint('id opponent: $opponent');
 
       //if (opponent['id'] != currentUserProfile.uid) {
       id = opponent['id'];
@@ -305,7 +333,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
     } else {
 
-      print('null opponent: $opponent');
+      debugPrint('null opponent: $opponent');
 
       id = opponent.keys.first;
       imageUrl = imageUrlFromStorage;
@@ -367,21 +395,21 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     // 업데이트된 Room 객체를 Firebase에 저장
     await messagesRef.set(messagesJson);
 
-    //print('IsOpponentUserInChat: $IsOpponentUserInChat');
+    //debugPrint('IsOpponentUserInChat: $IsOpponentUserInChat');
     final currentUserProfileUid = FirebaseAuth.instance.currentUser?.uid.toString() ?? '';
 
     isOpponentBlockedMe = await RepositoryRealtimeBlockedList().getCheckIsOpponentBlockedMe(opponentUser().id.toString()); // true 이면 현재 유저가 상대방으로부터 차단 당한 상태
     isOpponentInRoom = await loadOpponentMetadata(currentUserProfileUid);
 
-    print('handleSendPressed isOpponentInRoom: $isOpponentInRoom');
-    print('isOpponentBlockedMe: $isOpponentBlockedMe');
+    debugPrint('handleSendPressed isOpponentInRoom: $isOpponentInRoom');
+    debugPrint('isOpponentBlockedMe: $isOpponentBlockedMe');
 
     if (isOpponentInRoom == false && isOpponentBlockedMe == false) { //isOpponentInRoom
 
       await Future.delayed(Duration(milliseconds: 10)).then((value) async {
         final newBadge = await RepositoryRealtimeUsers().getAddOpponentUserBadge(
             opponentUser().id);
-        print('newBadge in chat view: $newBadge');
+        debugPrint('newBadge in chat view: $newBadge');
 
         //FlutterLocalNotification.showNotification();
         final token = await RepositoryRealtimeUsers().getCheckFcmToken(
@@ -405,19 +433,19 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     final updatedMessage = (messages[index] as types.TextMessage).copyWith(
       previewData: previewData,
     );
-    print('handlePreviewDataFetched 진입');
+    debugPrint('handlePreviewDataFetched 진입');
 
     messages[index] = updatedMessage;
   }
 
   void handleMessageTap(BuildContext _, types.Message message) async {
     var createdAt = message.createdAt;
-    //print("createdAt: $createdAt");
+    //debugPrint("createdAt: $createdAt");
   }
 
 
   Future<void> createChatRoom() async {
-    print('  Future<void> createChatRoom() async ');
+    debugPrint('  Future<void> createChatRoom() async ');
     DatabaseReference ref =
     FirebaseDatabase.instance.ref("messages/${chatRoomId}");
     await ref.set(room().toJson());
@@ -478,31 +506,23 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
         }).toList();
 
-        print('messagesList: $messagesList');
+        debugPrint('messagesList: $messagesList');
       }
 
       await updateMyMetadata(currentUserProfileUid).then((badge) async {
 
-        // IsOpponentUserInChat = await ChatBackgroundListen().checkIsOpponentUserInChat(opponentUser().id.toString());
-        // print('IsOpponentUserInChat: $IsOpponentUserInChat');
-        //isMyAndOpponentMetadataSame = (ChatBackgroundListen().checkIsOpponentUserInChat(opponentUser().id.toString())) as bool;
-        // isOpponentBlockedMe = await ChatBackgroundListen().checkIsOpponentBlockedMe(opponentUser().id.toString()); // true 이면 현재 유저가 상대방으로부터 차단 당한 상태
-        // isOpponentInRoom = await loadOpponentMetadata(currentUserProfileUid);
-        //print('loadMessages isOpponentInRoom: $isOpponentInRoom');
-        //isOpponentBlockedMe = await ChatBackgroundListen().checkIsOpponentUserInChat(opponentUser().id.toString());
-
-        print('final badge = await updateMetadata(currentUserProfile);: $badge');
+        debugPrint('final badge = await updateMetadata(currentUserProfile);: $badge');
         await clearMyBadge(currentUserProfileUid, badge);
 
         try {
-          if (Provider.of<ProfileUpdate>(context, listen: false).userProfile != UserProfile.emptyUserProfile) {
 
+          if (Provider.of<ProfileUpdate>(context, listen: false).userProfile != UserProfile.emptyUserProfile) {
+            await updateMyProfile(Provider
+                .of<ProfileUpdate>(context, listen: false)
+                .userProfile);
           }
-          await updateMyProfile(Provider
-              .of<ProfileUpdate>(context, listen: false)
-              .userProfile);
         } catch (e) {
-          print('updateMyProfile e: $e');
+          debugPrint('updateMyProfile e: $e');
         }
 
       }).then((value) {
@@ -533,16 +553,16 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
     refResult.forEach((element) {
       // 각 요소가 Map<String, dynamic>인지 확인합니다.
-      print('element.runtimeType ${element.runtimeType}');
+      debugPrint('element.runtimeType ${element.runtimeType}');
       var finalElement =
       (element as Map<Object?, Object?>?)?.map<String, dynamic>(
             (key, value) => MapEntry(key.toString(), value),
       );
       //if (element is Map<String, dynamic>) {
-      //print('id가 currentUserProfileUid와 일치하는 경우에만 firstName과 imageUrl을 업데이트합니다.');
+      //debugPrint('id가 currentUserProfileUid와 일치하는 경우에만 firstName과 imageUrl을 업데이트합니다.');
 
       if (finalElement?["id"] == currentUserProfile.uid) {
-        print('업데이트할 값으로 firstName과 imageUrl을 변경합니다.');
+        debugPrint('업데이트할 값으로 firstName과 imageUrl을 변경합니다.');
         finalElement?["firstName"] = currentUserProfile.nickName;
         finalElement?["imageUrl"] = currentUserProfile.photoUrl;
 
@@ -555,11 +575,11 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     });
 
 // 업데이트된 refResult를 출력합니다.
-    print('Updated newResult: $newResult');
+    debugPrint('Updated newResult: $newResult');
 
     await usersRef.set(newResult);
 
-    print('updateMyProfile 완료');
+    debugPrint('updateMyProfile 완료');
 
   }
 
@@ -592,8 +612,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         //}
       });
 
-      print('messagesListLength: $messagesListLength');
-      print('currentLastSeen: $currentLastSeen');
+      debugPrint('messagesListLength: $messagesListLength');
+      debugPrint('currentLastSeen: $currentLastSeen');
 
       return messagesListLength - currentLastSeen;
 
@@ -625,31 +645,31 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       // 현재 사용자의 UID를 키로 가지지 않는 경우에만 필터링
       if (key != currentUserProfileUid) {
         //filteredMetadata[key] = value;
-        print('value: $value');
+        debugPrint('value: $value');
         // opponentLastSeen = value['lastSeen'] as int;
-        // print('opponentLastSeen: $opponentLastSeen');
+        // debugPrint('opponentLastSeen: $opponentLastSeen');
 
         opponentIsInRoom = value['isInRoom'] as bool;
-        print('opponentIsInRoom: $opponentIsInRoom');
+        debugPrint('opponentIsInRoom: $opponentIsInRoom');
 
       } else {
         // myLastSeen = value['lastSeen'] as int;
-        // print('myLastSeen: $myLastSeen');
+        // debugPrint('myLastSeen: $myLastSeen');
       }
 
     });
 
     // if (opponentLastSeen > (myLastSeen - 1)){ // 원래는 opponentLastSeen == myLastSeen 라는 뜻
     //   if (opponentLastSeen == myLastSeen) {
-    //      print('1111');
+    //      debugPrint('1111');
     //      return true; //false 면 badge를 보냄
     //   } else {
-    //     print('2222');
+    //     debugPrint('2222');
     //     return false; //false 면 badge를 보냄
     //   }
     //
     // } else { // opponentLastSeen < (myLastSeen - 1)
-    //   print('3333');
+    //   debugPrint('3333');
     //   return false;
     // }
 
@@ -659,26 +679,26 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
   Future<void> clearMyBadge(String currentUserProfileUid, int badge) async {
 
-    print('clearMyBadge 진입');
+    debugPrint('clearMyBadge 진입');
 
     DatabaseReference badgeRef =
     FirebaseDatabase.instance.ref("users/${currentUserProfileUid}/badge");
-    print('updateBadge currentUserProfile: ${currentUserProfileUid}');
+    debugPrint('updateBadge currentUserProfile: ${currentUserProfileUid}');
 
     var badgeRefOnce = await badgeRef.once();
 
     final badgeRefResult = badgeRefOnce.snapshot.value; // int
-    print('badgeRefResult: $badgeRefResult');
+    debugPrint('badgeRefResult: $badgeRefResult');
 
     if (badgeRefResult == null) {
 
       await badgeRef.set(0);
 
     } else {
-      print('badgeRefResult as int: ${(badgeRefResult as int)}');
+      debugPrint('badgeRefResult as int: ${(badgeRefResult as int)}');
       int newBadge = (badgeRefResult as int) - badge; // 현재 유저가 가지고 있는 배치를 가져오고, 이번에 읽은 lastSeen을 뺌
-      print('badge: $badge');
-      print('newBadge: $newBadge');
+      debugPrint('badge: $badge');
+      debugPrint('newBadge: $newBadge');
 
       newBadge = newBadge < 0 ? 0 : newBadge;
 

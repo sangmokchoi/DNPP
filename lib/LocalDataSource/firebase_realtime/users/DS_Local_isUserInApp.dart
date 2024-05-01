@@ -1,6 +1,7 @@
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter/cupertino.dart';
 
 class LocalDSIsUserInApp {
 
@@ -10,7 +11,7 @@ class LocalDSIsUserInApp {
 
     // try {//
 
-    print('setIsCurrentUserInApp 진입');
+    debugPrint('setIsCurrentUserInApp 진입');
     DatabaseReference ref =
     FirebaseDatabase.instance.ref("users/${currentUser?.uid}/isUserInApp");
 
@@ -19,16 +20,14 @@ class LocalDSIsUserInApp {
     connectedRef.onValue.listen((event) async {
       final connected = event.snapshot.value as bool? ?? false;
       if (connected) {
-
         await ref.set(true);
-
       } else {
         await ref.set(false);
       }
     });
 
     // } catch (e) {
-    //   print('setIsCurrentUserInChat e: $e');
+    //   debugPrint('setIsCurrentUserInChat e: $e');
     //
     //
     // }
@@ -47,7 +46,7 @@ class LocalDSIsUserInApp {
 
 
     } catch (e) {
-      print('setIsCurrentUserInChat e: $e');
+      debugPrint('setIsCurrentUserInChat e: $e');
       return;
 
     }
@@ -63,11 +62,11 @@ class LocalDSIsUserInApp {
       final once = await ref.once();
 
       final isOpponentUserInChat = (once.snapshot.value) as bool? ?? false;
-      //print('checkIsOpponentUserInChat isOpponentUserInChat: $isOpponentUserInChat');
+      //debugPrint('checkIsOpponentUserInChat isOpponentUserInChat: $isOpponentUserInChat');
       yield isOpponentUserInChat;
 
     } catch (e) {
-      print('checkIsOpponentUserInChat e: $e');
+      debugPrint('checkIsOpponentUserInChat e: $e');
       yield false;
 
     }
@@ -81,16 +80,16 @@ class LocalDSIsUserInApp {
     //
     //     final connected = event.snapshot.value as bool? ?? false;
     //
-    //     print('connected: $connected');
+    //     debugPrint('connected: $connected');
     //     returnBool = connected;
     //     return returnBool;
     //   });
     //
-    //   //print('returnBool: $returnBool');
+    //   //debugPrint('returnBool: $returnBool');
     //
     //
     // } catch (e) {
-    //   print('setIsCurrentUserInChat e: $e');
+    //   debugPrint('setIsCurrentUserInChat e: $e');
     //
     //   return false;
     // }

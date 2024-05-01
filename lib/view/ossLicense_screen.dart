@@ -47,44 +47,53 @@ class OssLicenseScreen extends StatelessWidget {
       await Provider.of<CurrentPageProvider>(context, listen: false).setCurrentPage('OssLicenseScreen');
       await GoogleAnalytics().trackScreen(context, 'OssLicenseScreen');
     });
-    return SafeArea(
-      child: Scaffold(
-          appBar: AppBar(
-            title: const Text('Open Source Licenses'),
-            leading: IconButton(
-              onPressed: () async{
-                Future.microtask(() async {
-                  Provider.of<GoogleAnalyticsNotifier>(context, listen: false)
-                      .startTimer('OssLicenseScreen');
-                }).then((value) {
-                    Navigator.pop(context);
-                });
-              },
-              icon: Icon(Icons.arrow_back),
+    return PopScope(
+      onPopInvoked: (_) {
+        Future.microtask(() async {
+          Provider.of<GoogleAnalyticsNotifier>(context, listen: false)
+              .startTimer('OssLicenseScreen');
+        });
+      },
+      child: SafeArea(
+        child: Scaffold(
+            key: const ValueKey("OssLicenseScreen"),
+            appBar: AppBar(
+              title: const Text('Open Source Licenses'),
+              leading: IconButton(
+                onPressed: () async{
+                  Future.microtask(() async {
+                    Provider.of<GoogleAnalyticsNotifier>(context, listen: false)
+                        .startTimer('OssLicenseScreen');
+                  }).then((value) {
+                      Navigator.pop(context);
+                  });
+                },
+                icon: Icon(Icons.arrow_back),
+              ),
             ),
-          ),
-          body: FutureBuilder<List<Package>>(
-              future: _licenses,
-              initialData: const [],
-              builder: (context, snapshot) {
-                return ListView.separated(
-                    padding: const EdgeInsets.all(0),
-                    itemCount: snapshot.data?.length ?? 0,
-                    itemBuilder: (context, index) {
-                      final package = snapshot.data![index];
-                      return ListTile(
-                        title: Text('${package.name} ${package.version}'),
-                        subtitle: package.description.isNotEmpty ? Text(package.description) : null,
-                        trailing: const Icon(Icons.chevron_right),
-                        onTap: () => Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (context) => MiscOssLicenseSingle(package: package),
+            body: FutureBuilder<List<Package>>(
+                future: _licenses,
+                initialData: const [],
+                builder: (context, snapshot) {
+                  return ListView.separated(
+                      padding: const EdgeInsets.all(0),
+                      itemCount: snapshot.data?.length ?? 0,
+                      itemBuilder: (context, index) {
+                        final package = snapshot.data![index];
+                        return ListTile(
+                          title: Text('${package.name} ${package.version}'),
+                          subtitle: package.description.isNotEmpty ? Text(package.description) : null,
+                          trailing: const Icon(Icons.chevron_right),
+                          onTap: () => Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => MiscOssLicenseSingle(package: package),
+                            ),
                           ),
-                        ),
-                      );
-                    },
-                    separatorBuilder: (context, index) => const Divider());
-              })),
+                        );
+                      },
+                      separatorBuilder: (context, index) => const Divider());
+                })),
+      ),
     );
   }
 }

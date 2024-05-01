@@ -65,7 +65,7 @@ class MoveToOtherScreen {
   void bottomProfileUp(BuildContext context, String uid) {
     // data = types.User
 
-    print('bottomProfileUp data: $uid');
+    debugPrint('bottomProfileUp data: $uid');
     //getOneUserData
 
     showModalBottomSheet<void>(
@@ -75,8 +75,8 @@ class MoveToOtherScreen {
         return StreamBuilder(
             stream: LocalDSUserData().oneUserData(uid),//FirebaseFirestore.instance.collection('users').doc(data['id']).snapshots(),
           builder: (context, snapshot) {
-              print('bottomProfileUp snapshot.data?.docs: ${snapshot.data?.docs}');
-              print('bottomProfileUp snapshot.hasData: ${snapshot.hasData}');
+              debugPrint('bottomProfileUp snapshot.data?.docs: ${snapshot.data?.docs}');
+              debugPrint('bottomProfileUp snapshot.hasData: ${snapshot.hasData}');
               var docs = snapshot.data?.docs;
 
             if (snapshot.connectionState == ConnectionState.waiting) {
@@ -88,7 +88,7 @@ class MoveToOtherScreen {
             } else {
 
               final snapshotData = docs?.first.data();
-              print('snapshotData: ${snapshotData}');
+              debugPrint('snapshotData: ${snapshotData}');
 
               return Stack(
                 children: [

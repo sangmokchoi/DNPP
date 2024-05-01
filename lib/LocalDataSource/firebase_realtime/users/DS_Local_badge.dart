@@ -3,6 +3,7 @@ import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter_app_badger/flutter_app_badger.dart';
 
 class LocalDSBadge {
@@ -21,9 +22,9 @@ class LocalDSBadge {
 
     ref.onValue.listen((event) {
       final eventSnapshot = event.snapshot;
-      //print('myBadgeListen eventSnapshot: $eventSnapshot');
-      //print('myBadgeListen eventSnapshot: ${eventSnapshot.key}'); // badge
-      //print('myBadgeListen eventSnapshot: ${eventSnapshot.value}'); // badge 의 개수
+      //debugPrint('myBadgeListen eventSnapshot: $eventSnapshot');
+      //debugPrint('myBadgeListen eventSnapshot: ${eventSnapshot.key}'); // badge
+      //debugPrint('myBadgeListen eventSnapshot: ${eventSnapshot.value}'); // badge 의 개수
 
       if (eventSnapshot.value != null) {
         myBadgeCount = eventSnapshot.value as int;
@@ -56,7 +57,7 @@ class LocalDSBadge {
       }
 
     } catch (e) {
-      print('downloadMyBadge e: $e');
+      debugPrint('downloadMyBadge e: $e');
       return 0;
     }
   }
@@ -69,13 +70,13 @@ class LocalDSBadge {
       FirebaseDatabase.instance.ref("users/${currentUser?.uid}/badge");
 
       await ref.set(currentBadge);
-      print('appbadger currentBadge: $currentBadge');
+      debugPrint('appbadger currentBadge: $currentBadge');
 
       await FlutterAppBadger.updateBadgeCount(currentBadge);
       return;
 
     } catch (e) {
-      print('updateMyBadge e: $e');
+      debugPrint('updateMyBadge e: $e');
       return;
 
     }
@@ -89,12 +90,12 @@ class LocalDSBadge {
       FirebaseDatabase.instance.ref("users/${currentUser?.uid}/badge");
 
       await ref.set(0);
-      print('initializeMyBadge updateBadgeCount');
+      debugPrint('initializeMyBadge updateBadgeCount');
       await FlutterAppBadger.updateBadgeCount(0);
       return;
 
     } catch (e) {
-      print('initializeMyBadge e: $e');
+      debugPrint('initializeMyBadge e: $e');
       return;
 
     }
@@ -108,25 +109,25 @@ class LocalDSBadge {
       FirebaseDatabase.instance.ref("users/${opponentUid}/badge");
 
       final oldBadge = await ref.once();
-      print('oldBadge..snapshot.value: ${oldBadge.snapshot.value}');
+      debugPrint('oldBadge..snapshot.value: ${oldBadge.snapshot.value}');
 
       int badge = 0;
 
       if (oldBadge.snapshot.value == null) {
-        print('oldBadge.runtimeType: ${oldBadge.runtimeType}');
+        debugPrint('oldBadge.runtimeType: ${oldBadge.runtimeType}');
 
       } else {
         badge = oldBadge.snapshot.value as int;
       }
-      print('badge: $badge');
+      debugPrint('badge: $badge');
       final newBadge = badge + 1;
-      print('newBadge: $newBadge');
+      debugPrint('newBadge: $newBadge');
       await ref.set(newBadge);
 
       return newBadge;
 
     } catch (e) {
-      print('updateUserBadge e: $e');
+      debugPrint('updateUserBadge e: $e');
       return 0;
     }
 
@@ -140,25 +141,25 @@ class LocalDSBadge {
       FirebaseDatabase.instance.ref("users/${opponentUid}/badge");
 
       final oldBadge = await ref.once();
-      print('oldBadge..snapshot.value: ${oldBadge.snapshot.value}');
+      debugPrint('oldBadge..snapshot.value: ${oldBadge.snapshot.value}');
 
       int badge = 0;
 
       if (oldBadge.snapshot.value == null) {
-        print('oldBadge.runtimeType: ${oldBadge.runtimeType}');
+        debugPrint('oldBadge.runtimeType: ${oldBadge.runtimeType}');
 
       } else {
         badge = oldBadge.snapshot.value as int;
       }
-      print('badge: $badge');
+      debugPrint('badge: $badge');
       final newBadge = badge - lastSeen;
-      print('newBadge: $newBadge');
+      debugPrint('newBadge: $newBadge');
       await ref.set(newBadge);
 
       return newBadge;
 
     } catch (e) {
-      print('updateUserBadge e: $e');
+      debugPrint('updateUserBadge e: $e');
       return 0;
     }
 

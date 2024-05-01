@@ -1,4 +1,5 @@
 
+import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
@@ -17,15 +18,15 @@ class NaverMapSearch {
   //     });
   //
   //     if (response.statusCode == 200) {
-  //       print(response.body);
+  //       debugPrint(response.body);
   //       final Map<String, dynamic> data = json.decode(response.body);
-  //       print(data.runtimeType);
+  //       debugPrint(data.runtimeType);
   //       return data;
   //     } else {
   //       throw Exception('Failed to load data');
   //     }
   //   } catch (error) {
-  //     print("Error: $error");
+  //     debugPrint("Error: $error");
   //     throw error;
   //   }
   // }
@@ -41,23 +42,23 @@ class NaverMapSearch {
   //   //
   //   //     if (response.statusCode == 200) {
   //   //       final data = response.body; // API 응답 데이터
-  //   //       print(data);
+  //   //       debugPrint(data);
   //   //       // 여기서 데이터를 파싱하거나 사용합니다.
   //   //       final Map<String, dynamic> data1 = json.decode(response.body);
-  //   //       print(data1);
+  //   //       debugPrint(data1);
   //   //       return data1;
   //   //
   //   //     } else {
   //   //       throw Exception('Failed to load data');
   //   //     }
   //   //   } catch (error) {
-  //   //     print("Error: $error");
+  //   //     debugPrint("Error: $error");
   //   //     throw error;
   //   //   }
   //   // }
   //   try {
   //     final response = await http.get(Uri.parse(url));
-  //     print(response.statusCode);
+  //     debugPrint(response.statusCode);
   //     if (response.statusCode == 200) {
   //       final Map<String, dynamic> data = json.decode(response.body);
   //       return data;
@@ -65,7 +66,7 @@ class NaverMapSearch {
   //       throw Exception('Failed to load data');
   //     }
   //   } catch (error) {
-  //     print("Error: $error");
+  //     debugPrint("Error: $error");
   //     throw error;
   //   }
   // }
@@ -77,7 +78,7 @@ class NaverMapSearch {
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = json.decode(response.body);
-        print('data items: $data');
+        debugPrint('data items: $data');
 
         return data;
 
@@ -85,7 +86,7 @@ class NaverMapSearch {
         throw Exception('Failed to load data');
       }
     } catch (error) {
-      print("Error: $error");
+      debugPrint("Error: $error");
       throw error;
     }
 

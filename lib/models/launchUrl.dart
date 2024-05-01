@@ -14,7 +14,7 @@ import 'moveToOtherScreen.dart';
 class LaunchUrl {
 
   Future<void> myLaunchUrl(String _url) async {
-    print('myLaunchUrl 진입');
+    debugPrint('myLaunchUrl 진입');
     final Uri _newUrl = Uri.parse(_url);
     if (!await launchUrl(_newUrl)) {
       throw Exception('Could not launch $_newUrl');
@@ -161,7 +161,7 @@ class LaunchUrl {
                             style: kAppointmentTextButtonStyle.copyWith(color: okColor)
                         )),
                     onPressed: () {
-                      print('onOkPressed: ${onOkPressed}');
+                      debugPrint('onOkPressed: ${onOkPressed}');
                       if (onOkPressed != null) {
                         onOkPressed(); // 콜백 함수 실행
                         Navigator.pop(context); // 다이얼로그 닫기는 여기서 호출
@@ -178,12 +178,81 @@ class LaunchUrl {
         });
   }
 
+  Future<void> alertOkAndCancelFuncNoPop(BuildContext context, String titleText, String contentText,
+      String cancelText, String okText, Color cancelColor, Color okColor, VoidCallback? onCancelPressed, VoidCallback? onOkPressed, ) async {
+
+    showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (builder) {
+          return AlertDialog(
+            insetPadding:
+            EdgeInsets.only(left: 10.0, right: 10.0),
+            shape: kRoundedRectangleBorder,
+            title: Text(
+              titleText,
+              style: kAppointmentDateTextStyle,
+              textAlign: TextAlign.center,
+            ),
+            content: Text(
+              contentText,
+              style: TextStyle(
+                fontSize: 14.0,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            actions: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    style: TextButton.styleFrom(
+                      textStyle: Theme.of(context).textTheme.labelLarge,
+                    ),
+                    child: Center(
+                        child: Text(
+                          cancelText,
+                          style: kAppointmentTextButtonStyle.copyWith(color: cancelColor),
+                        )),
+                    onPressed: () {
+                      if (onCancelPressed != null) {
+                        onCancelPressed();
+                      }
+                      //Navigator.pop(context);
+
+                      // 다이얼로그 닫기는 여기서 호출
+
+                    },
+                  ),
+                  TextButton(
+                    style: TextButton.styleFrom(
+                      textStyle: Theme.of(context).textTheme.labelLarge,
+                    ),
+                    child: Center(
+                        child: Text(
+                            okText,
+                            style: kAppointmentTextButtonStyle.copyWith(color: okColor)
+                        )),
+                    onPressed: () {
+                      if (onOkPressed != null) {
+                        onOkPressed(); // 콜백 함수 실행
+                      }
+                    },
+                  ),
+                ],
+              ),
+            ],
+          );
+        });
+  }
+
+
   void openBottomSheetMoveToChat(BuildContext context, var user) {
     showModalBottomSheet(
       context: context,
       builder: (context) {
-        print('openBottomSheetMoveToChat user: ${user}');
-        print('user[pingpongCourt].length: ${user['pingpongCourt'].length}');
+        debugPrint('openBottomSheetMoveToChat user: ${user}');
+        debugPrint('user[pingpongCourt].length: ${user['pingpongCourt'].length}');
         return Container(
           height: 350,
           decoration: BoxDecoration(
@@ -251,7 +320,7 @@ class LaunchUrl {
                                 0) {
                               padding = EdgeInsets.only(left: 0.0);
                             } else if (index ==
-                                Provider.of<ProfileUpdate>(context, listen: false).pingpongList.length - 1) {
+                                Provider.of<ProfileUpdate>(context, listen: false).userProfile.pingpongCourt!.length - 1) {
                               padding = EdgeInsets.only(right: 0.0);
                             }
 

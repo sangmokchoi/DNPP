@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
@@ -22,7 +23,7 @@ class MapGeocode {
         throw Exception('Failed to load data');
       }
     } catch (error) {
-      print("Error: $error");
+      debugPrint("Error: $error");
       throw error;
     }
   }

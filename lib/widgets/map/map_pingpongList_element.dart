@@ -29,9 +29,9 @@ class PingpongListElement extends StatelessWidget {
     final Uri _url = Uri.parse(url);
 
     if (await launchUrl(_url)) {
-      print('Could launch $url');
+      debugPrint('Could launch $url');
     } else {
-      print('Could not launch $url');
+      debugPrint('Could not launch $url');
     }
   }
 
@@ -80,8 +80,8 @@ class PingpongListElement extends StatelessWidget {
                     minimumSize: Size(70, 20),
                     backgroundColor:
                         Provider.of<ProfileUpdate>(context, listen: false)
-                                .pingpongList
-                                .contains(_element)
+                                .userProfile.pingpongCourt
+                                !.contains(_element)
                             ? Colors.blueGrey
                             : kMainColor,
                     textStyle: TextStyle(fontSize: 15),
@@ -89,9 +89,9 @@ class PingpongListElement extends StatelessWidget {
                   onPressed: () {
 
                     if (Provider.of<ProfileUpdate>(context, listen: false)
-                        .pingpongList
-                        .contains(_element)) {
-                      print('contains true');
+                        .userProfile.pingpongCourt
+                    !.contains(_element)) {
+                      debugPrint('contains true');
                       Provider.of<ProfileUpdate>(
                           context,
                           listen: false)
@@ -100,19 +100,19 @@ class PingpongListElement extends StatelessWidget {
 
                     } else {
 
-                      print('contains false');
+                      debugPrint('contains false');
 
                       if (Provider.of<ProfileUpdate>(context, listen: false)
-                          .pingpongList
+                          .userProfile.pingpongCourt!
                           .length <
                           5) {
-                        print('탁구장 추가됨');
+                        debugPrint('탁구장 추가됨');
                         Provider.of<ProfileUpdate>(context, listen: false)
                             .addPingpongList(_element);
 
                       } else {
 
-                        print('활동 탁구장 등록은 총 5개까지만 가능합니다');
+                        debugPrint('활동 탁구장 등록은 총 5개까지만 가능합니다');
 
                         showDialog(
                           context: context,
@@ -144,7 +144,7 @@ class PingpongListElement extends StatelessWidget {
 
                   },
                   child: Provider.of<ProfileUpdate>(context, listen: false)
-                          .pingpongList
+                          .userProfile.pingpongCourt!
                           .contains(_element)
                       ? Text(
                           '해제',
@@ -211,7 +211,7 @@ class PingpongListElement extends StatelessWidget {
                     textStyle: TextStyle(fontSize: 15),
                   ),
                   onPressed: () async {
-                    print('더보기 완료');
+                    debugPrint('더보기 완료');
 
                     showDialog(
                       context: context,

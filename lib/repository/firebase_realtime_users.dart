@@ -69,8 +69,8 @@ class RepositoryRealtimeUsers {
   Future<void> getToggleNotification(bool value) async {
     return await _localDSIsNotificationAble.toggleNotification(value);
   }
-  Future<bool> getCheckUserNotification(String value) async {
-    return await _localDSIsNotificationAble.checkUserNotification(value);
+  Stream<bool> getCheckUserNotification(String value) async* {
+    yield* _localDSIsNotificationAble.checkUserNotification(value);
   }
 
 

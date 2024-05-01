@@ -33,8 +33,8 @@ class MainLineChart extends StatelessWidget {
     } else {
       basicData = Provider.of<PersonalAppointmentUpdate>(context, listen: false);
     }
-    // print('line number: $number');
-    // print('line basicData.hourlyCounts: ${basicData.hourlyCounts}');
+    // debugPrint('line number: $number');
+    // debugPrint('line basicData.hourlyCounts: ${basicData.hourlyCounts}');
 
     return Padding(
       padding:

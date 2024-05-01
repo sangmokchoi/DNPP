@@ -20,7 +20,30 @@ class ShowToast {
         textColor: Colors.white,
       );
     } catch (e) {
-      print('showToast e: $e');
+      debugPrint('showToast e: $e');
+    }
+
+
+    // fToast().showToast(
+    //   child: toast,
+    //   gravity: ToastGravity.BOTTOM,
+    //   toastDuration: Duration(seconds: 2),
+    // );
+  }
+
+  showToastMiddle(String msg) {
+
+    try {
+      Fluttertoast.showToast(
+        msg: msg,
+        timeInSecForIosWeb: 1,
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.CENTER,
+        backgroundColor: Colors.grey,
+        textColor: Colors.white,
+      );
+    } catch (e) {
+      debugPrint('showToast e: $e');
     }
 
 

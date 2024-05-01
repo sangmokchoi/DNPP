@@ -34,7 +34,7 @@ class GraphsWidget extends StatelessWidget {
                   children: [
                     ConstrainedBox(
                       constraints: BoxConstraints(
-                        maxWidth: MediaQuery.of(context).size.width * 0.7,
+                        maxWidth: MediaQuery.sizeOf(context).width * 0.7,
                       ),
                       child: Text(
                         titleText,

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:custom_refresh_indicator/custom_refresh_indicator.dart';
 import 'package:dnpp/models/userProfile.dart';
 import 'package:dnpp/view/profile_screen.dart';
 import 'package:dnpp/view/signup_screen.dart';
@@ -8,7 +9,6 @@ import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dnpp/constants.dart';
 import 'package:dnpp/statusUpdate/courtAppointmentUpdate.dart';
-import 'package:dnpp/statusUpdate/loadingUpdate.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:persistent_bottom_nav_bar/persistent_tab_view.dart';
@@ -22,6 +22,7 @@ import '../statusUpdate/CurrentPageProvider.dart';
 import '../statusUpdate/loginStatusUpdate.dart';
 import '../statusUpdate/profileUpdate.dart';
 import '../statusUpdate/personalAppointmentUpdate.dart';
+import '../viewModel/LoadingScreen_ViewModel.dart';
 import '../viewModel/MainScreen_ViewModel.dart';
 import '../widgets/paging/main_personalChartPage.dart';
 import '../widgets/paging/main_courtChartPage.dart';
@@ -59,7 +60,6 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
   bool isPersonal = false;
 
   //bool isLoading = false;
-  bool isRefresh = false;
 
   String _courtTitle = '';
   String _courtRoadAddress = '';
@@ -72,21 +72,26 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      startTimer();
+      if (mounted) {
+        startTimer();
+      }
     } else {
-      _timer?.cancel();
+      if (mounted) {
+        _timer?.cancel();
+      }
+
     }
   }
 
   void startTimer() {
     _timer = Timer.periodic(_timerDuration, (timer) {
 
-      if (Provider.of<LoadingUpdate>(context, listen: false)
+      if (Provider.of<LoadingScreenViewModel>(context, listen: false)
           .refStringListMain
           .length > 1) {
 
         if (_currentImage < Provider
-            .of<LoadingUpdate>(context, listen: false)
+            .of<LoadingScreenViewModel>(context, listen: false)
             .refStringListMain
             .length -
             1) {
@@ -112,7 +117,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
 
       if (newPage != _currentPersonal) {
         _currentPersonal = newPage;
-        print('_currentPersonal: $_currentPersonal');
+        debugPrint('_currentPersonal: $_currentPersonal');
 
         // 요일 버튼 눌린 것이 초기화 되어야 함
         Provider.of<PersonalAppointmentUpdate>(context, listen: false)
@@ -121,13 +126,13 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
         if (_currentPersonal != 0) {
           _indexPersonal = _currentPersonal - 1;
           isPersonal = false;
-          print('isMyTime: $isPersonal');
+          debugPrint('isMyTime: $isPersonal');
         } else {
           _indexPersonal = _currentPersonal;
           isPersonal = true;
-          print('isMyTime: $isPersonal');
+          debugPrint('isMyTime: $isPersonal');
         }
-        print('_currentPersonal index: $_indexPersonal');
+        debugPrint('_currentPersonal index: $_indexPersonal');
 
         _courtTitle = Provider.of<ProfileUpdate>(context, listen: false)
                 .userProfile
@@ -146,7 +151,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
 
       if (newPage != _currentCourt) {
         _currentCourt = newPage;
-        print('_currentCourt: $_currentCourt');
+        debugPrint('_currentCourt: $_currentCourt');
 
         // 요일 버튼 눌린 것이 초기화 되어야 함
         Provider.of<CourtAppointmentUpdate>(context, listen: false)
@@ -154,7 +159,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
 
         _indexCourt = _currentCourt;
 
-        print('_currentCourt index: $_indexCourt');
+        debugPrint('_currentCourt index: $_indexCourt');
 
         _courtTitle = Provider.of<ProfileUpdate>(context, listen: false)
                 .userProfile
@@ -173,10 +178,12 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
     myFuture = calculateConfirmTime();
 
     super.initState(); // downloadAllImages()가 완료된 후에 initState()를 호출
-
+    debugPrint('메인 페이지 이닛스테이츠');
     WidgetsBinding.instance!.addObserver(this);
 
-    startTimer();
+    if (mounted) {
+      startTimer();
+    }
   }
 
   @override
@@ -194,6 +201,11 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
 
+    debugPrint('메인 페이지 build');
+    if (mounted) {
+      debugPrint('메인 페이지 mount됨!');
+    }
+
     // final currentPageProvider = Provider.of<CurrentPageProvider>(context, listen: false);
     // currentPageProvider.setCurrentPage('MainScreen');
 
@@ -203,24 +215,26 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
         _secondBarChartPageController.jumpToPage(0);
         _thirdBarChartPageController.jumpToPage(0);
       } catch (e) {
-        print('jumpToPage: $e');
+        debugPrint('jumpToPage: $e');
       }
 
       if (Provider.of<ProfileUpdate>(context, listen: false).userProfile != UserProfile.emptyUserProfile) {
         await GoogleAnalytics().setAnalyticsUserProfile(context, Provider.of<ProfileUpdate>(context, listen: false).userProfile);
       }
+      await Provider.of<GoogleAnalyticsNotifier>(context, listen: false)
+          .startTimer('MainScreen');
       await Provider.of<CurrentPageProvider>(context, listen: false).setCurrentPage('MainScreen');
       await GoogleAnalytics().trackScreen(context, 'MainScreen');
 
       // Timer.periodic(Duration(seconds: 7), (timer) {
       //
       //   _currentImage = _imagePageController.page!.toInt();
-      //   if (Provider.of<LoadingUpdate>(context, listen: false)
+      //   if (Provider.of<LoadingScreenViewModel>(context, listen: false)
       //       .refStringListMain
       //       .length > 1 ){
       //
       //     if (_currentImage <
-      //         Provider.of<LoadingUpdate>(context, listen: false)
+      //         Provider.of<LoadingScreenViewModel>(context, listen: false)
       //             .refStringListMain
       //             .length -
       //             1) {
@@ -240,7 +254,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
       // });
     });
 
-    double width = MediaQuery.of(context).size.width;
+    double width = MediaQuery.sizeOf(context).width;
     double height = width * 3 / 4;
 
     Color sectionColor = Theme.of(context).brightness == Brightness.light
@@ -251,6 +265,8 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
       builder: (context, mainScreenViewModel, child) {
         return SafeArea(
           child: Scaffold(
+              resizeToAvoidBottomInset: false,
+            key: const ValueKey("MainScreen"),
               appBar: AppBar(
                 scrolledUnderElevation: 0,
                 centerTitle: false,
@@ -283,42 +299,8 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
                   //   onPressed: () => throw Exception(),
                   //   child: const Text("Throw Test Exception"),
                   // ),
-                  TextButton(
-                    onPressed: () {
-
-                    },
-                    child: const Text("Device Info"),
-                  ),
                 ],
               ),
-            //   body: CustomMaterialIndicator(
-            // onRefresh: () {
-            //   isRefresh = true;
-            //   return Provider.of<LoadingUpdate>(context, listen: false)
-            //       .loadData(context, isPersonal, _courtTitle, _courtRoadAddress)
-            //       .whenComplete(() => setState(() {
-            //             _secondBarChartPageController.animateTo(
-            //               _secondBarChartPageController.position.minScrollExtent,
-            //               duration: Duration(milliseconds: 250),
-            //               curve: Curves.easeInOut,
-            //             );
-            //
-            //             _thirdBarChartPageController.animateTo(
-            //               _thirdBarChartPageController.position.minScrollExtent,
-            //               duration: Duration(milliseconds: 250),
-            //               curve: Curves.easeInOut,
-            //             );
-            //             isRefresh = false;
-            //           })); //LoadData().refreshData(context);
-            // },
-            // indicatorBuilder: (context, controller) {
-            //   return Icon(
-            //     Icons.refresh,
-            //     color: kMainColor,
-            //     size: 30,
-            //   );
-            // },
-            // child: Stack(
             body: Stack(
               children: [
                 ListView(
@@ -332,7 +314,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
                         child: PageView.builder(
                           controller: _imagePageController,
                           itemCount:
-                              Provider.of<LoadingUpdate>(context, listen: false)
+                              Provider.of<LoadingScreenViewModel>(context, listen: false)
                                   .refStringListMain
                                   .length,
                           itemBuilder: (context, index) {
@@ -343,8 +325,8 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
                                 //     context,
                                 //     'mainScreen',
                                 //     index,
-                                //     Provider.of<LoadingUpdate>(context, listen: false).urlMapMain[
-                                //     Provider.of<LoadingUpdate>(
+                                //     Provider.of<LoadingScreenViewModel>(context, listen: false).urlMapMain[
+                                //     Provider.of<LoadingScreenViewModel>(
                                 //         context,
                                 //         listen: false).refStringListMain['$index']
                                 //     ]!);
@@ -353,11 +335,11 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
                                     context,
                                     'mainScreen',
                                     index,
-                                    Provider.of<LoadingUpdate>(
+                                    Provider.of<LoadingScreenViewModel>(
                                         context,
                                         listen: false).refStringListMain['$index']!,
-                                    Provider.of<LoadingUpdate>(context, listen: false).urlMapMain[
-                                    Provider.of<LoadingUpdate>(
+                                    Provider.of<LoadingScreenViewModel>(context, listen: false).urlMapMain[
+                                    Provider.of<LoadingScreenViewModel>(
                                         context,
                                         listen: false).refStringListMain['$index']
                                     ]!);
@@ -365,17 +347,17 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
                                 //await GoogleAnalytics().setUserProperty(context, "name0", "value0");
 
                                 await LaunchUrl().myLaunchUrl(
-                                    "${Provider.of<LoadingUpdate>(context, listen: false).urlMapMain[Provider.of<LoadingUpdate>(context, listen: false).refStringListMain['$index']]}");
+                                    "${Provider.of<LoadingScreenViewModel>(context, listen: false).urlMapMain[Provider.of<LoadingScreenViewModel>(context, listen: false).refStringListMain['$index']]}");
 
                                 },
                               child: Container(
                                 decoration: BoxDecoration(
                                   image: DecorationImage(
-                                    image: MemoryImage(Provider.of<LoadingUpdate>(
+                                    image: MemoryImage(Provider.of<LoadingScreenViewModel>(
                                                     context,
                                                     listen: false)
                                                 .imageMapMain[
-                                            Provider.of<LoadingUpdate>(context,
+                                            Provider.of<LoadingScreenViewModel>(context,
                                                     listen: false)
                                                 .refStringListMain['$index']] ??
                                         Uint8List(0)),
@@ -406,336 +388,626 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
                           color: sectionColor,
                           borderRadius:
                           BorderRadius.all(Radius.circular(10.0))),
-                      child: (FirebaseAuth.instance.currentUser != null) ?
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              ConstrainedBox(
-                                constraints: BoxConstraints(
-                                  maxWidth: MediaQuery.of(context).size.width * 0.8,
-                                ),
-                                child: Padding(
-                                  padding: const EdgeInsets.only(top: 15.0, left: 15.0),
-                                  child: Text(
-                                    '반갑습니다, ${Provider.of<ProfileUpdate>(context,
-                                        listen: false)
-                                        .userProfile
-                                        .nickName} 님',
-                                    style: kAppointmentTextStyle.copyWith(
-                                      fontSize: 20.0
-                                    ),
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                              ),
-                              SizedBox(width: 10.0,),
-                              Padding(
-                                padding: const EdgeInsets.only(top: 15.0, right: 15.0),
-                                child: GestureDetector(
-                                  onTap: () async {
-                                    await MoveToOtherScreen()
-                                        .persistentNavPushNewScreen(
-                                        context,
-                                        ProfileScreen(
-                                          isSignup: false,
-                                        ),
-                                        false,
-                                        PageTransitionAnimation.cupertino);
-                                  },
-                                    child: Icon(Icons.arrow_right_alt, size: 20.0, ),),
-                              ),
+                      child:
+                      Consumer<ProfileUpdate>(
+                        builder: (context, profileUpdate, child) {
 
-                            ],
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.only(top: 10.0, bottom: 5.0, left: 15.0, right: 15.0),
-                            child: Text.rich(
-                                TextSpan(
-                                    children: [
-                                      TextSpan(
-                                        text: '경력 ',
-                                        style: TextStyle(
-                                          fontSize: 14.0,
-                                        ),
-                                      ),
-                                      TextSpan(
-                                        text: '${Provider.of<ProfileUpdate>(context,
-                                            listen: false)
-                                            .userProfile.playedYears}\n',
-                                        style: TextStyle(
-                                            fontSize: 14.0,
-                                            fontWeight: FontWeight.bold
-                                        ),
-                                      ),
-                                      TextSpan(
-                                        text: '스타일 ',
-                                        style: TextStyle(
-                                          fontSize: 14.0,
-
-                                        ),
-                                      ),
-                                      TextSpan(
-                                        text: '${Provider.of<ProfileUpdate>(context,
-                                            listen: false)
-                                            .userProfile.playStyle}  ',
-                                        style: TextStyle(
-                                            fontSize: 14.0,
-                                            fontWeight: FontWeight.bold
-                                        ),
-                                      ),
-                                      TextSpan(
-                                        text: ' 라켓 ',
-                                        style: TextStyle(
-                                          fontSize: 14.0,
-
-                                        ),
-                                      ),
-                                      TextSpan(
-                                        text: '${Provider.of<ProfileUpdate>(context,
-                                            listen: false)
-                                            .userProfile.racket}  ',
-                                        style: TextStyle(
-                                            fontSize: 14.0,
-                                            fontWeight: FontWeight.bold
-                                        ),
-                                      ),
-                                      TextSpan(
-                                        text: ' 러버 ',
-                                        style: TextStyle(
-                                          fontSize: 14.0,
-
-                                        ),
-                                      ),
-                                      TextSpan(
-                                        text: '${Provider.of<ProfileUpdate>(context,
-                                            listen: false)
-                                            .userProfile.rubber}',
-                                        style: TextStyle(
-                                            fontSize: 14.0,
-                                            fontWeight: FontWeight.bold
-                                        ),
-                                      ),
-                                    ]
-                                )
-                            ),
-                          ), // 스펙
-                          Padding(
-                            padding:
-                            const EdgeInsets.only(top: 10.0, bottom: 5.0, left: 15.0, right: 15.0),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          if (profileUpdate.userProfile != UserProfile.emptyUserProfile) {
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Flexible(
-                                  flex: 3,
-                                  child: Column(
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    ConstrainedBox(
+                                      constraints: BoxConstraints(
+                                        maxWidth: MediaQuery.sizeOf(context).width * 0.8,
+                                      ),
+                                      child: Padding(
+                                        padding: const EdgeInsets.only(top: 15.0, left: 15.0),
+                                        child: Text(
+                                          '반갑습니다, ${profileUpdate
+                                              .userProfile
+                                              .nickName} 님',
+                                          style: kAppointmentTextStyle.copyWith(
+                                              fontSize: 20.0
+                                          ),
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    ),
+                                    SizedBox(width: 10.0,),
+                                    Padding(
+                                      padding: const EdgeInsets.only(top: 15.0, right: 15.0),
+                                      child: GestureDetector(
+                                        onTap: () async {
+                                          await MoveToOtherScreen()
+                                              .persistentNavPushNewScreen(
+                                              context,
+                                              ProfileScreen(
+                                                isSignup: false,
+                                              ),
+                                              false,
+                                              PageTransitionAnimation.cupertino);
+                                        },
+                                        child: Icon(Icons.arrow_right_alt, size: 20.0, ),),
+                                    ),
+
+                                  ],
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 10.0, bottom: 5.0, left: 15.0, right: 15.0),
+                                  child: Text.rich(
+                                      TextSpan(
+                                          children: [
+                                            TextSpan(
+                                              text: '경력 ',
+                                              style: TextStyle(
+                                                fontSize: 14.0,
+                                              ),
+                                            ),
+                                            TextSpan(
+                                              text: '${profileUpdate
+                                                  .userProfile.playedYears}\n',
+                                              style: TextStyle(
+                                                  fontSize: 14.0,
+                                                  fontWeight: FontWeight.bold
+                                              ),
+                                            ),
+                                            TextSpan(
+                                              text: '스타일 ',
+                                              style: TextStyle(
+                                                fontSize: 14.0,
+
+                                              ),
+                                            ),
+                                            TextSpan(
+                                              text: '${profileUpdate
+                                                  .userProfile.playStyle}  ',
+                                              style: TextStyle(
+                                                  fontSize: 14.0,
+                                                  fontWeight: FontWeight.bold
+                                              ),
+                                            ),
+                                            TextSpan(
+                                              text: ' 라켓 ',
+                                              style: TextStyle(
+                                                fontSize: 14.0,
+
+                                              ),
+                                            ),
+                                            TextSpan(
+                                              text: '${profileUpdate
+                                                  .userProfile.racket}  ',
+                                              style: TextStyle(
+                                                  fontSize: 14.0,
+                                                  fontWeight: FontWeight.bold
+                                              ),
+                                            ),
+                                            TextSpan(
+                                              text: ' 러버 ',
+                                              style: TextStyle(
+                                                fontSize: 14.0,
+
+                                              ),
+                                            ),
+                                            TextSpan(
+                                              text: '${profileUpdate
+                                                  .userProfile.rubber}',
+                                              style: TextStyle(
+                                                  fontSize: 14.0,
+                                                  fontWeight: FontWeight.bold
+                                              ),
+                                            ),
+                                          ]
+                                      )
+                                  ),
+                                ), // 스펙
+                                Padding(
+                                  padding:
+                                  const EdgeInsets.only(top: 10.0, bottom: 5.0, left: 15.0, right: 15.0),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceAround,
                                     children: [
-                                      Row(
-                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          Text(
-                                            '활동 탁구장   ',
-                                            style: TextStyle(
-                                              fontSize: 14.0,
-                                            ),
-                                          ),
-                                          Expanded(
-                                            child: Container(
-                                              height: 26,
-                                              //margin: EdgeInsets.only(top: 5.0, bottom: 0.0),
-                                              child: ListView.builder(
-                                                  scrollDirection: Axis.horizontal,
-                                                  itemCount: (Provider.of<ProfileUpdate>(context,
-                                                      listen: false)
-                                                      .userProfile.pingpongCourt?.length != 0) ? Provider.of<ProfileUpdate>(context,
-                                                      listen: false)
-                                                      .userProfile.pingpongCourt?.length : 1,
-                                                  itemBuilder: (itemBuilder, index) {
-                                                    var padding =
-                                                        EdgeInsets.zero;
+                                      Flexible(
+                                        flex: 3,
+                                        child: Column(
+                                          children: [
+                                            Row(
+                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                              children: [
+                                                Text(
+                                                  '활동 탁구장   ',
+                                                  style: TextStyle(
+                                                    fontSize: 14.0,
+                                                  ),
+                                                ),
+                                                Expanded(
+                                                  child: Container(
+                                                    height: 26,
+                                                    //margin: EdgeInsets.only(top: 5.0, bottom: 0.0),
+                                                    child: ListView.builder(
+                                                        scrollDirection: Axis.horizontal,
+                                                        itemCount: (
+                                                            profileUpdate
+                                                                .userProfile.pingpongCourt?.length != 0) ?
+                                                        profileUpdate
+                                                            .userProfile.pingpongCourt?.length : 1,
+                                                        itemBuilder: (itemBuilder, index) {
+                                                          var padding =
+                                                              EdgeInsets.zero;
 
-                                                    if (index ==
-                                                        0) {
-                                                      padding = EdgeInsets.only(left: 0.0);
-                                                    } else if (index ==
-                                                        Provider.of<ProfileUpdate>(context, listen: false).pingpongList.length - 1) {
-                                                      padding = EdgeInsets.only(right: 0.0);
-                                                    }
+                                                          if (index ==
+                                                              0) {
+                                                            padding = EdgeInsets.only(left: 0.0);
+                                                          } else if (index ==
+                                                              profileUpdate.userProfile.pingpongCourt!.length - 1) {
+                                                            padding = EdgeInsets.only(right: 0.0);
+                                                          }
 
-                                                    if (Provider.of<ProfileUpdate>(context,
-                                                        listen: false)
-                                                        .userProfile.pingpongCourt?.length != 0) { // 활동 탁구장이 있는 경우,
-                                                      return Padding(
-                                                        padding: padding,
-                                                        child: Container(
-                                                            margin: EdgeInsets.only(right: 7.0),
-                                                            padding: EdgeInsets.only(left: 10.0, right: 10.0, top: 3.0, bottom: 3.0),
-                                                            decoration: BoxDecoration(
-                                                              border: Border.all(color: kMainColor),
-                                                              borderRadius: BorderRadius.circular(20.0),
-                                                            ),
-                                                            child: Text('${Provider.of<ProfileUpdate>(context,
-                                                                listen: false)
-                                                                .userProfile.pingpongCourt?[index].title}',
-                                                              style: TextStyle(color: kMainColor, fontSize: 12.0),)),
-                                                      );
-                                                    } else { //활동 탁구장이 없는 경우,
-                                                      return Center(
-                                                        child: Row(
-                                                          crossAxisAlignment: CrossAxisAlignment.center,
-                                                          children: [
-                                                            Text(
-                                                              '활동 탁구장을 추가해주세요 ',
-                                                              style: TextStyle(color: Colors.grey,
-                                                              ),
-                                                            ),
-                                                            GestureDetector(
-                                                              onTap: () async {
-                                                                await MoveToOtherScreen()
-                                                                    .persistentNavPushNewScreen(
-                                                                    context,
-                                                                    ProfileScreen(
-                                                                      isSignup: false,
+                                                          if (profileUpdate
+                                                              .userProfile.pingpongCourt?.length != 0) { // 활동 탁구장이 있는 경우,
+                                                            return Padding(
+                                                              padding: padding,
+                                                              child: Container(
+                                                                  margin: EdgeInsets.only(right: 7.0),
+                                                                  padding: EdgeInsets.only(left: 10.0, right: 10.0, top: 3.0, bottom: 3.0),
+                                                                  decoration: BoxDecoration(
+                                                                    border: Border.all(color: kMainColor),
+                                                                    borderRadius: BorderRadius.circular(20.0),
+                                                                  ),
+                                                                  child: Text('${profileUpdate
+                                                                      .userProfile.pingpongCourt?[index].title}',
+                                                                    style: TextStyle(color: kMainColor, fontSize: 12.0),)),
+                                                            );
+                                                          } else { //활동 탁구장이 없는 경우,
+                                                            return Center(
+                                                              child: Row(
+                                                                crossAxisAlignment: CrossAxisAlignment.center,
+                                                                children: [
+                                                                  Text(
+                                                                    '활동 탁구장을 추가해주세요 ',
+                                                                    style: TextStyle(color: Colors.grey,
                                                                     ),
-                                                                    false,
-                                                                    PageTransitionAnimation.cupertino);
-                                                              },
-                                                              child: Icon(Icons.add_circle_outline, size: 15, color: kMainColor,),
-                                                            ),
-                                                          ],
-                                                        ),
-                                                      );
-                                                    }
-
-                                                  }),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      SizedBox(height: 5.0,),
-                                      Row(
-                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          Text(
-                                            '활동 지역   ',
-                                            style: TextStyle(
-                                              fontSize: 14.0,
-                                            ),
-                                          ),
-                                          Expanded(
-                                            child: Container(
-                                              height: 26,
-                                              //margin: EdgeInsets.only(top: 5.0, bottom: 0.0),
-                                              child: ListView.builder(
-                                                  scrollDirection: Axis.horizontal,
-                                                  itemCount: (Provider.of<ProfileUpdate>(context,
-                                                      listen: false)
-                                                      .userProfile.address?.length != 0) ? Provider.of<ProfileUpdate>(context,
-                                                      listen: false)
-                                                      .userProfile.address?.length : 1,
-                                                  itemBuilder: (itemBuilder, index) {
-                                                    var padding =
-                                                        EdgeInsets.zero;
-
-                                                    if (index ==
-                                                        0) {
-                                                      padding = EdgeInsets.only(left: 0.0);
-                                                    } else if (index ==
-                                                        Provider.of<ProfileUpdate>(context,
-                                                            listen: false)
-                                                            .userProfile.address.length - 1) {
-                                                      padding = EdgeInsets.only(right: 0.0);
-                                                    }
-
-                                                    // print('Provider.of<ProfileUpdate>(context,listen: false).userProfile.address: '
-                                                    //     '${Provider.of<ProfileUpdate>(context,
-                                                    // listen: false)
-                                                    //     .userProfile.address}');
-                                                    if (Provider.of<ProfileUpdate>(context,
-                                                        listen: false)
-                                                        .userProfile.address?.length != 0 && Provider.of<ProfileUpdate>(context,
-                                                        listen: false)
-                                                        .userProfile.address.first != '동네를 추가해주세요') { // 활동 탁구장이 있는 경우,
-                                                      return Padding(
-                                                        padding: padding,
-                                                        child: Container(
-                                                            margin: EdgeInsets.only(right: 7.0),
-                                                            padding: EdgeInsets.only(left: 10.0, right: 10.0, top: 3.0, bottom: 3.0),
-                                                            decoration: BoxDecoration(
-                                                              border: Border.all(color: kMainColor),
-                                                              borderRadius: BorderRadius.circular(20.0),
-                                                            ),
-                                                            child: Text('${Provider.of<ProfileUpdate>(context,
-                                                                listen: false)
-                                                                .userProfile.address[index]}',
-                                                              style: TextStyle(color: kMainColor, fontSize: 12.0),)),
-                                                      );
-                                                    } else { //활동 지역이 없는 경우,
-                                                      return Center(
-                                                        child: Row(
-                                                          crossAxisAlignment: CrossAxisAlignment.center,
-                                                          children: [
-                                                            Text(
-                                                              '활동 지역을 추가해주세요 ',
-                                                              style: TextStyle(color: Colors.grey,
+                                                                  ),
+                                                                  GestureDetector(
+                                                                    onTap: () async {
+                                                                      await MoveToOtherScreen()
+                                                                          .persistentNavPushNewScreen(
+                                                                          context,
+                                                                          ProfileScreen(
+                                                                            isSignup: false,
+                                                                          ),
+                                                                          false,
+                                                                          PageTransitionAnimation.cupertino);
+                                                                    },
+                                                                    child: Icon(Icons.add_circle_outline, size: 15, color: kMainColor,),
+                                                                  ),
+                                                                ],
                                                               ),
-                                                            ),
-                                                            GestureDetector(
-                                                              onTap: () async {
-                                                                await MoveToOtherScreen()
-                                                                    .persistentNavPushNewScreen(
-                                                                    context,
-                                                                    ProfileScreen(
-                                                                      isSignup: false,
-                                                                    ),
-                                                                    false,
-                                                                    PageTransitionAnimation.cupertino);
-                                                              },
-                                                              child: Icon(Icons.add_circle_outline, size: 15, color: kMainColor),
-                                                            ),
+                                                            );
+                                                          }
 
-                                                          ],
-                                                        ),
-                                                      );
-                                                    }
-
-                                                  }),
+                                                        }),
+                                                  ),
+                                                ),
+                                              ],
                                             ),
-                                          ),
-                                        ],
-                                      ),
+                                            SizedBox(height: 5.0,),
+                                            Row(
+                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                              children: [
+                                                Text(
+                                                  '활동 지역   ',
+                                                  style: TextStyle(
+                                                    fontSize: 14.0,
+                                                  ),
+                                                ),
+                                                Expanded(
+                                                  child: Container(
+                                                    height: 26,
+                                                    //margin: EdgeInsets.only(top: 5.0, bottom: 0.0),
+                                                    child: ListView.builder(
+                                                        scrollDirection: Axis.horizontal,
+                                                        itemCount: (profileUpdate
+                                                            .userProfile.address?.length != 0) ? profileUpdate
+                                                            .userProfile.address?.length : 1,
+                                                        itemBuilder: (itemBuilder, index) {
+                                                          var padding =
+                                                              EdgeInsets.zero;
+
+                                                          if (index ==
+                                                              0) {
+                                                            padding = EdgeInsets.only(left: 0.0);
+                                                          } else if (index ==
+                                                              profileUpdate
+                                                                  .userProfile.address.length - 1) {
+                                                            padding = EdgeInsets.only(right: 0.0);
+                                                          }
+
+                                                          // debugPrint('Provider.of<ProfileUpdate>(context,listen: false).userProfile.address: '
+                                                          //     '${Provider.of<ProfileUpdate>(context,
+                                                          // listen: false)
+                                                          //     .userProfile.address}');
+                                                          if (profileUpdate
+                                                              .userProfile.address?.length != 0 && profileUpdate
+                                                              .userProfile.address.first != '동네를 추가해주세요') { // 활동 탁구장이 있는 경우,
+                                                            return Padding(
+                                                              padding: padding,
+                                                              child: Container(
+                                                                  margin: EdgeInsets.only(right: 7.0),
+                                                                  padding: EdgeInsets.only(left: 10.0, right: 10.0, top: 3.0, bottom: 3.0),
+                                                                  decoration: BoxDecoration(
+                                                                    border: Border.all(color: kMainColor),
+                                                                    borderRadius: BorderRadius.circular(20.0),
+                                                                  ),
+                                                                  child: Text('${profileUpdate
+                                                                      .userProfile.address[index]}',
+                                                                    style: TextStyle(color: kMainColor, fontSize: 12.0),)),
+                                                            );
+                                                          } else { //활동 지역이 없는 경우,
+                                                            return Center(
+                                                              child: Row(
+                                                                crossAxisAlignment: CrossAxisAlignment.center,
+                                                                children: [
+                                                                  Text(
+                                                                    '활동 지역을 추가해주세요 ',
+                                                                    style: TextStyle(color: Colors.grey,
+                                                                    ),
+                                                                  ),
+                                                                  GestureDetector(
+                                                                    onTap: () async {
+                                                                      await MoveToOtherScreen()
+                                                                          .persistentNavPushNewScreen(
+                                                                          context,
+                                                                          ProfileScreen(
+                                                                            isSignup: false,
+                                                                          ),
+                                                                          false,
+                                                                          PageTransitionAnimation.cupertino);
+                                                                    },
+                                                                    child: Icon(Icons.add_circle_outline, size: 15, color: kMainColor),
+                                                                  ),
+
+                                                                ],
+                                                              ),
+                                                            );
+                                                          }
+
+                                                        }),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ],
+                                        ),
+                                      )
                                     ],
                                   ),
-                                )
+                                ),
                               ],
-                            ),
-                          ),
-                        ],
-                      ) :
-                      SizedBox(
-                        height: 100,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            Text('핑퐁플러스 이용을 위해서\n로그인 해주세요', style: TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold), textAlign: TextAlign.end,),
-                            SizedBox(width: 15.0,),
-                            IconButton(
-                              onPressed: () {
-                                MoveToOtherScreen().persistentNavPushNewScreen(
-                                    context,
-                                    SignupScreen(0),
-                                    false,
-                                    PageTransitionAnimation.fade);
-                              },
-                              icon: Icon(Icons.arrow_right_alt, size: 20.0, ),
-                            ),
-                            SizedBox(width: 15.0,)
-                          ],
-                        ),
-                      ),
+                            );
+                          } else {
+                            return SizedBox(
+                              height: 100,
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  Text('핑퐁플러스 이용을 위해서\n로그인 해주세요', style: TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold), textAlign: TextAlign.end,),
+                                  SizedBox(width: 15.0,),
+                                  IconButton(
+                                    onPressed: () {
+                                      MoveToOtherScreen().persistentNavPushNewScreen(
+                                          context,
+                                          SignupScreen(0),
+                                          false,
+                                          PageTransitionAnimation.fade);
+                                    },
+                                    icon: Icon(Icons.arrow_right_alt, size: 20.0, ),
+                                  ),
+                                  SizedBox(width: 15.0,)
+                                ],
+                              ),
+                            );
+                          }
+                          // return Column(
+                          //   crossAxisAlignment: CrossAxisAlignment.start,
+                          //   children: [
+                          //     Row(
+                          //       crossAxisAlignment: CrossAxisAlignment.center,
+                          //       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          //       children: [
+                          //         ConstrainedBox(
+                          //           constraints: BoxConstraints(
+                          //             maxWidth: MediaQuery.of(context).size.width * 0.8,
+                          //           ),
+                          //           child: Padding(
+                          //             padding: const EdgeInsets.only(top: 15.0, left: 15.0),
+                          //             child: Text(
+                          //               '반갑습니다, ${profileUpdate
+                          //                   .userProfile
+                          //                   .nickName} 님',
+                          //               style: kAppointmentTextStyle.copyWith(
+                          //                 fontSize: 20.0
+                          //               ),
+                          //               overflow: TextOverflow.ellipsis,
+                          //             ),
+                          //           ),
+                          //         ),
+                          //         SizedBox(width: 10.0,),
+                          //         Padding(
+                          //           padding: const EdgeInsets.only(top: 15.0, right: 15.0),
+                          //           child: GestureDetector(
+                          //             onTap: () async {
+                          //               await MoveToOtherScreen()
+                          //                   .persistentNavPushNewScreen(
+                          //                   context,
+                          //                   ProfileScreen(
+                          //                     isSignup: false,
+                          //                   ),
+                          //                   false,
+                          //                   PageTransitionAnimation.cupertino);
+                          //             },
+                          //               child: Icon(Icons.arrow_right_alt, size: 20.0, ),),
+                          //         ),
+                          //
+                          //       ],
+                          //     ),
+                          //     Padding(
+                          //       padding: const EdgeInsets.only(top: 10.0, bottom: 5.0, left: 15.0, right: 15.0),
+                          //       child: Text.rich(
+                          //           TextSpan(
+                          //               children: [
+                          //                 TextSpan(
+                          //                   text: '경력 ',
+                          //                   style: TextStyle(
+                          //                     fontSize: 14.0,
+                          //                   ),
+                          //                 ),
+                          //                 TextSpan(
+                          //                   text: '${profileUpdate
+                          //                       .userProfile.playedYears}\n',
+                          //                   style: TextStyle(
+                          //                       fontSize: 14.0,
+                          //                       fontWeight: FontWeight.bold
+                          //                   ),
+                          //                 ),
+                          //                 TextSpan(
+                          //                   text: '스타일 ',
+                          //                   style: TextStyle(
+                          //                     fontSize: 14.0,
+                          //
+                          //                   ),
+                          //                 ),
+                          //                 TextSpan(
+                          //                   text: '${profileUpdate
+                          //                       .userProfile.playStyle}  ',
+                          //                   style: TextStyle(
+                          //                       fontSize: 14.0,
+                          //                       fontWeight: FontWeight.bold
+                          //                   ),
+                          //                 ),
+                          //                 TextSpan(
+                          //                   text: ' 라켓 ',
+                          //                   style: TextStyle(
+                          //                     fontSize: 14.0,
+                          //
+                          //                   ),
+                          //                 ),
+                          //                 TextSpan(
+                          //                   text: '${profileUpdate
+                          //                       .userProfile.racket}  ',
+                          //                   style: TextStyle(
+                          //                       fontSize: 14.0,
+                          //                       fontWeight: FontWeight.bold
+                          //                   ),
+                          //                 ),
+                          //                 TextSpan(
+                          //                   text: ' 러버 ',
+                          //                   style: TextStyle(
+                          //                     fontSize: 14.0,
+                          //
+                          //                   ),
+                          //                 ),
+                          //                 TextSpan(
+                          //                   text: '${profileUpdate
+                          //                       .userProfile.rubber}',
+                          //                   style: TextStyle(
+                          //                       fontSize: 14.0,
+                          //                       fontWeight: FontWeight.bold
+                          //                   ),
+                          //                 ),
+                          //               ]
+                          //           )
+                          //       ),
+                          //     ), // 스펙
+                          //     Padding(
+                          //       padding:
+                          //       const EdgeInsets.only(top: 10.0, bottom: 5.0, left: 15.0, right: 15.0),
+                          //       child: Row(
+                          //         mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          //         children: [
+                          //           Flexible(
+                          //             flex: 3,
+                          //             child: Column(
+                          //               children: [
+                          //                 Row(
+                          //                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          //                   children: [
+                          //                     Text(
+                          //                       '활동 탁구장   ',
+                          //                       style: TextStyle(
+                          //                         fontSize: 14.0,
+                          //                       ),
+                          //                     ),
+                          //                     Expanded(
+                          //                       child: Container(
+                          //                         height: 26,
+                          //                         //margin: EdgeInsets.only(top: 5.0, bottom: 0.0),
+                          //                         child: ListView.builder(
+                          //                             scrollDirection: Axis.horizontal,
+                          //                             itemCount: (
+                          //                                 profileUpdate
+                          //                                 .userProfile.pingpongCourt?.length != 0) ?
+                          //                             profileUpdate
+                          //                                 .userProfile.pingpongCourt?.length : 1,
+                          //                             itemBuilder: (itemBuilder, index) {
+                          //                               var padding =
+                          //                                   EdgeInsets.zero;
+                          //
+                          //                               if (index ==
+                          //                                   0) {
+                          //                                 padding = EdgeInsets.only(left: 0.0);
+                          //                               } else if (index ==
+                          //                                   profileUpdate.pingpongList.length - 1) {
+                          //                                 padding = EdgeInsets.only(right: 0.0);
+                          //                               }
+                          //
+                          //                               if (profileUpdate
+                          //                                   .userProfile.pingpongCourt?.length != 0) { // 활동 탁구장이 있는 경우,
+                          //                                 return Padding(
+                          //                                   padding: padding,
+                          //                                   child: Container(
+                          //                                       margin: EdgeInsets.only(right: 7.0),
+                          //                                       padding: EdgeInsets.only(left: 10.0, right: 10.0, top: 3.0, bottom: 3.0),
+                          //                                       decoration: BoxDecoration(
+                          //                                         border: Border.all(color: kMainColor),
+                          //                                         borderRadius: BorderRadius.circular(20.0),
+                          //                                       ),
+                          //                                       child: Text('${profileUpdate
+                          //                                           .userProfile.pingpongCourt?[index].title}',
+                          //                                         style: TextStyle(color: kMainColor, fontSize: 12.0),)),
+                          //                                 );
+                          //                               } else { //활동 탁구장이 없는 경우,
+                          //                                 return Center(
+                          //                                   child: Row(
+                          //                                     crossAxisAlignment: CrossAxisAlignment.center,
+                          //                                     children: [
+                          //                                       Text(
+                          //                                         '활동 탁구장을 추가해주세요 ',
+                          //                                         style: TextStyle(color: Colors.grey,
+                          //                                         ),
+                          //                                       ),
+                          //                                       GestureDetector(
+                          //                                         onTap: () async {
+                          //                                           await MoveToOtherScreen()
+                          //                                               .persistentNavPushNewScreen(
+                          //                                               context,
+                          //                                               ProfileScreen(
+                          //                                                 isSignup: false,
+                          //                                               ),
+                          //                                               false,
+                          //                                               PageTransitionAnimation.cupertino);
+                          //                                         },
+                          //                                         child: Icon(Icons.add_circle_outline, size: 15, color: kMainColor,),
+                          //                                       ),
+                          //                                     ],
+                          //                                   ),
+                          //                                 );
+                          //                               }
+                          //
+                          //                             }),
+                          //                       ),
+                          //                     ),
+                          //                   ],
+                          //                 ),
+                          //                 SizedBox(height: 5.0,),
+                          //                 Row(
+                          //                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          //                   children: [
+                          //                     Text(
+                          //                       '활동 지역   ',
+                          //                       style: TextStyle(
+                          //                         fontSize: 14.0,
+                          //                       ),
+                          //                     ),
+                          //                     Expanded(
+                          //                       child: Container(
+                          //                         height: 26,
+                          //                         //margin: EdgeInsets.only(top: 5.0, bottom: 0.0),
+                          //                         child: ListView.builder(
+                          //                             scrollDirection: Axis.horizontal,
+                          //                             itemCount: (profileUpdate
+                          //                                 .userProfile.address?.length != 0) ? profileUpdate
+                          //                                 .userProfile.address?.length : 1,
+                          //                             itemBuilder: (itemBuilder, index) {
+                          //                               var padding =
+                          //                                   EdgeInsets.zero;
+                          //
+                          //                               if (index ==
+                          //                                   0) {
+                          //                                 padding = EdgeInsets.only(left: 0.0);
+                          //                               } else if (index ==
+                          //                                   profileUpdate
+                          //                                       .userProfile.address.length - 1) {
+                          //                                 padding = EdgeInsets.only(right: 0.0);
+                          //                               }
+                          //
+                          //                               // debugPrint('Provider.of<ProfileUpdate>(context,listen: false).userProfile.address: '
+                          //                               //     '${Provider.of<ProfileUpdate>(context,
+                          //                               // listen: false)
+                          //                               //     .userProfile.address}');
+                          //                               if (profileUpdate
+                          //                                   .userProfile.address?.length != 0 && profileUpdate
+                          //                                   .userProfile.address.first != '동네를 추가해주세요') { // 활동 탁구장이 있는 경우,
+                          //                                 return Padding(
+                          //                                   padding: padding,
+                          //                                   child: Container(
+                          //                                       margin: EdgeInsets.only(right: 7.0),
+                          //                                       padding: EdgeInsets.only(left: 10.0, right: 10.0, top: 3.0, bottom: 3.0),
+                          //                                       decoration: BoxDecoration(
+                          //                                         border: Border.all(color: kMainColor),
+                          //                                         borderRadius: BorderRadius.circular(20.0),
+                          //                                       ),
+                          //                                       child: Text('${profileUpdate
+                          //                                           .userProfile.address[index]}',
+                          //                                         style: TextStyle(color: kMainColor, fontSize: 12.0),)),
+                          //                                 );
+                          //                               } else { //활동 지역이 없는 경우,
+                          //                                 return Center(
+                          //                                   child: Row(
+                          //                                     crossAxisAlignment: CrossAxisAlignment.center,
+                          //                                     children: [
+                          //                                       Text(
+                          //                                         '활동 지역을 추가해주세요 ',
+                          //                                         style: TextStyle(color: Colors.grey,
+                          //                                         ),
+                          //                                       ),
+                          //                                       GestureDetector(
+                          //                                         onTap: () async {
+                          //                                           await MoveToOtherScreen()
+                          //                                               .persistentNavPushNewScreen(
+                          //                                               context,
+                          //                                               ProfileScreen(
+                          //                                                 isSignup: false,
+                          //                                               ),
+                          //                                               false,
+                          //                                               PageTransitionAnimation.cupertino);
+                          //                                         },
+                          //                                         child: Icon(Icons.add_circle_outline, size: 15, color: kMainColor),
+                          //                                       ),
+                          //
+                          //                                     ],
+                          //                                   ),
+                          //                                 );
+                          //                               }
+                          //
+                          //                             }),
+                          //                       ),
+                          //                     ),
+                          //                   ],
+                          //                 ),
+                          //               ],
+                          //             ),
+                          //           )
+                          //         ],
+                          //       ),
+                          //     ),
+                          //   ],
+                          // );
+                        }
+                      )
                     ), // 프로필
                     Padding(
                       padding: EdgeInsets.only(top: 25),
@@ -781,7 +1053,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
                               ),
                               child: OutlinedButton(
                                 onPressed: () async {
-                                  print('최근 일자 클릭');
+                                  debugPrint('최근 일자 클릭');
                                     await Provider.of<PersonalAppointmentUpdate>(context,
                                             listen: false)
                                         .updateChart(index);
@@ -899,8 +1171,8 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
                   future: myFuture,
                   builder: (context, snapshot) {
 
-                    print('공지사항 및 배너 snapshot.connectionState: ${snapshot.connectionState}');
-                    print('공지사항 및 배너 snapshot.data: ${snapshot.data}');
+                    debugPrint('공지사항 및 배너 snapshot.connectionState: ${snapshot.connectionState}');
+                    debugPrint('공지사항 및 배너 snapshot.data: ${snapshot.data}');
                     if (snapshot.data != null){
                       return Visibility(
                         visible: viewModel.isAdBannerVisible,
@@ -933,7 +1205,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
 
     final DateTime currentVisit = Provider.of<LoginStatusUpdate>(context, listen: false).currentVisit;
     final DateTime? confirmTime = await RepositoryRealtimeUsers().getDownloadAnnouncementVisibleTime();
-    print('confirmTime: $confirmTime');
+    debugPrint('confirmTime: $confirmTime');
 
     if (confirmTime != null) {
 
@@ -944,15 +1216,15 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
       final visit = DateFormat('yyyy-MM-dd').parse(confirmTimeString);
 
       if (visit.isBefore(now)) {
-        print('now가 더 빠릅니다.'); // 오늘 하루 보지 않음이 적용되지 않음
+        debugPrint('now가 더 빠릅니다.'); // 오늘 하루 보지 않음이 적용되지 않음
         await viewModel.trueIsAdBannerVisible();
         return true;
       } else if (visit.isAfter(now)) {
-        print('confirmTime이 now가 보다 더 빠릅니다.');
+        debugPrint('confirmTime이 now가 보다 더 빠릅니다.');
         await viewModel.falseIsAdBannerVisible(); // 사실상 불가능
         return false;
       } else {
-        print('두 날짜가 같습니다.');
+        debugPrint('두 날짜가 같습니다.');
         await viewModel.falseIsAdBannerVisible();
         return false;
       }
