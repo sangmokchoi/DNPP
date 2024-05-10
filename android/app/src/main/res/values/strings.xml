@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <string name="client_id">fnA7onW12CtWy2n_z9a5</string>
-    <string name="client_secret">s13ITu_UsG</string>
-    <string name="client_name">DNPP</string>
-    <string name="default_notification_channel_id" translatable="false">fcm_default_channel</string>
-</resources>
