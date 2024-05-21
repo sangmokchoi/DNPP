@@ -45,6 +45,21 @@ class RepositoryRealtimeUsers {
   Future<int> getAdjustOpponentBadge(String opponentUid, int lastSeen) async {
     return await _localDSBadge.adjustOpponentBadge(opponentUid, lastSeen);
   }
+  Stream<int> getMyPrivateMailBadgeListen() async* {
+    yield* _localDSBadge.myPrivateMailBadgeListen();
+  }
+  Future<int> getDownloadPrivateMailBadge() async {
+    return await _localDSBadge.downloadPrivateMailBadge();
+  }
+  Future<void> getUpdatePrivateMailBadge() async {
+    return await _localDSBadge.updatePrivateMailBadge();
+  }
+  Future<void> getInitializePrivateMailBadge() async {
+    return await _localDSBadge.initializePrivateMailBadge();
+  }
+  Future<void> getSetDeviceBadge() async {
+    return await _localDSBadge.setDeviceBadge();
+  }
 
 
   // _localDSDeviceId

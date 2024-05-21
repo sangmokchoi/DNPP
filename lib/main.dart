@@ -4,8 +4,11 @@ import 'package:dnpp/repository/firebase_realtime_users.dart';
 import 'package:dnpp/repository/firebase_remoteConfig.dart';
 import 'package:dnpp/statusUpdate/googleAnalytics.dart';
 import 'package:dnpp/statusUpdate/CurrentPageProvider.dart';
+import 'package:dnpp/view/PrivateMail_Screen.dart';
 
 import 'package:dnpp/view/home_screen.dart';
+import 'package:dnpp/view/signup_screen.dart';
+import 'package:dnpp/viewModel/PrivateMailScreen_ViewModel.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_remote_config/firebase_remote_config.dart';
 
@@ -58,6 +61,10 @@ import 'models/moveToOtherScreen.dart';
 import 'norification.dart';
 import 'package:permission_handler/permission_handler.dart';
 
+
+// 위젯을 저장할 Map을 선언합니다.
+Map<String, GlobalKey> widgetRegistry = {};
+
 FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotification.flutterLocalNotificationPlugin;
 late AndroidNotificationChannel channel;
@@ -80,17 +87,56 @@ Future<void> getToken() async {
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  // 백그라운드에서 탭하면 열림 (안드로이드는 확인, ios 확인 필요)
   debugPrint('백그라운드 _firebaseMessagingBackgroundHandler');
+
+  RemoteNotification? notification = message.notification;
+  AndroidNotification? android = message.notification?.android;
+  AppleNotification? apple = message.notification?.apple;
+
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  //await setupFlutterNotifications(); // 셋팅 메소드
-  showFlutterNotification(message); // 로컬노티
+
+  if (notification?.apple == null) { // 안드로이드인 경우
+    if (message?.data['From'] != 'server') {
+      // 백그라운드에서 열 때 아래 부분이 실행되지 않고 있음
+      try {
+        await RepositoryRealtimeUsers()
+            .getDownloadMyBadge().then((value) async {
+          debugPrint('노티 수신 value: $value');
+          await RepositoryRealtimeUsers().getUpdateMyBadge(value + 1);
+        });
+
+      } catch (e) {
+        debugPrint('노티 수신 myCurrentPrivateMailBadge e: $e');
+      }
+    } else { // message.data['From'] == 'server'
+      // notification apple?.badge가 null 로 나타남
+      await RepositoryRealtimeUsers()
+          .getUpdatePrivateMailBadge(); // 기존 배지에다가 1을 더함
+    }
+  }
+
+  if (notification?.apple != null) {
+    if (message?.data['From'] != 'server') {
+      await RepositoryRealtimeUsers()
+          .getUpdateMyBadge(int.parse(apple!.badge ?? '0'));
+    } else { // message.data['From'] == 'server'
+      // notification apple?.badge가 null 로 나타남
+      await RepositoryRealtimeUsers()
+          .getUpdatePrivateMailBadge(); // 기존 배지에다가 1을 더함
+    }
+  }
+
 }
 
 /// fcm 전경 처리 - 로컬 알림 보이기
 @pragma('vm:entry-point')
 void showFlutterNotification(RemoteMessage message) async {
+
+  debugPrint('showFlutterNotification 진입');
+
   channel = const AndroidNotificationChannel(
     'high_importance_channel', // id
     'High Importance Notifications', // title
@@ -112,6 +158,7 @@ void showFlutterNotification(RemoteMessage message) async {
   debugPrint('Message mutableContent: ${message.mutableContent}');
   debugPrint('Message category: ${message.category}');
   debugPrint('Message from: ${message.from}');
+  debugPrint('Message sentTime: ${message.data['message_sentTime']}');
   debugPrint('Message hashCode: ${message.hashCode}');
   debugPrint('Message notification: ${message.notification}');
   debugPrint(
@@ -165,18 +212,31 @@ void showFlutterNotification(RemoteMessage message) async {
   if (notification?.apple == null) {
     // 안드로이드인 경우,
     debugPrint('안드로이드인 경우');
+    debugPrint('안드로이드인 경우 message.data[From]: ${message.data['From']}');
 
-    // 백그라운드에서 열 때 아래 부분이 실행되지 않고 있음
-    // try {
-    //   final myCurrentBadge = await RepositoryRealtimeUsers()
-    //       .getDownloadMyBadge();
-    //   debugPrint('노티 수신 myCurrentBadge: $myCurrentBadge');
-    //   await RepositoryRealtimeUsers().getUpdateMyBadge(myCurrentBadge);
-    // } catch (e) {
-    //   debugPrint('노티 수신 myCurrentBadge e: $e');
-    // }
+    if (message.data['From'] != 'server') {
 
-    flutterLocalNotificationsPlugin.show(
+          try {
+            await RepositoryRealtimeUsers()
+                .getDownloadMyBadge().then((value) async {
+              debugPrint('노티 수신 value: $value');
+              await RepositoryRealtimeUsers().getUpdateMyBadge(value);
+            });
+
+          } catch (e) {
+            debugPrint('노티 수신 myCurrentPrivateMailBadge e: $e');
+          }
+
+          await GoogleAnalytics().setNotificationReceive('user', 'fromUser');
+
+    } else { // message.data['From'] == 'server'
+      // 서버에서 수신
+      // notification apple?.badge가 null 로 나타남
+      await RepositoryRealtimeUsers()
+          .getUpdatePrivateMailBadge();
+    }
+
+      flutterLocalNotificationsPlugin.show(
         message.hashCode,
         message.notification!.title,
         message.notification!.body,
@@ -189,28 +249,57 @@ void showFlutterNotification(RemoteMessage message) async {
             icon: 'mipmap/ic_launcher',
             //'launch_background',
             //importance: Importance.max,
-            importance: Importance.high,
+            importance: Importance.max,
             priority: Priority.high,
-            showWhen: false,
+            //showWhen: false,
           ),
           // android: AndroidNotificationDetails(
           //   'high_importance_channel',
           //   'high_importance_notification',
           //   importance: Importance.max,
-          //   priority: Priority.max,
+          //   priority: Priority.high,
           //   showWhen: false,
           // ),
         ),
         payload: message.data['From'] // == 'server'
         );
+
+    await GoogleAnalytics().setNotificationReceive('server', message.notification!.title.toString());
+
   } // 안드로이드
 
   if (notification?.apple != null) {
     // ios 인 경우 *** ios 인 경우에는 별도로 .show를 하지 않아도 알아서 노티를 수신함 ***
     debugPrint('ios인 경우');
 
-    await RepositoryRealtimeUsers()
-        .getUpdateMyBadge(int.parse(notification?.apple!.badge ?? '0'));
+    if (message.data['From'] != 'server') {
+      await RepositoryRealtimeUsers()
+          .getUpdateMyBadge(int.parse(notification?.apple!.badge ?? '0'));
+      await GoogleAnalytics().setNotificationReceive('user', 'fromUser');
+
+    } else { // message.data['From'] == 'server'
+      // notification apple?.badge가 null 로 나타남
+      await RepositoryRealtimeUsers()
+          .getUpdatePrivateMailBadge(); // 기존 배지에다가 1을 더함
+
+      // if (message.data['From'] == 'server') {
+      //   Future.microtask(() async {
+      //     // 백그라운드에서 열 때 아래 부분이 실행되지 않고 있음
+      //     try {
+      //       await RepositoryRealtimeUsers()
+      //           .getDownloadPrivateMailBadge().then((value) async {
+      //         final myCurrentPrivateMailBadge = value;
+      //         debugPrint('노티 수신 myCurrentPrivateMailBadge: $myCurrentPrivateMailBadge');
+      //         await RepositoryRealtimeUsers().getUpdatePrivateMailBadge(myCurrentPrivateMailBadge + 1);
+      //       });
+      //
+      //     } catch (e) {
+      //       debugPrint('노티 수신 myCurrentPrivateMailBadge e: $e');
+      //     }
+      //   });
+      // }
+
+    }
 
     flutterLocalNotificationsPlugin.show(
         notification.hashCode,
@@ -224,7 +313,10 @@ void showFlutterNotification(RemoteMessage message) async {
         )),
         payload: message.data['From'] // payload
         );
+
+    await GoogleAnalytics().setNotificationReceive('server', notification?.title.toString() ?? '');
   } // ios
+
 }
 
 bool isChatScreenActive = false; // 특정 뷰의 활성 여부를 추적하는 변수
@@ -345,6 +437,15 @@ Future<void> main() async {
   FirebaseAnalyticsObserver observer =
       FirebaseAnalyticsObserver(analytics: analytics);
 
+  FlutterError.onError = (errorDetails) {
+    FirebaseCrashlytics.instance.recordFlutterFatalError(errorDetails);
+  };
+  // Pass all uncaught asynchronous errors that aren't handled by the Flutter framework to Crashlytics
+  PlatformDispatcher.instance.onError = (error, stack) {
+    FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+    return true;
+  };
+
   runApp(
     MultiProvider(
       providers: [
@@ -368,6 +469,9 @@ Future<void> main() async {
         ),
         ChangeNotifierProvider(
           create: (context) => MatchingScreenViewModel(),
+        ),
+        ChangeNotifierProvider(
+          create: (context) => PrivateMailScreenViewModel(),
         ),
         ChangeNotifierProvider(
           create: (context) => PersonalAppointmentUpdate(),
@@ -406,7 +510,7 @@ Future<void> main() async {
         //   splash: Container(
         //     decoration: BoxDecoration(
         //       image: DecorationImage(
-        //         image: AssetImage('images/핑퐁플러스 로고.png'),
+        //         image: AssetImage('images/logo.png'),
         //         //fit: BoxFit.cover,
         //       ),
         //     ),
@@ -553,7 +657,8 @@ ThemeData darkTheme = ThemeData.dark().copyWith(
       floatingLabelStyle: TextStyle(color: kMainColor),
       focusedBorder: UnderlineInputBorder(
         borderSide: BorderSide(style: BorderStyle.solid, color: kMainColor),
-      )),
+      ),
+  ),
 );
 
 class HomePage extends StatefulWidget {
@@ -584,21 +689,25 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     super.didChangeAppLifecycleState(state);
     switch (state) {
       case AppLifecycleState.paused:
-        debugPrint('App is in background');
         //WidgetsBinding.instance!.addPostFrameCallback((_) async {
-        // CurrentPageProvider().setCurrentPage('', 'main');
         // ChatBackgroundListen().updateMyIsInRoom(FirebaseAuth.instance.currentUser?.uid.toString() ?? '', chatRoomId, messagesList.length ?? 0); // 채팅방에서 나감을 선언
 
         Future.microtask(() async {
           final currentPage =
-              Provider.of<CurrentPageProvider>(context, listen: false)
+              Provider.of<CurrentPageProvider>(navigatorKey.currentContext!, listen: false)
                   .currentPage;
           debugPrint('App is in background currentPage: $currentPage');
-          await Provider.of<GoogleAnalyticsNotifier>(context, listen: false)
-              .startTimer(currentPage);
+          widgetRegistry['$currentPage'] = GlobalKey();
 
-          Provider.of<CurrentPageProvider>(context, listen: false)
+          // await Provider.of<GoogleAnalyticsNotifier>(context, listen: false)
+          //     .startTimer(currentPage);
+
+          await Provider.of<GoogleAnalyticsNotifier>(navigatorKey.currentContext!, listen: false).cancelAndLogBoardingTime(currentPage);
+          // 화면 추적 종료
+
+          Provider.of<CurrentPageProvider>(navigatorKey.currentContext!, listen: false)
               .setInitialCurrentPage();
+
           final myCurrentBadge =
               await RepositoryRealtimeUsers().getDownloadMyBadge();
           debugPrint('노티 수신 myCurrentBadge: $myCurrentBadge');
@@ -613,6 +722,29 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
         break;
       case AppLifecycleState.resumed:
         debugPrint('App is in foreground');
+
+        final providerCurrentPage =
+            Provider.of<CurrentPageProvider>(navigatorKey.currentContext!, listen: false)
+                .currentPage;
+        debugPrint('AppLifecycleState App is in foreground providerCurrentPage: $providerCurrentPage');
+
+        final String currentPage = widgetRegistry.keys.isNotEmpty ? widgetRegistry.keys.first : providerCurrentPage; // 직전 화면의 스크린명
+
+        await Provider.of<CurrentPageProvider>(navigatorKey.currentContext!, listen: false).setCurrentPage(currentPage).then((value) async {
+
+          await Provider.of<GoogleAnalyticsNotifier>(navigatorKey.currentContext!, listen: false)
+              .startTimer(currentPage).then((value) {
+
+            debugPrint('AppLifecycleState App is in foreground currentPage: $currentPage');
+            debugPrint('AppLifecycleState widgetRegistry: $widgetRegistry');
+            //debugPrint('widgetRegistry: ${widgetRegistry.keys?.first}');
+
+            widgetRegistry.clear();
+
+          });
+        });
+
+
         break;
       case AppLifecycleState.inactive:
         // Not in use on Android, this is the state in which the app is not receiving user input and running in the background.
@@ -644,9 +776,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     if (widget.isUpdateNeeded == false && widget.checkUrgentNews.isEmpty) {
       debugPrint('메인 다트에서 빌드 중');
       return LoadingScreen(); // 업데이트가 필요한 경우 ,  LoadingScreen 대신에 곧장 homeScreen으로 보내고, 로딩 뷰와 홈 뷰를 합쳐버리자
-      // onTap: () {
-      //           FocusManager.instance.primaryFocus?.unfocus();
-      //         },
+
     } else {
 
       if (widget.checkUrgentNews.isNotEmpty){
@@ -728,22 +858,97 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   Future<void> setupInteractedMessage() async {
     // Get any messages which caused the application to open from
     // a terminated state.
-    debugPrint('setupInteractedMessage');
+    // terminate 된 상태에서 상호작용하는 경우
+    debugPrint('setupInteractedMessage 열림');
     RemoteMessage? initialMessage = await FirebaseMessaging.instance
         .getInitialMessage()
-        .then((RemoteMessage? message) {
+        .then((RemoteMessage? message) async {
+
       if (message != null) {
         // terminate에서 오픈하면 오게되는 곳 (server에서 받는 경우를 처리하는 수정 필요)
-        //_handleMessage(message);
-        MoveToOtherScreen().persistentNavPushNewScreen(
-            context, ChatListView(), false, PageTransitionAnimation.cupertino);
+
+        // 로그인을 한 경우와 로그인을 하지 않은 경우 구분 필요
+        final uid = FirebaseAuth.instance.currentUser?.uid.toString();
+        debugPrint('setupInteractedMessage uid: $uid');
+        //로그인 안하면 null로 나타남
+
+        if (uid == null) {
+          // 로그인이 안된 상태
+          // 로그인 하는 페이지로 가야함
+          await MoveToOtherScreen()
+              .initializeGASetting(context, 'SignupScreen').then((value) async {
+
+            await MoveToOtherScreen()
+                .persistentNavPushNewScreen(
+                context,
+                SignupScreen(0),
+                false,
+                PageTransitionAnimation.cupertino)
+                .then((value) async {
+
+              await MoveToOtherScreen().initializeGASetting(
+                  context, 'MainScreen');
+
+            });
+          });
+
+        } else {
+          // 로그인이 된 상태
+          if (message.data['From'] == 'server') {
+
+            await MoveToOtherScreen()
+                .initializeGASetting(context, 'PrivateMailScreen').then((value) async {
+
+              await MoveToOtherScreen()
+                  .persistentNavPushNewScreen(
+                  context,
+                  PrivateMailScreen(),
+                  false,
+                  PageTransitionAnimation.cupertino)
+                  .then((value) async {
+
+                debugPrint('main.dart에서 돌아옴');
+
+                await MoveToOtherScreen().initializeGASetting(
+                    context, 'MainScreen');
+
+              });
+            });
+
+          } else {
+            //_handleMessage(message);
+            MoveToOtherScreen().persistentNavPushNewScreen(
+                context, ChatListView(), false, PageTransitionAnimation.cupertino);
+
+            await MoveToOtherScreen()
+                .initializeGASetting(context, 'ChatListScreen').then((value) async {
+
+              await MoveToOtherScreen()
+                  .persistentNavPushNewScreen(
+                  context,
+                  PrivateMailScreen(),
+                  false,
+                  PageTransitionAnimation.cupertino)
+                  .then((value) async {
+
+                debugPrint('main.dart에서 돌아옴');
+
+                await MoveToOtherScreen().initializeGASetting(
+                    context, 'MainScreen');
+
+              });
+            });
+          }
+
+        }
+
       }
     });
 
-    // If the message also contains a data property with a "type" of "chat",
-    // navigate to a chat screen
+
     if (initialMessage != null) {
-      _handleMessage(initialMessage);
+      debugPrint('    if (initialMessage != null) { 에서 핸들 메시지');
+      await _handleMessage(initialMessage);
     }
 
     // Also handle any interaction when the app is in the background via a
@@ -751,8 +956,8 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     FirebaseMessaging.onMessageOpenedApp.listen(_handleMessage);
   }
 
-  void _handleMessage(RemoteMessage message) {
-    // ios에서만 작동
+  Future<void> _handleMessage(RemoteMessage message) async { // 백그라운드에서 노티 탭하면 작동하는 함수
+
     // 내가 지정한 그 알람이면? 지정한 화면으로 이동
     // if (message.data['data1'] == 'value1') {
     //   Navigator.pushNamed(context, '/'); // main에서는 이동불가 Home에 들어와서 해줘야함
@@ -765,39 +970,134 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     debugPrint('_handleMessage message: ${message.from}');
     debugPrint('_handleMessage message: ${message.data['From']}');
 
-    // WidgetsBinding.instance!.addPostFrameCallback((_) async {
-    // Provider.of<LoadingScreenViewModel>(context, listen: false).initibnalize(context);
-    // });
-
     // 이렇게 들어오게 되면 GA에 잡히나?
 
-    final currentPage =
-        Provider.of<CurrentPageProvider>(context, listen: false).currentPage;
+    // final currentPage =
+    //     Provider.of<CurrentPageProvider>(context, listen: false).currentPage;
+    //
+    // // 백그라운드에서 노티를 클릭해서 들어오게되면,
+    // // 디폴트 값인 mainscreen으로 currentPage가 설정되어 버림
+    // widgetRegistry['$currentPage'] = GlobalKey();
+
+    final providerCurrentPage =
+        Provider.of<CurrentPageProvider>(navigatorKey.currentContext!, listen: false)
+            .currentPage;
+    debugPrint('App is in foreground providerCurrentPage: $providerCurrentPage');
+
+    final String currentPage = widgetRegistry.keys.isNotEmpty ? widgetRegistry.keys.first : providerCurrentPage; // 직전 화면의 스크린명
+
+    await Provider.of<CurrentPageProvider>(context, listen: false).setCurrentPage(currentPage).then((value) async {
+
+      await Provider.of<GoogleAnalyticsNotifier>(context, listen: false)
+          .startTimer(currentPage).then((value) {
+
+        debugPrint('App is in foreground currentPage: $currentPage');
+        debugPrint('widgetRegistry: $widgetRegistry');
+        //debugPrint('widgetRegistry: ${widgetRegistry.keys?.first}');
+
+        widgetRegistry.clear();
+
+      });
+    });
 
     debugPrint('main.dart currentPage: $currentPage');
     debugPrint('message.data[From]: ${message.data['From']}');
     debugPrint('navigatorKey.currentWidget.key: ${navigatorKey.currentWidget?.key}');
 
-    if (message.data['From'] == 'server') {
-      // if (currentPage == 'HomeScreen' || currentPage == 'MainScreen' || currentPage == 'CalendarScreen' || currentPage == 'SettingScreen') {
+    // 로그인을 한 경우와 로그인을 하지 않은 경우 구분 필요
+    final uid = FirebaseAuth.instance.currentUser?.uid.toString();
+    debugPrint('setupInteractedMessage uid: $uid');
+    //로그인 안하면 null로 나타남
 
-      if (currentPage == 'HomeScreen') {
-      } else {
-        MoveToOtherScreen().persistentNavPushNewScreen(
-            context, HomeScreen(), false, PageTransitionAnimation.cupertino);
-      }
+    if (uid == null) {
+      // 로그인이 안된 상태
+      // 로그인 하는 페이지로 가야함
+      await MoveToOtherScreen()
+          .initializeGASetting(context, 'SignupScreen').then((value) async {
+
+        await MoveToOtherScreen()
+            .persistentNavPushNewScreen(
+            context,
+            SignupScreen(0),
+            false,
+            PageTransitionAnimation.cupertino)
+            .then((value) async {
+
+          await MoveToOtherScreen().initializeGASetting(
+              context, currentPage);
+
+        });
+      });
+
     } else {
-      if (currentPage == 'ChatListView') {
-        // 현재 페이지가 ChatListView인 경우에는 동작하지 않도록 처리
+
+      if (message.data['From'] == 'server') {
+        // if (currentPage == 'HomeScreen' || currentPage == 'MainScreen' || currentPage == 'CalendarScreen' || currentPage == 'SettingScreen') {
+
+        if (currentPage == 'HomeScreen') {
+
+        } else {
+
+          /// 최종: 앱을 이용하는 와중에 노티 클릭하면, 아무일 없게끔 설정 (이벤트 노티 수신 시)
+          // 현재 다른 화면에 있는 상태에서 백그라운드에 진입했다가,
+          // 노티를 수신해서 클릭해서 열게 되면, 그 원래 있던 다른 화면으로 돌아가게됨
+
+          // final previousScreen = Provider.of<CurrentPageProvider>(context, listen: false).currentPage;
+          // debugPrint('main.dart previousScreen: $previousScreen'); // 무조건 메인 페이지로 나타나는 중
+
+          // await MoveToOtherScreen()
+          //     .initializeGASetting(context, 'PrivateMailScreen').then((value) async {
+          //
+          //   await MoveToOtherScreen()
+          //       .persistentNavPushNewScreen(
+          //       context,
+          //       PrivateMailScreen(),
+          //       false,
+          //       PageTransitionAnimation.cupertino)
+          //       .then((value) async {
+          //
+          //         debugPrint('main.dart에서 돌아옴');
+          //
+          //     await MoveToOtherScreen().initializeGASetting(
+          //         context, 'MainScreen');
+          //
+          //   });
+          // });
+
+          // MoveToOtherScreen().persistentNavPushNewScreen(
+          //     context, HomeScreen(), false, PageTransitionAnimation.cupertino); // 홈스크린 대신에 프라이빗 메시지함으로 가야함. 단, ga 세팅을 살려야 함
+        }
+
+        /// GA 이벤트 중 notification_open 세부 세팅 필요
+
+        //await GoogleAnalytics().
+
+
       } else {
-        MoveToOtherScreen().persistentNavPushNewScreen(
-            context, ChatListView(), false, PageTransitionAnimation.cupertino);
+
+        if (currentPage == 'ChatListView') {
+          // 현재 페이지가 ChatListView인 경우에는 동작하지 않도록 처리
+
+        } else {
+          await MoveToOtherScreen()
+              .initializeGASetting(context, 'ChatListScreen').then((value) async {
+
+          }).then((value) {
+            MoveToOtherScreen().persistentNavPushNewScreen(
+                context, ChatListView(), false, PageTransitionAnimation.cupertino).then((value) async {
+
+              await MoveToOtherScreen().initializeGASetting(
+                  context, currentPage);
+
+            }); // ga 세팅을 살려야 함
+          });
+
+        }
+
+        // MoveToOtherScreen().persistentNavPushNewScreen(
+        //           context, ChatListView(), false, PageTransitionAnimation.cupertino);
       }
-
-      // MoveToOtherScreen().persistentNavPushNewScreen(
-      //           context, ChatListView(), false, PageTransitionAnimation.cupertino);
     }
-
     //Navigator.push(context, MoveToOtherScreen.createRouteChatListView());
 
     // 서버에서 보낸 메시지면 home으로?

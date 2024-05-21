@@ -14,7 +14,6 @@ import 'package:intl/intl.dart';
 import 'package:syncfusion_flutter_calendar/calendar.dart';
 import '../../models/customAppointment.dart';
 import '../../models/launchUrl.dart';
-import '../../statusUpdate/googleAnalytics.dart';
 import '../../statusUpdate/courtAppointmentUpdate.dart';
 import '../../statusUpdate/personalAppointmentUpdate.dart';
 import '../../statusUpdate/loginStatusUpdate.dart';
@@ -107,11 +106,6 @@ class _AddAppointmentState extends State<AddAppointment> {
     }
 
     super.initState();
-
-    WidgetsBinding.instance!.addPostFrameCallback((_) async {
-      await GoogleAnalytics().trackScreen(context, 'AddAppointment');
-      Provider.of<GoogleAnalyticsNotifier>(context, listen: false).startTimer('CalendarScreen');
-    });
   }
 
   int colorNum = 5;
@@ -137,8 +131,6 @@ class _AddAppointmentState extends State<AddAppointment> {
   @override
   Widget build(BuildContext defaultContext) {
 
-    // Provider.of<GoogleAnalyticsNotifier>(context, listen: false).startTimer('CalendarScreen');
-
     double _height = MediaQuery.sizeOf(context).height;
 
     final User _currentUser =
@@ -148,11 +140,8 @@ class _AddAppointmentState extends State<AddAppointment> {
       onPopInvoked: (_) {
         Future.microtask(() async {
           FocusScope.of(context).unfocus();
-          //if (mounted) {
           await Provider.of<PersonalAppointmentUpdate>(defaultContext, listen: false).clear();
-          await Provider.of<GoogleAnalyticsNotifier>(context, listen: false)
-              .startTimer('AddAppointment');
-          //}
+
         });
       },
       child: Consumer<PersonalAppointmentUpdate>(
@@ -194,8 +183,6 @@ class _AddAppointmentState extends State<AddAppointment> {
                                         Future.microtask(() async {
                                           //if (mounted) {
                                           await personalAppointmentUpdate.clear();
-                                          await Provider.of<GoogleAnalyticsNotifier>(context, listen: false)
-                                              .startTimer('AddAppointment');
                                           //}
                                         }).then((value) {
                                           Navigator.pop(context);

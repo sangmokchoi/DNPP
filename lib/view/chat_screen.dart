@@ -16,8 +16,6 @@ import 'package:provider/provider.dart';
 import '../models/userProfile.dart';
 import 'package:uuid/uuid.dart';
 import '../repository/firebase_realtime_messages.dart';
-import '../statusUpdate/googleAnalytics.dart';
-import '../statusUpdate/CurrentPageProvider.dart';
 
 class ChatScreen extends StatefulWidget {
   Map<String, dynamic> receivedData;
@@ -76,13 +74,6 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     //   Provider.of<GoogleAnalyticsNotifier>(context, listen: false).startTimer(
     //       'ChatListScreen');
     // });
-
-    Future.microtask(() {
-        Provider.of<CurrentPageProvider>(context, listen: false)
-            .setInitialCurrentPage();
-        Provider.of<GoogleAnalyticsNotifier>(context, listen: false).startTimer(
-            'ChatListScreen');
-    });
 
     super.initState();
     WidgetsBinding.instance!.addObserver(this);
@@ -147,12 +138,6 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           "gs://dnpp-402403.appspot.com/profile_photos/empty_profile_6.png");
       imageUrlFromStorage = await gsReference.getDownloadURL();
       //await ChatBackgroundListen().setIsCurrentUserInChat(true);
-      if (mounted) {
-        debugPrint('채팅 스크린 마운트됨');
-        await Provider.of<CurrentPageProvider>(context, listen: false)
-            .setCurrentPage('ChatScreen');
-        await GoogleAnalytics().trackScreen(context, 'ChatScreen');
-      }
     });
 
     return PopScope(
@@ -164,8 +149,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                 FirebaseAuth.instance.currentUser?.uid.toString() ?? '', chatRoomId,
                 messagesList.length ?? 0); // 채팅방에서 나감을 선언
 
-            await Provider.of<GoogleAnalyticsNotifier>(context, listen: false)
-                .startTimer('ChatScreen');
+            // await Provider.of<GoogleAnalyticsNotifier>(context, listen: false)
+            //     .startTimer('ChatScreen');
 
           });
 
@@ -188,13 +173,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                       FirebaseAuth.instance.currentUser?.uid.toString() ?? '', chatRoomId,
                       messagesList.length ?? 0); // 채팅방에서 나감을 선언
 
-                  await Provider.of<GoogleAnalyticsNotifier>(context, listen: false)
-                      .startTimer('ChatScreen');
-
                 }).then((value) {
                   Navigator.pop(context);
                 });
-
 
               },
             ),

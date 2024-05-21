@@ -19,7 +19,6 @@ import '../../LocalDataSource/firebase_fireStore/DS_Local_appointments.dart';
 import '../../constants.dart';
 import '../../models/customAppointment.dart';
 import '../../models/launchUrl.dart';
-import '../../statusUpdate/googleAnalytics.dart';
 import '../../LocalDataSource/firebase_fireStore/DS_Local_userData.dart';
 import '../../statusUpdate/courtAppointmentUpdate.dart';
 import '../../statusUpdate/loginStatusUpdate.dart';
@@ -158,20 +157,13 @@ class _EditAppointmentState extends State<EditAppointment> {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       // 상태 변경 작업을 여기에 넣습니다.
       checkOldMeeting();
-      await GoogleAnalytics().trackScreen(context, 'EditAppointment');
-      Provider.of<GoogleAnalyticsNotifier>(context, listen: false).startTimer('CalendarScreen');
     });
   }
 
   @override
   void deactivate() {
     super.deactivate();
-    // Future.microtask(() {
-    //   //if (mounted) {
-    //     Provider.of<GoogleAnalyticsNotifier>(context, listen: false)
-    //         .startTimer('EditAppointment');
-    //   //}
-    // });
+
   }
 
   @override
@@ -192,8 +184,7 @@ class _EditAppointmentState extends State<EditAppointment> {
 
         Future.microtask(() async {
           await personalAppointmentUpdate.clear();
-          await Provider.of<GoogleAnalyticsNotifier>(context, listen: false)
-              .startTimer('EditAppointment');
+
         });
       },
       child: Consumer<PersonalAppointmentUpdate>(
@@ -215,7 +206,7 @@ class _EditAppointmentState extends State<EditAppointment> {
                         mainAxisAlignment: MainAxisAlignment.start,
                         children: <Widget>[
                           Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
+                            mainAxisAlignment:MainAxisAlignment.center,
                             children: [
                               TextButton(
                                 style: ButtonStyle(
@@ -231,8 +222,6 @@ class _EditAppointmentState extends State<EditAppointment> {
                                     Future.microtask(() async {
                                       //if (mounted) {
                                       await personalAppointmentUpdate.clear();
-                                      await Provider.of<GoogleAnalyticsNotifier>(context, listen: false)
-                                          .startTimer('EditAppointment');
                                       //}
                                     }).then((value) {
                                       Navigator.of(context, rootNavigator: true).pop();

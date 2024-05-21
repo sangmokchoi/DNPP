@@ -5,8 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../models/launchUrl.dart';
-import '../statusUpdate/googleAnalytics.dart';
-import '../statusUpdate/CurrentPageProvider.dart';
 import '/oss_licenses.dart';
 
 
@@ -42,17 +40,17 @@ class OssLicenseScreen extends StatelessWidget {
   Widget build(BuildContext context) {
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await Provider.of<GoogleAnalyticsNotifier>(context, listen: false)
-          .startTimer('SettingScreen');
-      await Provider.of<CurrentPageProvider>(context, listen: false).setCurrentPage('OssLicenseScreen');
-      await GoogleAnalytics().trackScreen(context, 'OssLicenseScreen');
+      // await Provider.of<GoogleAnalyticsNotifier>(context, listen: false)
+      //     .startTimer('SettingScreen');
+      // await Provider.of<CurrentPageProvider>(context, listen: false).setCurrentPage('OssLicenseScreen');
+      // await GoogleAnalytics().trackScreen(context, 'OssLicenseScreen');
     });
     return PopScope(
       onPopInvoked: (_) {
-        Future.microtask(() async {
-          Provider.of<GoogleAnalyticsNotifier>(context, listen: false)
-              .startTimer('OssLicenseScreen');
-        });
+        // Future.microtask(() async {
+        //   Provider.of<GoogleAnalyticsNotifier>(context, listen: false)
+        //       .startTimer('OssLicenseScreen');
+        // });
       },
       child: SafeArea(
         child: Scaffold(
@@ -60,13 +58,14 @@ class OssLicenseScreen extends StatelessWidget {
             appBar: AppBar(
               title: const Text('Open Source Licenses'),
               leading: IconButton(
-                onPressed: () async{
-                  Future.microtask(() async {
-                    Provider.of<GoogleAnalyticsNotifier>(context, listen: false)
-                        .startTimer('OssLicenseScreen');
-                  }).then((value) {
-                      Navigator.pop(context);
-                  });
+                onPressed: () async {
+                  // Future.microtask(() async {
+                  //   Provider.of<GoogleAnalyticsNotifier>(context, listen: false)
+                  //       .startTimer('OssLicenseScreen');
+                  // }).then((value) {
+                  //     Navigator.pop(context);
+                  // });
+                  Navigator.pop(context);
                 },
                 icon: Icon(Icons.arrow_back),
               ),

@@ -8,6 +8,8 @@ import '../../constants.dart';
 import '../../LocalDataSource/SFcalendar_dataSource.dart';
 import '../../models/moveToOtherScreen.dart';
 import '../../models/userProfile.dart';
+import '../../statusUpdate/CurrentPageProvider.dart';
+import '../../statusUpdate/googleAnalytics.dart';
 import '../../statusUpdate/loginStatusUpdate.dart';
 import '../../statusUpdate/profileUpdate.dart';
 import '../../viewModel/CalendarScreen_ViewModel.dart';
@@ -309,13 +311,18 @@ class CustomSFCalendar extends StatelessWidget {
   }
 
   Future<void> openModalBottomSheet(BuildContext context, dynamic appointmentDetails) async {
-    final result = await MoveToOtherScreen().persistentNavPushNewScreen(context, EditAppointment(
+
+    await MoveToOtherScreen().initializeGASetting(context, 'EditAppointment');
+
+    await MoveToOtherScreen().persistentNavPushNewScreen(context, EditAppointment(
         context: context, userCourt: '', oldMeeting: appointmentDetails), true,
-      PageTransitionAnimation.slideUp,).then((value) {
+      PageTransitionAnimation.slideUp,).then((value) async {
+
+      await MoveToOtherScreen().initializeGASetting(context, 'CalendarScreen');
+
       Provider.of<CalendarScreenViewModel>(widgetContext, listen: false).notifyListeners();
       debugPrint('openModalBottomSheet 완료');
     });
-
 
   }
 

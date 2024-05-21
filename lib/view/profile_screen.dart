@@ -19,6 +19,7 @@ import '../constants.dart';
 import '../models/launchUrl.dart';
 import '../models/locationData.dart';
 
+import '../models/moveToOtherScreen.dart';
 import '../models/pingpongList.dart';
 import '../statusUpdate/googleAnalytics.dart';
 import '../LocalDataSource/firebase_fireStore/DS_Local_userData.dart';
@@ -71,11 +72,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
     super.initState();
 
     WidgetsBinding.instance!.addPostFrameCallback((_) async {
-      Provider.of<GoogleAnalyticsNotifier>(context, listen: false)
-          .startTimer('SettingScreen');
-      await Provider.of<CurrentPageProvider>(context, listen: false)
-          .setCurrentPage('ProfileScreen');
-      await GoogleAnalytics().trackScreen(context, 'ProfileScreen');
+      // Provider.of<GoogleAnalyticsNotifier>(context, listen: false)
+      //     .startTimer('SettingScreen');
+      // await Provider.of<CurrentPageProvider>(context, listen: false)
+      //     .setCurrentPage('ProfileScreen');
+      // await GoogleAnalytics().trackScreen(context, 'ProfileScreen');
     });
   }
 
@@ -101,11 +102,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return PopScope(
       onPopInvoked: (_) {
         FocusScope.of(context).unfocus();
-        Future.microtask(() {
-          Provider.of<GoogleAnalyticsNotifier>(context,
-              listen: false)
-              .startTimer('ProfileScreen');
-        });
+        // Future.microtask(() {
+        //   Provider.of<GoogleAnalyticsNotifier>(context,
+        //       listen: false)
+        //       .startTimer('ProfileScreen');
+        // });
       },
       child: GestureDetector(
           onTap: () {
@@ -139,23 +140,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               .resetUserProfile();
                           debugPrint('FirebaseAuth.instance.signOut 성공');
 
-                          Future.microtask(() {
-                            Provider.of<GoogleAnalyticsNotifier>(context,
-                                    listen: false)
-                                .startTimer('ProfileScreen');
-                          }).then((value) {
-                            Navigator.pop(context);
-                          });
+                          // Future.microtask(() {
+                          //   Provider.of<GoogleAnalyticsNotifier>(context,
+                          //           listen: false)
+                          //       .startTimer('ProfileScreen');
+                          // }).then((value) {
+                          //   Navigator.pop(context);
+                          // });
+                          Navigator.pop(context);
+
                         });
                       } catch (error) {
                         debugPrint('FirebaseAuth.instance.signOut 실패: $error');
-                        Future.microtask(() {
-                          Provider.of<GoogleAnalyticsNotifier>(context,
-                                  listen: false)
-                              .startTimer('ProfileScreen');
-                        }).then((value) {
-                          Navigator.pop(context);
-                        });
+
+                        // Future.microtask(() {
+                        //   Provider.of<GoogleAnalyticsNotifier>(context,
+                        //           listen: false)
+                        //       .startTimer('ProfileScreen');
+                        // }).then((value) {
+                        //   Navigator.pop(context);
+                        // });
+                        Navigator.pop(context);
                       }
                     });
                   } else {
@@ -170,12 +175,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         await mapWidgetUpdate.clearPPListElements();
                       }
 
-                      Future.microtask(() {
-                        Provider.of<GoogleAnalyticsNotifier>(context, listen: false)
-                            .startTimer('ProfileScreen');
-                      }).then((value) {
-                        Navigator.pop(context);
-                      });
+                      // Future.microtask(() {
+                      //   Provider.of<GoogleAnalyticsNotifier>(context, listen: false)
+                      //       .startTimer('ProfileScreen');
+                      // }).then((value) {
+                      //   Navigator.pop(context);
+                      // });
+                      Navigator.pop(context);
                     });
 
 
@@ -537,17 +543,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                           TextButton(
                                             onPressed: () async {
                                               debugPrint(MapScreen.id);
-                                              final resultFromMapScreen = await Navigator.pushAndRemoveUntil(
-                                                  context,
-                                                  MaterialPageRoute(
-                                                      builder: (context) =>
-                                                          MapScreen(pingpongList: newProfile.pingpongCourt,)),
-                                                  (route) => true);
-                                              // 받은 데이터 출력
-                                              debugPrint('resultFromMapScreen: $resultFromMapScreen');
-                                              setState(() {
-                                                newProfile.pingpongCourt = resultFromMapScreen;
+                                              await MoveToOtherScreen().initializeGASetting(
+                                                  context, 'MapScreen').then((value) async {
+
+                                                await Navigator.pushAndRemoveUntil(
+                                                    context,
+                                                    MaterialPageRoute(
+                                                        builder: (context) =>
+                                                            MapScreen(pingpongList: newProfile.pingpongCourt,)),
+                                                        (route) => true).then((resultFromMapScreen) async {
+
+                                                  await MoveToOtherScreen().initializeGASetting(
+                                                      context, 'ProfileScreen').then((value) {
+                                                    // 받은 데이터 출력
+                                                    debugPrint('resultFromMapScreen: $resultFromMapScreen');
+                                                    setState(() {
+                                                      newProfile.pingpongCourt = resultFromMapScreen;
+                                                    });
+
+                                                  });
+                                                });
                                               });
+
                                             },
                                             child: Text(
                                               '추가',

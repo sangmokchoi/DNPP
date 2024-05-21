@@ -145,6 +145,18 @@ const kMatchingScreen_FirstNicknameTextStyle = TextStyle(
     overflow: TextOverflow.fade
 );
 
+const kMainScreen_AnnouncementTextStyle = TextStyle(
+    fontSize: 20.0,
+    color: Colors.white,
+    fontWeight: FontWeight.bold
+);
+
+const kMainScreen_HowToUseTextStyle = TextStyle(
+    fontSize: 20.0,
+    color: Colors.white,
+    fontWeight: FontWeight.bold
+);
+
 const kMatchingScreen_FirstUserInfoTextStyle = TextStyle(
     fontSize: 13.0,
     color: Colors.white,

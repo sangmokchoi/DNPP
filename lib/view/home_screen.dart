@@ -1,4 +1,5 @@
 import 'dart:core';
+import 'package:dnpp/models/moveToOtherScreen.dart';
 import 'package:dnpp/view/main_screen.dart';
 import 'package:dnpp/view/matching_screen.dart';
 import 'package:dnpp/view/setting_screen.dart';
@@ -6,10 +7,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:persistent_bottom_nav_bar/persistent_tab_view.dart';
 import 'package:provider/provider.dart';
+import '../main.dart';
+import '../statusUpdate/CurrentPageProvider.dart';
 import '../statusUpdate/googleAnalytics.dart';
 import 'calendar_screen.dart';
 
-// GlobalKey<_HomeScreenState> homePageKey = GlobalKey<_HomeScreenState>();
 
 class HomeScreen extends StatefulWidget {
   static String id = '/HomeScreenID';
@@ -21,7 +23,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen>
     with SingleTickerProviderStateMixin {
 
-  PersistentTabController _controller =
+  PersistentTabController _persistentTabController =
       PersistentTabController(initialIndex: 0);
 
   //Timer? _timer; // 타이머를 저장할 변수
@@ -93,7 +95,7 @@ class _HomeScreenState extends State<HomeScreen>
 
   // @override
   void onItemSelected(int index) {
-    _controller.jumpToTab(index);
+    _persistentTabController.jumpToTab(index);
     // 추가로 수행해야 할 로직이 있다면 여기에 추가
     debugPrint('onItemSelected pressed');
   }
@@ -104,8 +106,18 @@ class _HomeScreenState extends State<HomeScreen>
   @override
   void initState() {
     debugPrint('홈스크린 이닛!');
+    WidgetsBinding.instance?.addPostFrameCallback((_) {
+      // navigator key의 현재 라우트 수 확인
+      if (navigatorKey.currentState?.canPop() ?? false) {
+        debugPrint('불필요한 라우트가 있는 경우 pop');
+        // 불필요한 라우트가 있는 경우 pop
+        navigatorKey.currentState?.popUntil((route) => route.isFirst);
+      }
+    });
+
     super.initState();
-    _controller = PersistentTabController(initialIndex: 0);
+
+    _persistentTabController = PersistentTabController(initialIndex: 0);
 
     controller = AnimationController(
       duration: const Duration(milliseconds: 500),
@@ -122,8 +134,6 @@ class _HomeScreenState extends State<HomeScreen>
           .startTimer('MainScreen');
     });
   }
-
-  int clickedTab = -1;
 
   @override
   void dispose() {
@@ -147,14 +157,13 @@ class _HomeScreenState extends State<HomeScreen>
           body: PersistentTabView(
             //key: homePageKey,
             context,
-            controller: _controller,
+            controller: _persistentTabController,
             onItemSelected: (itemInt) async {
+
               String screenName = '';
-              debugPrint('clickedTab: $clickedTab');
               // 맨 처음 진입시에 곧장 매칭 스크린, 채팅 리스트, 채팅 뷰로 넘어가면 매칭 스크린이 ga에서 추적이 안됨
 
-              if (clickedTab != -1) {
-                switch (clickedTab) {
+                switch (itemInt) {
                   case 0:
                     screenName = 'MainScreen';
                   case 1:
@@ -164,17 +173,12 @@ class _HomeScreenState extends State<HomeScreen>
                   case 3:
                     screenName = 'SettingScreen';
                 }
-                debugPrint('screenName: $screenName');
+              debugPrint('홈스크린 itemInt: $itemInt');
+                debugPrint('홈스크린 screenName: $screenName');
 
-                await Provider.of<GoogleAnalyticsNotifier>(context, listen: false)
-                    .startTimer(screenName);
-              } else {
-                await Provider.of<GoogleAnalyticsNotifier>(context, listen: false)
-                    .startTimer('MainScreen'); // 맨 처음 값을 저장할 때는 mainScreen에서 시작하므로
-              }
+                await MoveToOtherScreen().initializeGASetting(context, screenName);
 
               setState(() {
-                clickedTab = itemInt;
                 return debugPrint('$itemInt');
               }); // This is required to update the nav bar if Android back button is pressed
             },

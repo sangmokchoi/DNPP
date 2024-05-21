@@ -20,13 +20,12 @@ class CalendarScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // final currentPageProvider = Provider.of<CurrentPageProvider>(context, listen: false);
-    // currentPageProvider.setCurrentPage('CalendarScreen');
 
     WidgetsBinding.instance!.addPostFrameCallback((_) async {
-      await Provider.of<CurrentPageProvider>(context, listen: false)
-          .setCurrentPage('CalendarScreen');
-
-      await GoogleAnalytics().trackScreen(context, 'CalendarScreen');
+      // await Provider.of<CurrentPageProvider>(context, listen: false)
+      //     .setCurrentPage('CalendarScreen');
+      //
+      // await GoogleAnalytics().trackScreen(context, 'CalendarScreen');
 
       // int durationInSeconds = 0;
       // Timer.periodic(Duration(seconds: 1), (timer) {
@@ -34,6 +33,7 @@ class CalendarScreen extends StatelessWidget {
       //   debugPrint('durationInSeconds: $durationInSeconds');
       //   //GoogleAnalytics().onboardingScreen(context, durationInSeconds);
       // });
+      //await initialize(context, 'CalendarScreen');
     });
 
     return Consumer<CalendarScreenViewModel>(
@@ -73,15 +73,24 @@ class CalendarScreen extends StatelessWidget {
                     ),
                     child: Icon(Icons.edit_calendar),
                     onPressed: () async {
-                      final result = await MoveToOtherScreen().persistentNavPushNewScreen(
-                          context,
-                          AddAppointment(userCourt: ''),
-                          false,
-                          PageTransitionAnimation.slideUp);
-                      // setState(() {
-                         debugPrint('AddAppointment result: $result');
-                      Provider.of<CalendarScreenViewModel>(context, listen: false).notifyListeners();
-                      // });
+
+                      await MoveToOtherScreen().initializeGASetting(context, 'AddAppointment')
+                          .then((value) async {
+
+                        await MoveToOtherScreen().persistentNavPushNewScreen(
+                            context,
+                            AddAppointment(userCourt: ''),
+                            false,
+                            PageTransitionAnimation.slideUp).then((value) async {
+                          await MoveToOtherScreen().initializeGASetting(context, 'CalendarScreen');
+
+                        });
+
+                        Provider.of<CalendarScreenViewModel>(context, listen: false).notifyListeners();
+                      });
+
+
+
                     },
                   );
                 } else {
@@ -112,16 +121,24 @@ class CalendarScreen extends StatelessWidget {
                               Center(
                                 child: ElevatedButton(
                                   onPressed: () async {
-                                    Navigator.of(context).pop();
-                                    final result = await MoveToOtherScreen()
-                                        .persistentNavPushNewScreen(
-                                            context,
-                                            SignupScreen(1),
-                                            false,
-                                            PageTransitionAnimation.fade);
+                                    await MoveToOtherScreen().initializeGASetting(context, 'SignupScreen').then((value) async {
+                                      Navigator.of(context).pop();
 
-                                    debugPrint('SignupScreen result: $result');
-                                    Provider.of<CalendarScreenViewModel>(context, listen: false).notifyListeners();
+                                      await MoveToOtherScreen()
+                                          .persistentNavPushNewScreen(
+                                          context,
+                                          SignupScreen(1),
+                                          false,
+                                          PageTransitionAnimation.fade).then((value) async {
+
+                                        await MoveToOtherScreen().initializeGASetting(context, 'CalendarScreen');
+
+                                        Provider.of<CalendarScreenViewModel>(context, listen: false).notifyListeners();
+
+                                      });
+
+                                    });
+
                                   },
                                   child: Text('확인'),
                                 ),
@@ -181,4 +198,5 @@ class CalendarScreen extends StatelessWidget {
       ));
     });
   }
+
 }

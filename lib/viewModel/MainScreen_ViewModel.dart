@@ -22,6 +22,7 @@ class MainScreenViewModel extends ChangeNotifier {
   ScrollController _scrollControllerHowToUse = ScrollController();
 
   Future<void> updateIsAdBannerVisible() async {
+    isHowToUseVisible = false;
     isAdBannerVisible = !isAdBannerVisible;
     notifyListeners();
   }
@@ -37,6 +38,7 @@ class MainScreenViewModel extends ChangeNotifier {
   }
 
   Future<void> updateIsHowToUseVisible() async {
+    isAdBannerVisible = false;
     isHowToUseVisible = !isHowToUseVisible;
     notifyListeners();
   }
@@ -102,6 +104,10 @@ class MainScreenViewModel extends ChangeNotifier {
                   ),
                   child: Column(
                     children: [
+                      Text('공지사항', style: kMainScreen_AnnouncementTextStyle,),
+                      SizedBox(
+                        height: 5.0,
+                      ),
                       Expanded(
                         child: PageView.builder(
                             controller: _announcementController,
@@ -349,9 +355,7 @@ class MainScreenViewModel extends ChangeNotifier {
                       ),
                       child: Column(
                         children: [
-                          SizedBox(
-                            height: 5.0,
-                          ),
+                          Text('이용안내', style: kMainScreen_HowToUseTextStyle,),
                           Expanded(
                             child: PageView.builder(
                                 controller: _howToUsePageController,
