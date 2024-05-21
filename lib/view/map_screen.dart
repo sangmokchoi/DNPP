@@ -20,9 +20,9 @@ import 'package:dnpp/constants.dart';
 class MapScreen extends StatefulWidget {
   static String id = '/MapScreenID';
 
-  List<PingpongList>? pingpongList;
-
-  MapScreen({required this.pingpongList});
+  // List<PingpongList>? pingpongList;
+  //
+  // MapScreen({required this.pingpongList});
 
   @override
   State<MapScreen> createState() => _MapScreenState();
@@ -33,11 +33,11 @@ class _MapScreenState extends State<MapScreen> {
   late BuildContext _context;
 
   late Future<void> myFuture;
-  late List<PingpongList> _pingpongList;
+  //late List<PingpongList> _pingpongList;
 
   @override
   void initState() {
-    _pingpongList = widget.pingpongList ?? [];
+    //_pingpongList = widget.pingpongList ?? [];
 
     _textFormFieldController.addListener(() {});
 
@@ -85,7 +85,8 @@ class _MapScreenState extends State<MapScreen> {
           onTap: () {
             FocusScope.of(context).unfocus();
           },
-          child: Consumer<ProfileUpdate>(builder: (context, taskData, child) {
+          child: Consumer<ProfileUpdate>(
+              builder: (context, profileUpdate, child) {
             return Scaffold(
               key: const ValueKey("MapScreen"),
               resizeToAvoidBottomInset: false,
@@ -123,7 +124,7 @@ class _MapScreenState extends State<MapScreen> {
                             debugPrint('마운트 됨');
                           }
                         }).then((value) {
-                          Navigator.pop(context, _pingpongList);
+                          Navigator.pop(context, profileUpdate.userProfile.pingpongCourt);
                         });
                       },
                       child: Text(
@@ -137,28 +138,32 @@ class _MapScreenState extends State<MapScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Padding(
-                    padding: _pingpongList.isEmpty
+                    padding:
+                    (profileUpdate.userProfile.pingpongCourt?.isEmpty ?? true)
                         ? EdgeInsets.zero
-                        : EdgeInsets.only(
+                        :
+                    EdgeInsets.only(
                             left: 0.0, right: 0.0, top: 15.0, bottom: 0.0),
-                    child: _pingpongList!.isEmpty
+                    child:
+                    (profileUpdate.userProfile.pingpongCourt?.isEmpty ?? true)
                         ? null
-                        : Container(
+                        :
+                    Container(
                             height: 35.0,
                             alignment: Alignment.centerLeft,
                             child: ListView.builder(
                               scrollDirection: Axis.horizontal,
-                              controller: Provider.of<ProfileUpdate>(context,
-                                      listen: false)
-                                  .horizontalScrollController,
+                              controller: profileUpdate.horizontalScrollController,
                               shrinkWrap: true,
-                              itemCount: _pingpongList?.length ?? 0,
+                              itemCount: profileUpdate.userProfile.pingpongCourt?.length ?? 0,
                               itemBuilder: (context, index) {
+
+                                debugPrint(' profileUpdate.userProfile.pingpongCourt?.length: ${ profileUpdate.userProfile.pingpongCourt?.length}');
                                 var margin = EdgeInsets.zero;
 
                                 if (index == 0) {
                                   margin = EdgeInsets.only(left: 15.0);
-                                } else if (index == _pingpongList.length - 1) {
+                                } else if (index == profileUpdate.userProfile.pingpongCourt!.length - 1) {
                                   margin = EdgeInsets.only(right: 15.0);
                                 }
 
@@ -182,7 +187,7 @@ class _MapScreenState extends State<MapScreen> {
                                         child: Row(
                                           children: [
                                             Text(
-                                              _pingpongList[index].title,
+                                              profileUpdate.userProfile.pingpongCourt?[index].title ?? '',
                                               style: TextStyle(color: kMainColor),
                                             ),
                                             SizedBox(
@@ -207,7 +212,7 @@ class _MapScreenState extends State<MapScreen> {
                                           }, () {
                                             //Navigator.pop(context);
                                             setState(() {
-                                              _pingpongList.removeAt(index);
+                                              profileUpdate.userProfile.pingpongCourt?.removeAt(index);
                                             });
 
                                             //setState(() {

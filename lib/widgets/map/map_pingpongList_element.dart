@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../constants.dart';
+import '../../main.dart';
 import '../../models/launchUrl.dart';
 import '../../models/pingpongList.dart';
 import '../../statusUpdate/mapWidgetUpdate.dart';
@@ -28,11 +29,19 @@ class PingpongListElement extends StatelessWidget {
 
     final Uri _url = Uri.parse(url);
 
-    if (await launchUrl(_url)) {
-      debugPrint('Could launch $url');
-    } else {
-      debugPrint('Could not launch $url');
+    try {
+      if (await launchUrl(_url)) {
+        debugPrint('Could launch $url');
+      } else {
+        debugPrint('Could not launch $url');
+      }
+    } catch (e) {
+      LaunchUrl().alertFunc(navigatorKey.currentContext!, '에러', '네이버 지도 앱을 열 수 없습니다', '확인', () {
+        Navigator.pop(navigatorKey.currentContext!);
+      });
     }
+
+
   }
 
   bool onTapToggle = false;
@@ -86,13 +95,14 @@ class PingpongListElement extends StatelessWidget {
                             : kMainColor,
                     textStyle: TextStyle(fontSize: 15),
                   ),
-                  onPressed: () {
+                  onPressed: () async {
 
                     if (Provider.of<ProfileUpdate>(context, listen: false)
                         .userProfile.pingpongCourt
                     !.contains(_element)) {
                       debugPrint('contains true');
-                      Provider.of<ProfileUpdate>(
+
+                      await Provider.of<ProfileUpdate>(
                           context,
                           listen: false)
                           .removeByElementPingpongList(
@@ -107,8 +117,11 @@ class PingpongListElement extends StatelessWidget {
                           .length <
                           5) {
                         debugPrint('탁구장 추가됨');
-                        Provider.of<ProfileUpdate>(context, listen: false)
-                            .addPingpongList(_element);
+                        await Provider.of<ProfileUpdate>(context, listen: false)
+                            .addPingpongList(_element).then((value) {
+                          Provider.of<ProfileUpdate>(context, listen: false).scrollListView();
+                        });
+
 
                       } else {
 

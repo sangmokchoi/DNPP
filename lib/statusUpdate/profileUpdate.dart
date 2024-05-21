@@ -67,6 +67,19 @@ class ProfileUpdate with ChangeNotifier {
   }
 
   void scrollListView() {
+    // WidgetsBinding.instance?.addPostFrameCallback((_) {
+    //   // Introduce a small delay to ensure everything is ready
+    //   Future.delayed(Duration(milliseconds: 200), () {
+    //     if (horizontalScrollController.hasClients) {
+    //       horizontalScrollController.animateTo(
+    //         horizontalScrollController.position.maxScrollExtent,
+    //         duration: Duration(milliseconds: 500),
+    //         curve: Curves.easeInOut,
+    //       );
+    //     }
+    //   });
+    // });
+
     Future.delayed(
       Duration(milliseconds: 200),
       () {
@@ -80,18 +93,18 @@ class ProfileUpdate with ChangeNotifier {
     //notifyListeners();
   }
 
-  void addPingpongList(PingpongList element) {
+  Future<void> addPingpongList(PingpongList element) async {
     userProfile.pingpongCourt?.add(element);
-    scrollListView();
+    debugPrint('userProfile.pingpongCourt: ${userProfile.pingpongCourt}');
     notifyListeners();
   }
 
-  void removeByIndexPingpongList(int index) {
+  Future<void> removeByIndexPingpongList(int index) async {
     userProfile.pingpongCourt?.removeAt(index);
     notifyListeners();
   }
 
-  void removeByElementPingpongList(PingpongList element) {
+  Future<void> removeByElementPingpongList(PingpongList element) async {
     userProfile.pingpongCourt?.remove(element);
     notifyListeners();
   }

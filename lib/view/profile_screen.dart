@@ -108,1445 +108,1425 @@ class _ProfileScreenState extends State<ProfileScreen> {
         //       .startTimer('ProfileScreen');
         // });
       },
-      child: GestureDetector(
-          onTap: () {
-            FocusScope.of(context).unfocus();
-          },
-          child: Scaffold(
-            resizeToAvoidBottomInset: false,
-            key: const ValueKey("ProfileScreen"),
-            appBar: AppBar(
-              centerTitle: true,
-              automaticallyImplyLeading: false,
-              leading: TextButton(
-                onPressed: () async {
-                  // 첫 회원 가입 시에 뒤로를 클릭하게 되면, userprofile을 초기화 해야 함
+      child: Consumer<ProfileUpdate>(
+          builder: (context, profileUpdate, child) {
+          return GestureDetector(
+              onTap: () {
+                FocusScope.of(context).unfocus();
+              },
+              child: Scaffold(
+                resizeToAvoidBottomInset: false,
+                key: const ValueKey("ProfileScreen"),
+                appBar: AppBar(
+                  centerTitle: true,
+                  automaticallyImplyLeading: false,
+                  leading: TextButton(
+                    onPressed: () async {
+                      // 첫 회원 가입 시에 뒤로를 클릭하게 되면, userprofile을 초기화 해야 함
 
-                  if (!Provider.of<LoginStatusUpdate>(context, listen: false)
-                      .isLoggedIn) {
-                    LaunchUrl().alertOkAndCancelFunc(
-                        context,
-                        '알림',
-                        '회원가입을 정말 취소하시겠습니까?',
-                        '아니오',
-                        '예',
-                        Colors.red,
-                        kMainColor, () {
-                      Navigator.pop(context);
-                    }, () async {
-                      try {
-                        await FirebaseAuth.instance.signOut().then((value) async {
-                          await Provider.of<ProfileUpdate>(context, listen: false)
-                              .resetUserProfile();
-                          debugPrint('FirebaseAuth.instance.signOut 성공');
+                      if (!Provider.of<LoginStatusUpdate>(context, listen: false)
+                          .isLoggedIn) {
+                        LaunchUrl().alertOkAndCancelFunc(
+                            context,
+                            '알림',
+                            '회원가입을 정말 취소하시겠습니까?',
+                            '아니오',
+                            '예',
+                            Colors.red,
+                            kMainColor, () {
+                          Navigator.pop(context);
+                        }, () async {
+                          try {
+                            await FirebaseAuth.instance.signOut().then((value) async {
+                              await profileUpdate.resetUserProfile();
+                              debugPrint('FirebaseAuth.instance.signOut 성공');
+
+                              // Future.microtask(() {
+                              //   Provider.of<GoogleAnalyticsNotifier>(context,
+                              //           listen: false)
+                              //       .startTimer('ProfileScreen');
+                              // }).then((value) {
+                              //   Navigator.pop(context);
+                              // });
+                              Navigator.pop(context);
+
+                            });
+                          } catch (error) {
+                            debugPrint('FirebaseAuth.instance.signOut 실패: $error');
+
+                            // Future.microtask(() {
+                            //   Provider.of<GoogleAnalyticsNotifier>(context,
+                            //           listen: false)
+                            //       .startTimer('ProfileScreen');
+                            // }).then((value) {
+                            //   Navigator.pop(context);
+                            // });
+                            Navigator.pop(context);
+                          }
+                        });
+                      } else {
+
+                        LaunchUrl().alertOkAndCancelFunc(context, '알림', '변경사항이 저장되지 않습니다\n정말 프로필 수정 화면에서 나가시겠습니까?', '아니오', '예', kMainColor, kMainColor, () {
+                          Navigator.pop(context);
+                        }, () async {
+                          final mapWidgetUpdate =
+                          Provider.of<MapWidgetUpdate>(context, listen: false);
+
+                          if (mapWidgetUpdate.pPListElements.isNotEmpty) {
+                            await mapWidgetUpdate.clearPPListElements();
+                          }
 
                           // Future.microtask(() {
-                          //   Provider.of<GoogleAnalyticsNotifier>(context,
-                          //           listen: false)
+                          //   Provider.of<GoogleAnalyticsNotifier>(context, listen: false)
                           //       .startTimer('ProfileScreen');
                           // }).then((value) {
                           //   Navigator.pop(context);
                           // });
                           Navigator.pop(context);
-
                         });
-                      } catch (error) {
-                        debugPrint('FirebaseAuth.instance.signOut 실패: $error');
 
-                        // Future.microtask(() {
-                        //   Provider.of<GoogleAnalyticsNotifier>(context,
-                        //           listen: false)
-                        //       .startTimer('ProfileScreen');
-                        // }).then((value) {
-                        //   Navigator.pop(context);
-                        // });
-                        Navigator.pop(context);
+
                       }
-                    });
-                  } else {
-
-                    LaunchUrl().alertOkAndCancelFunc(context, '알림', '변경사항이 저장되지 않습니다\n정말 프로필 수정 화면에서 나가시겠습니까?', '아니오', '예', kMainColor, kMainColor, () {
-                      Navigator.pop(context);
-                    }, () async {
-                      final mapWidgetUpdate =
-                      Provider.of<MapWidgetUpdate>(context, listen: false);
-
-                      if (mapWidgetUpdate.pPListElements.isNotEmpty) {
-                        await mapWidgetUpdate.clearPPListElements();
-                      }
-
-                      // Future.microtask(() {
-                      //   Provider.of<GoogleAnalyticsNotifier>(context, listen: false)
-                      //       .startTimer('ProfileScreen');
-                      // }).then((value) {
-                      //   Navigator.pop(context);
-                      // });
-                      Navigator.pop(context);
-                    });
-
-
-                  }
-                },
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    Text(
-                      '뒤로',
-                      style: kElevationButtonStyle,
-                      textAlign: TextAlign.right,
+                    },
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        Text(
+                          '뒤로',
+                          style: kElevationButtonStyle,
+                          textAlign: TextAlign.right,
+                        ),
+                      ],
                     ),
+                  ),
+                  title: Text(
+                    '프로필 설정',
+                    style: kAppointmentTextStyle,
+                    textAlign: TextAlign.center,
+                  ),
+                  actions: [
+                    if (scrollDouble)
+                      TextButton(
+                        onPressed: () async {
+                          await uploadProfile(context);
+                        },
+                        child: Text('저장', style: kElevationButtonStyle
+                            //     .copyWith(
+                            //   color: kMainColor.withOpacity(0.3)
+                            // ),
+                            ),
+                      )
+                    // Padding(
+                    //   padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                    //   child: Icon(
+                    //       Icons.arrow_downward,
+                    //     //color: kMainColor,
+                    //   ),
+                    // ),
                   ],
                 ),
-              ),
-              title: Text(
-                '프로필 설정',
-                style: kAppointmentTextStyle,
-                textAlign: TextAlign.center,
-              ),
-              actions: [
-                if (scrollDouble)
-                  TextButton(
-                    onPressed: () async {
-                      await uploadProfile(context);
-                    },
-                    child: Text('저장', style: kElevationButtonStyle
-                        //     .copyWith(
-                        //   color: kMainColor.withOpacity(0.3)
-                        // ),
-                        ),
-                  )
-                // Padding(
-                //   padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                //   child: Icon(
-                //       Icons.arrow_downward,
-                //     //color: kMainColor,
-                //   ),
-                // ),
-              ],
-            ),
-            body: SingleChildScrollView(
-              controller: _viewVerticalScrollController,
-              child: Padding(
-                padding: const EdgeInsets.only(bottom: 35.0),
-                child: Column(
-                  //crossAxisAlignment: CrossAxisAlignment.start,
-                  //mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    AbsorbPointer(
-                      absorbing: false, //isEditing ? false : true,
-                      //isEditing == true이면, AbsorbPointer는 false여야 수정 가능
-                      child: buildProfilePhoto(),
-                    ), // 유저 프로필 사진
-                    AbsorbPointer(
-                      absorbing: false, //isEditing ? false : true,
-                      //isEditing == true이면, AbsorbPointer는 false여야 수정 가능
-                      child: Column(
-                        children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                body: SingleChildScrollView(
+                  controller: _viewVerticalScrollController,
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: 35.0),
+                    child: Column(
+                      //crossAxisAlignment: CrossAxisAlignment.start,
+                      //mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        AbsorbPointer(
+                          absorbing: false, //isEditing ? false : true,
+                          //isEditing == true이면, AbsorbPointer는 false여야 수정 가능
+                          child: buildProfilePhoto(),
+                        ), // 유저 프로필 사진
+                        AbsorbPointer(
+                          absorbing: false, //isEditing ? false : true,
+                          //isEditing == true이면, AbsorbPointer는 false여야 수정 가능
+                          child: Column(
                             children: [
-                              Padding(
-                                padding: const EdgeInsets.only(
-                                    top: 10.0,
-                                    bottom: 10.0,
-                                    left: 20.0,
-                                    right: 20.0),
-                                child: Text(
-                                  '자기소개',
-                                  style: kAppointmentTextStyle,
-                                  textAlign: TextAlign.left,
-                                ),
-                              ),
-                              Container(
-                                margin: EdgeInsets.symmetric(
-                                    vertical: 10.0, horizontal: 10.0),
-                                padding: EdgeInsets.symmetric(
-                                    vertical: 15.0, horizontal: 0.0),
-                                decoration: BoxDecoration(
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.grey.withOpacity(0.5),
-                                        //spreadRadius: 3,
-                                        blurRadius: 3,
-                                        offset: Offset(3, 3),
-                                      ),
-                                    ],
-                                    color: sectionColor,
-                                    borderRadius:
-                                        BorderRadius.all(Radius.circular(10.0))),
-                                child: Column(
-                                  children: [
-                                    Padding(
-                                      padding: EdgeInsets.only(
-                                          left: 25.0, right: 25.0, bottom: 0.0),
-                                      child: TextFormField(
-                                        autocorrect: false,
-                                        enableSuggestions: false,
-                                        // style: TextStyle(
-                                        //   fontSize: 20.0
-                                        // ),
-                                        controller:
-                                            _nickNameTextFormFieldController,
-                                        maxLength: 15,
-                                        decoration: const InputDecoration(
-                                          labelText: '닉네임 (필수)',
-                                          labelStyle:
-                                              TextStyle(color: Colors.grey),
-                                          focusedBorder: UnderlineInputBorder(
-                                            borderSide: BorderSide(
-                                                color: Colors.grey), // 밑줄 색상
-                                          ),
-                                          hintText: '15자 이내',
-                                          // hintStyle: TextStyle(
-                                          //   fontSize: 14.0
-                                          // ),
-                                          // enabledBorder: const OutlineInputBorder(
-                                          //   borderSide: BorderSide(color: Colors.red, width: 1.0),
-                                          //   borderRadius: BorderRadius.all(Radius.circular(4.0)),
-                                          // ),
-                                          // focusedBorder: const OutlineInputBorder(
-                                          //   //borderSide: BorderSide(color: Colors.black, width: 2.0),
-                                          //   borderRadius: BorderRadius.all(Radius.circular(4.0)),
-                                          // ),
-                                        ),
-                                      ),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Padding(
+                                    padding: const EdgeInsets.only(
+                                        top: 10.0,
+                                        bottom: 10.0,
+                                        left: 20.0,
+                                        right: 20.0),
+                                    child: Text(
+                                      '자기소개',
+                                      style: kAppointmentTextStyle,
+                                      textAlign: TextAlign.left,
                                     ),
-                                    // 닉네임
-                                    Padding(
-                                      padding: EdgeInsets.only(
-                                          left: 25.0, right: 25.0, bottom: 5.0),
-                                      child: TextFormField(
-                                        autocorrect: false,
-                                        enableSuggestions: false,
-                                        // style: TextStyle(
-                                        //     fontSize: 20.0
-                                        // ),
-                                        controller:
-                                            _selfIntroductionTextFormFieldController,
-                                        maxLength: 30,
-                                        decoration: const InputDecoration(
-                                          labelText: '자기소개',
-                                          labelStyle:
-                                              TextStyle(color: Colors.grey),
-                                          focusedBorder: UnderlineInputBorder(
-                                            borderSide: BorderSide(
-                                                color: Colors.grey), // 밑줄 색상
-                                          ),
-                                          hintText: '15자 이내',
-                                          // hintStyle: TextStyle(
-                                          //     fontSize: 14.0
-                                          // ),
-                                          // enabledBorder: const OutlineInputBorder(
-                                          //   borderSide: BorderSide(color: Colors.red, width: 1.0),
-                                          //   borderRadius: BorderRadius.all(Radius.circular(4.0)),
-                                          // ),
-                                          // focusedBorder: const OutlineInputBorder(
-                                          //   //borderSide: BorderSide(color: Colors.black, width: 2.0),
-                                          //   borderRadius: BorderRadius.all(Radius.circular(4.0)),
-                                          // ),
-                                        ),
-                                      ),
-                                    ),
-                                    // 자기소개
-                                    Padding(
-                                      padding: EdgeInsets.symmetric(
-                                          horizontal: 25.0, vertical: 10.0),
-                                      child: Column(
-                                        children: [
-                                          Align(
-                                            alignment: Alignment.topLeft,
-                                            child: Text('성별',
-                                                style: kProfileTextStyle),
-                                          ),
-                                          Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.center,
-                                            children: [
-                                              ToggleButtons(
-                                                  borderRadius:
-                                                      BorderRadius.circular(4.0),
-                                                  color: kMainColor,
-                                                  selectedColor: kMainColor,
-                                                  isSelected:
-                                                      Provider.of<ProfileUpdate>(
-                                                              context,
-                                                              listen: false)
-                                                          .genderIsSelected,
-                                                  constraints: BoxConstraints(
-                                                    minHeight: 40.0,
-                                                    minWidth: _buttonwidth(
-                                                        context,
-                                                        Provider.of<ProfileUpdate>(
-                                                                context,
-                                                                listen: false)
-                                                            .genderIsSelected
-                                                            .length),
-                                                  ),
-                                                  onPressed: (index) async {
-                                                    setState(() {
-                                                      Provider.of<ProfileUpdate>(
-                                                              context,
-                                                              listen: false)
-                                                          .updateGenderIsSelected(
-                                                              index);
-                                                      newProfile.gender =
-                                                          UserProfile
-                                                              .genderList[index];
-                                                    });
-                                                  },
-                                                  children: [
-                                                    Padding(
-                                                      padding: const EdgeInsets
-                                                          .symmetric(
-                                                          horizontal: 8.0),
-                                                      child: Text(UserProfile
-                                                          .genderList[0]),
-                                                    ),
-                                                    Padding(
-                                                      padding: const EdgeInsets
-                                                          .symmetric(
-                                                          horizontal: 8.0),
-                                                      child: Text(UserProfile
-                                                          .genderList[1]),
-                                                    ),
-                                                    Padding(
-                                                      padding: const EdgeInsets
-                                                          .symmetric(
-                                                          horizontal: 8.0),
-                                                      child: Text(UserProfile
-                                                          .genderList[2]),
-                                                    ),
-                                                  ]),
-                                            ],
+                                  ),
+                                  Container(
+                                    margin: EdgeInsets.symmetric(
+                                        vertical: 10.0, horizontal: 10.0),
+                                    padding: EdgeInsets.symmetric(
+                                        vertical: 15.0, horizontal: 0.0),
+                                    decoration: BoxDecoration(
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.grey.withOpacity(0.5),
+                                            //spreadRadius: 3,
+                                            blurRadius: 3,
+                                            offset: Offset(3, 3),
                                           ),
                                         ],
-                                      ),
+                                        color: sectionColor,
+                                        borderRadius:
+                                            BorderRadius.all(Radius.circular(10.0))),
+                                    child: Column(
+                                      children: [
+                                        Padding(
+                                          padding: EdgeInsets.only(
+                                              left: 25.0, right: 25.0, bottom: 0.0),
+                                          child: TextFormField(
+                                            autocorrect: false,
+                                            enableSuggestions: false,
+                                            // style: TextStyle(
+                                            //   fontSize: 20.0
+                                            // ),
+                                            controller:
+                                                _nickNameTextFormFieldController,
+                                            maxLength: 15,
+                                            decoration: const InputDecoration(
+                                              labelText: '닉네임 (필수)',
+                                              labelStyle:
+                                                  TextStyle(color: Colors.grey),
+                                              focusedBorder: UnderlineInputBorder(
+                                                borderSide: BorderSide(
+                                                    color: Colors.grey), // 밑줄 색상
+                                              ),
+                                              hintText: '15자 이내',
+                                              // hintStyle: TextStyle(
+                                              //   fontSize: 14.0
+                                              // ),
+                                              // enabledBorder: const OutlineInputBorder(
+                                              //   borderSide: BorderSide(color: Colors.red, width: 1.0),
+                                              //   borderRadius: BorderRadius.all(Radius.circular(4.0)),
+                                              // ),
+                                              // focusedBorder: const OutlineInputBorder(
+                                              //   //borderSide: BorderSide(color: Colors.black, width: 2.0),
+                                              //   borderRadius: BorderRadius.all(Radius.circular(4.0)),
+                                              // ),
+                                            ),
+                                          ),
+                                        ),
+                                        // 닉네임
+                                        Padding(
+                                          padding: EdgeInsets.only(
+                                              left: 25.0, right: 25.0, bottom: 5.0),
+                                          child: TextFormField(
+                                            autocorrect: false,
+                                            enableSuggestions: false,
+                                            // style: TextStyle(
+                                            //     fontSize: 20.0
+                                            // ),
+                                            controller:
+                                                _selfIntroductionTextFormFieldController,
+                                            maxLength: 30,
+                                            decoration: const InputDecoration(
+                                              labelText: '자기소개',
+                                              labelStyle:
+                                                  TextStyle(color: Colors.grey),
+                                              focusedBorder: UnderlineInputBorder(
+                                                borderSide: BorderSide(
+                                                    color: Colors.grey), // 밑줄 색상
+                                              ),
+                                              hintText: '15자 이내',
+                                              // hintStyle: TextStyle(
+                                              //     fontSize: 14.0
+                                              // ),
+                                              // enabledBorder: const OutlineInputBorder(
+                                              //   borderSide: BorderSide(color: Colors.red, width: 1.0),
+                                              //   borderRadius: BorderRadius.all(Radius.circular(4.0)),
+                                              // ),
+                                              // focusedBorder: const OutlineInputBorder(
+                                              //   //borderSide: BorderSide(color: Colors.black, width: 2.0),
+                                              //   borderRadius: BorderRadius.all(Radius.circular(4.0)),
+                                              // ),
+                                            ),
+                                          ),
+                                        ),
+                                        // 자기소개
+                                        Padding(
+                                          padding: EdgeInsets.symmetric(
+                                              horizontal: 25.0, vertical: 10.0),
+                                          child: Column(
+                                            children: [
+                                              Align(
+                                                alignment: Alignment.topLeft,
+                                                child: Text('성별',
+                                                    style: kProfileTextStyle),
+                                              ),
+                                              Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.center,
+                                                children: [
+                                                  ToggleButtons(
+                                                      borderRadius:
+                                                          BorderRadius.circular(4.0),
+                                                      color: kMainColor,
+                                                      selectedColor: kMainColor,
+                                                      isSelected: profileUpdate.genderIsSelected,
+                                                      constraints: BoxConstraints(
+                                                        minHeight: 40.0,
+                                                        minWidth: _buttonwidth(
+                                                            context,
+                                                            profileUpdate
+                                                                .genderIsSelected
+                                                                .length),
+                                                      ),
+                                                      onPressed: (index) async {
+                                                        setState(() {
+                                                          profileUpdate
+                                                              .updateGenderIsSelected(
+                                                                  index);
+                                                          newProfile.gender =
+                                                              UserProfile
+                                                                  .genderList[index];
+                                                        });
+                                                      },
+                                                      children: [
+                                                        Padding(
+                                                          padding: const EdgeInsets
+                                                              .symmetric(
+                                                              horizontal: 8.0),
+                                                          child: Text(UserProfile
+                                                              .genderList[0]),
+                                                        ),
+                                                        Padding(
+                                                          padding: const EdgeInsets
+                                                              .symmetric(
+                                                              horizontal: 8.0),
+                                                          child: Text(UserProfile
+                                                              .genderList[1]),
+                                                        ),
+                                                        Padding(
+                                                          padding: const EdgeInsets
+                                                              .symmetric(
+                                                              horizontal: 8.0),
+                                                          child: Text(UserProfile
+                                                              .genderList[2]),
+                                                        ),
+                                                      ]),
+                                                ],
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        // 성별
+                                        Padding(
+                                          padding: EdgeInsets.symmetric(
+                                              horizontal: 25.0, vertical: 5.0),
+                                          child: Column(
+                                            children: [
+                                              Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.spaceBetween,
+                                                children: [
+                                                  Text('연령대',
+                                                      style: kProfileTextStyle),
+                                                  Text(
+                                                      '${UserProfile.ageRangeList[_currentAgeRangeSliderValue.toInt()]}',
+                                                      style: kProfileTextStyle),
+                                                ],
+                                              ),
+                                              SliderTheme(
+                                                data: SliderThemeData(
+                                                  thumbColor:
+                                                      Theme.of(context).primaryColor,
+                                                  activeTrackColor: Theme.of(context)
+                                                      .primaryColor
+                                                      .withOpacity(0.7),
+                                                  inactiveTrackColor:
+                                                      Theme.of(context)
+                                                          .primaryColor
+                                                          .withOpacity(0.3),
+                                                  showValueIndicator:
+                                                      ShowValueIndicator
+                                                          .never, // 슬라이더의 썸의 색상
+                                                ),
+                                                child: Slider(
+                                                  value: _currentAgeRangeSliderValue,
+                                                  min: 0.0,
+                                                  max: UserProfile.ageRangeList.length
+                                                          .toDouble() -
+                                                      1,
+                                                  divisions: UserProfile
+                                                          .ageRangeList.length
+                                                          .toInt() -
+                                                      1,
+                                                  label:
+                                                      '${UserProfile.ageRangeList[_currentAgeRangeSliderValue.toInt()]}',
+                                                  onChanged: (double value) {
+                                                    debugPrint("$value");
+                                                    setState(() {
+                                                      _currentAgeRangeSliderValue =
+                                                          value;
+                                                      newProfile
+                                                          .ageRange = UserProfile
+                                                              .ageRangeList[
+                                                          _currentAgeRangeSliderValue
+                                                              .toInt()];
+                                                    });
+                                                  },
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        // 연령대
+                                      ],
                                     ),
-                                    // 성별
-                                    Padding(
-                                      padding: EdgeInsets.symmetric(
-                                          horizontal: 25.0, vertical: 5.0),
-                                      child: Column(
-                                        children: [
-                                          Row(
+                                  ),
+                                ],
+                              ), // 개인정보
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Padding(
+                                    padding: const EdgeInsets.only(
+                                        top: 20.0,
+                                        bottom: 10.0,
+                                        left: 20.0,
+                                        right: 20.0),
+                                    child: Text(
+                                      '어느 지역에 주로 계시나요?',
+                                      style: kAppointmentTextStyle,
+                                      textAlign: TextAlign.left,
+                                    ),
+                                  ),
+                                  Container(
+                                    margin: EdgeInsets.symmetric(
+                                        vertical: 10.0, horizontal: 10.0),
+                                    padding: EdgeInsets.only(bottom: 15.0, top: 10.0),
+                                    decoration: BoxDecoration(
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.grey.withOpacity(0.5),
+                                            //spreadRadius: 3,
+                                            blurRadius: 3,
+                                            offset: Offset(3, 3),
+                                          ),
+                                        ],
+                                        color: sectionColor,
+                                        borderRadius:
+                                            BorderRadius.all(Radius.circular(10.0))),
+                                    child: Column(
+                                      children: [
+                                        Padding(
+                                          padding: EdgeInsets.only(
+                                              left: 25.0, right: 25.0, top: 0.0),
+                                          child: Row(
                                             mainAxisAlignment:
                                                 MainAxisAlignment.spaceBetween,
                                             children: [
-                                              Text('연령대',
-                                                  style: kProfileTextStyle),
-                                              Text(
-                                                  '${UserProfile.ageRangeList[_currentAgeRangeSliderValue.toInt()]}',
-                                                  style: kProfileTextStyle),
-                                            ],
-                                          ),
-                                          SliderTheme(
-                                            data: SliderThemeData(
-                                              thumbColor:
-                                                  Theme.of(context).primaryColor,
-                                              activeTrackColor: Theme.of(context)
-                                                  .primaryColor
-                                                  .withOpacity(0.7),
-                                              inactiveTrackColor:
-                                                  Theme.of(context)
-                                                      .primaryColor
-                                                      .withOpacity(0.3),
-                                              showValueIndicator:
-                                                  ShowValueIndicator
-                                                      .never, // 슬라이더의 썸의 색상
-                                            ),
-                                            child: Slider(
-                                              value: _currentAgeRangeSliderValue,
-                                              min: 0.0,
-                                              max: UserProfile.ageRangeList.length
-                                                      .toDouble() -
-                                                  1,
-                                              divisions: UserProfile
-                                                      .ageRangeList.length
-                                                      .toInt() -
-                                                  1,
-                                              label:
-                                                  '${UserProfile.ageRangeList[_currentAgeRangeSliderValue.toInt()]}',
-                                              onChanged: (double value) {
-                                                debugPrint("$value");
-                                                setState(() {
-                                                  _currentAgeRangeSliderValue =
-                                                      value;
-                                                  newProfile
-                                                      .ageRange = UserProfile
-                                                          .ageRangeList[
-                                                      _currentAgeRangeSliderValue
-                                                          .toInt()];
-                                                });
-                                              },
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    // 연령대
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ), // 개인정보
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.only(
-                                    top: 20.0,
-                                    bottom: 10.0,
-                                    left: 20.0,
-                                    right: 20.0),
-                                child: Text(
-                                  '어느 지역에 주로 계시나요?',
-                                  style: kAppointmentTextStyle,
-                                  textAlign: TextAlign.left,
-                                ),
-                              ),
-                              Container(
-                                margin: EdgeInsets.symmetric(
-                                    vertical: 10.0, horizontal: 10.0),
-                                padding: EdgeInsets.only(bottom: 15.0, top: 10.0),
-                                decoration: BoxDecoration(
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.grey.withOpacity(0.5),
-                                        //spreadRadius: 3,
-                                        blurRadius: 3,
-                                        offset: Offset(3, 3),
-                                      ),
-                                    ],
-                                    color: sectionColor,
-                                    borderRadius:
-                                        BorderRadius.all(Radius.circular(10.0))),
-                                child: Column(
-                                  children: [
-                                    Padding(
-                                      padding: EdgeInsets.only(
-                                          left: 25.0, right: 25.0, top: 0.0),
-                                      child: Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          Row(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.end,
-                                            children: [
-                                              Text('활동 탁구장',
-                                                  style: kProfileTextStyle),
-                                              SizedBox(width: 5.0),
-                                              Text('(최대 5개)',
-                                                  style: kProfileSubTextStyle),
-                                            ],
-                                          ),
-                                          TextButton(
-                                            onPressed: () async {
-                                              debugPrint(MapScreen.id);
-                                              await MoveToOtherScreen().initializeGASetting(
-                                                  context, 'MapScreen').then((value) async {
-
-                                                await Navigator.pushAndRemoveUntil(
-                                                    context,
-                                                    MaterialPageRoute(
-                                                        builder: (context) =>
-                                                            MapScreen(pingpongList: newProfile.pingpongCourt,)),
-                                                        (route) => true).then((resultFromMapScreen) async {
-
+                                              Row(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.end,
+                                                children: [
+                                                  Text('활동 탁구장',
+                                                      style: kProfileTextStyle),
+                                                  SizedBox(width: 5.0),
+                                                  Text('(최대 5개)',
+                                                      style: kProfileSubTextStyle),
+                                                ],
+                                              ),
+                                              TextButton(
+                                                onPressed: () async {
+                                                  debugPrint(MapScreen.id);
                                                   await MoveToOtherScreen().initializeGASetting(
-                                                      context, 'ProfileScreen').then((value) {
-                                                    // 받은 데이터 출력
-                                                    debugPrint('resultFromMapScreen: $resultFromMapScreen');
-                                                    setState(() {
-                                                      newProfile.pingpongCourt = resultFromMapScreen;
+                                                      context, 'MapScreen').then((value) async {
+
+                                                    await Navigator.pushAndRemoveUntil(
+                                                        context,
+                                                        MaterialPageRoute(
+                                                            builder: (context) =>
+                                                                MapScreen()
+                                                                  //pingpongList: newProfile.pingpongCourt,
+                                                                //),
+                                                        ),
+                                                            (route) => true).then((resultFromMapScreen) async {
+
+                                                      await MoveToOtherScreen().initializeGASetting(
+                                                          context, 'ProfileScreen').then((value) {
+                                                        // 받은 데이터 출력
+                                                        debugPrint('resultFromMapScreen: $resultFromMapScreen');
+                                                        setState(() {
+                                                          newProfile.pingpongCourt = resultFromMapScreen;
+                                                        });
+
+                                                      });
                                                     });
-
                                                   });
-                                                });
-                                              });
 
-                                            },
-                                            child: Text(
-                                              '추가',
-                                              style: kElevationButtonStyle.copyWith(
-
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    // 활동 탁구장 (최대 5개) 추가
-                                    Padding(
-                                      padding: newProfile.pingpongCourt!.isEmpty
-                                          ? EdgeInsets.zero
-                                          : EdgeInsets.only(
-                                              left: 0.0,
-                                              right: 0.0,
-                                              top: 5.0,
-                                              bottom: 10.0),
-                                      child: newProfile.pingpongCourt!.isEmpty
-                                          ? Container(
-                                              height: 50.0,
-                                              alignment: Alignment.center,
-                                              child: Text(
-                                                '데이터 없음',
-                                                style:
-                                                    kProfileSubTextStyle.copyWith(
-                                                        color: Theme.of(context)
-                                                                    .brightness ==
-                                                                Brightness.light
-                                                            ? Colors.black
-                                                            : Colors.grey),
-                                              ),
-                                            )
-                                          : Container(
-                                              height: 35.0,
-                                              alignment: Alignment.centerLeft,
-                                              child: ListView.builder(
-                                                scrollDirection: Axis.horizontal,
-                                                //controller: _SecondHorizontalScrollController,
-                                                shrinkWrap: true,
-                                                itemCount: newProfile
-                                                    .pingpongCourt?.length,
-                                                itemBuilder: (context, index) {
-                                                  var padding = EdgeInsets.zero;
-
-                                                  if (index == 0) {
-                                                    padding = EdgeInsets.only(
-                                                        left: 20.0);
-                                                  } else if (index ==
-                                                      newProfile.pingpongCourt!
-                                                              .length -
-                                                          1) {
-                                                    padding = EdgeInsets.only(
-                                                        right: 20.0);
-                                                  }
-
-                                                  return Padding(
-                                                    padding: padding,
-                                                    child: Stack(
-                                                      alignment:
-                                                          Alignment.centerRight,
-                                                      children: [
-                                                        Container(
-                                                          margin: EdgeInsets.only(
-                                                              right: 7.0),
-                                                          padding:
-                                                              EdgeInsets.only(
-                                                                  left: 10.0,
-                                                                  right: 5.0,
-                                                                  top: 5.0,
-                                                                  bottom: 5.0),
-                                                          decoration:
-                                                              BoxDecoration(
-                                                            border: Border.all(
-                                                                color:
-                                                                    kMainColor),
-                                                            borderRadius:
-                                                                BorderRadius
-                                                                    .circular(
-                                                                        20.0),
-                                                          ),
-                                                          child: Row(
-                                                            children: [
-                                                              Text(
-                                                                newProfile
-                                                                    .pingpongCourt![
-                                                                        index]
-                                                                    .title,
-                                                                style: TextStyle(
-                                                                    color:
-                                                                        kMainColor),
-                                                              ),
-                                                              SizedBox(
-                                                                width: 24.0,
-                                                              )
-                                                            ],
-                                                          ),
-                                                        ),
-                                                        IconButton(
-                                                          onPressed: () {
-                                                            debugPrint(
-                                                                'IconButton 클릭');
-
-                                                            LaunchUrl().alertOkAndCancelFunc(
-                                                                context,
-                                                                '선택한 탁구장을 삭제할까요?',
-                                                                '삭제를 원한다면\n확인 버튼을 클릭해주세요',
-                                                                '취소',
-                                                                '확인',
-                                                                kMainColor,
-                                                                kMainColor, () {
-                                                              Navigator.pop(
-                                                                  context);
-                                                            }, () {
-                                                              //Navigator.pop(context);
-                                                              setState(() {
-                                                                debugPrint(
-                                                                    'Provider.of<ProfileUpdate>(context, listen: false).userProfile: ${Provider.of<ProfileUpdate>(context, listen: false).userProfile.pingpongCourt}');
-
-                                                                newProfile
-                                                                    .pingpongCourt
-                                                                    ?.removeAt(
-                                                                        index);
-                                                                debugPrint(
-                                                                    'Provider.of<ProfileUpdate>(context, listen: false).userProfile: ${Provider.of<ProfileUpdate>(context, listen: false).userProfile.pingpongCourt}');
-                                                                // Provider.of<ProfileUpdate>(context, listen: false)
-                                                                //     .removeByIndexPingpongList(
-                                                                //         index);
-                                                              });
-                                                            });
-                                                          },
-                                                          icon: Icon(
-                                                            CupertinoIcons
-                                                                .clear_circled,
-                                                            color: Colors.grey,
-                                                          ),
-                                                          style: ButtonStyle(
-                                                            padding:
-                                                                MaterialStateProperty
-                                                                    .all(EdgeInsets
-                                                                        .zero),
-                                                          ),
-                                                          iconSize:
-                                                              18.0, // IconButton의 크기 설정
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  );
                                                 },
+                                                child: Text(
+                                                  '추가',
+                                                  style: kElevationButtonStyle.copyWith(
+
+                                                  ),
+                                                ),
                                               ),
-                                            ),
-                                    ),
-                                    // 탁구장 등록 리스트
-                                    Padding(
-                                      padding: EdgeInsets.only(
-                                          left: 25.0, right: 25.0, top: 10.0),
-                                      child: Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          Row(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.end,
-                                            children: [
-                                              Text('활동 지역',
-                                                  style: kProfileTextStyle),
-                                              SizedBox(width: 5.0),
-                                              Text('읍/면/동까지 입력 (최대 3개)',
-                                                  style: kProfileSubTextStyle),
                                             ],
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    // 활동 지역 Text
-                                    Padding(
-                                      padding: newProfile.address.isEmpty
-                                          ? EdgeInsets.zero
-                                          : EdgeInsets.only(top: 10.0),
-                                      child: newProfile.address.isEmpty
-                                          ? null
-                                          : Container(
-                                              height: 35.0,
-                                              alignment: Alignment.centerLeft,
-                                              child: ListView.builder(
-                                                scrollDirection: Axis.horizontal,
-                                                //reverse: true,
-                                                controller:
-                                                    _FirstHorizontalScrollController,
-                                                shrinkWrap: true,
-                                                itemCount:
-                                                    newProfile.address.length,
-                                                itemBuilder: (context, index) {
-                                                  var padding = EdgeInsets.zero;
-                                                  //debugPrint('index: $index');
-
-                                                  //debugPrint('pickedLocationList.length: ${pickedLocationList.length}');
-
-                                                  if (index == 0) {
-                                                    padding = EdgeInsets.only(
-                                                        left: 20.0);
-                                                  }
-                                                  if (index ==
-                                                      newProfile.address.length -
-                                                          1) {
-                                                    padding = EdgeInsets.only(
-                                                        right: 20.0);
-                                                  }
-                                                  if (newProfile.address
-                                                          .length ==
-                                                      1) {
-                                                    padding = EdgeInsets.only(
-                                                        left: 20.0);
-                                                  }
-                                                  return Padding(
-                                                    padding: padding,
-                                                    child: Stack(
-                                                      alignment:
-                                                          Alignment.centerRight,
-                                                      children: [
-                                                        Container(
-                                                          margin: EdgeInsets.only(
-                                                              right: 7.0),
-                                                          padding:
-                                                              EdgeInsets.only(
-                                                                  left: 10.0,
-                                                                  right: 5.0,
-                                                                  top: 5.0,
-                                                                  bottom: 5.0),
-                                                          decoration:
-                                                              BoxDecoration(
-                                                            border: Border.all(
-                                                                color:
-                                                                    kMainColor),
-                                                            borderRadius:
-                                                                BorderRadius
-                                                                    .circular(
-                                                                        20.0),
-                                                          ),
-                                                          child: Row(
-                                                            children: [
-                                                              Text(
-                                                                newProfile.address[
-                                                                    index],
-                                                                style: TextStyle(
-                                                                    color:
-                                                                        kMainColor),
-                                                              ),
-                                                              SizedBox(
-                                                                width: 24.0,
-                                                              )
-                                                            ],
-                                                          ),
-                                                        ),
-                                                        //SizedBox(width: 5.0,),
-
-                                                        IconButton(
-                                                          onPressed: () {
-                                                            LaunchUrl().alertOkAndCancelFunc(
-                                                                context,
-                                                                '선택한 지역을 삭제할까요?',
-                                                                '삭제를 원한다면\n확인 버튼을 클릭해주세요',
-                                                                '취소',
-                                                                '확인',
-                                                                kMainColor,
-                                                                kMainColor, () {
-                                                              Navigator.pop(
-                                                                  context);
-                                                            }, () {
-                                                              //Navigator.pop(context);
-                                                              setState(() {
-                                                                String
-                                                                    deleteLocation =
-                                                                    newProfile.address[
-                                                                        index];
-                                                                newProfile.address
-                                                                    .remove(
-                                                                        deleteLocation);
-                                                              });
-                                                            });
-                                                          },
-                                                          icon: Icon(
-                                                            CupertinoIcons
-                                                                .clear_circled,
-                                                            color: Colors.grey,
-                                                          ),
-                                                          style: ButtonStyle(
-                                                            padding:
-                                                                MaterialStateProperty
-                                                                    .all(EdgeInsets
-                                                                        .zero),
-                                                          ),
-                                                          iconSize:
-                                                              18.0, // IconButton의 크기 설정
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  );
-                                                },
-                                              ),
-                                            ),
-                                    ),
-                                    // 등록된 활동 지역
-                                    Padding(
-                                      padding: EdgeInsets.symmetric(
-                                          horizontal: 25.0, vertical: 10.0),
-                                      child: TextFormField(
-                                        autocorrect: false,
-                                        enableSuggestions: false,
-                                        controller:
-                                            _locationTextFormFieldController,
-                                        decoration: InputDecoration(
-                                          hintText: '예) 신사동, 흥업면',
-                                          labelStyle:
-                                              TextStyle(color: Colors.grey),
-                                          focusedBorder: UnderlineInputBorder(
-                                            borderSide: BorderSide(
-                                                color: Colors.grey), // 밑줄 색상
-                                          ),
-                                          suffixIcon: IconButton(
-                                            icon: Icon(Icons.clear),
-                                            onPressed: clearTextField,
                                           ),
                                         ),
-                                        onChanged: (text) {
-                                          setState(() {
-                                            if (text == '') {
-                                              filteredRegions.clear();
-                                              debugPrint('text == 111');
-                                            } else {
-                                              pickedLocation = text;
-                                              filteredRegions = LocationData()
-                                                  .address
-                                                  .where((region) =>
-                                                      region.contains(text))
-                                                  .toList();
-                                            }
-                                          });
-                                        },
-                                      ),
-                                    ),
-                                    // 활동 지역 텍스트필드 // 화순 혜화동
-                                    Padding(
-                                      padding: EdgeInsets.fromLTRB(
-                                          20.0, 0.0, 20.0, 5.0),
-                                      child: Container(
-                                        child: filteredRegions.isEmpty
-                                            ? Center(
-                                                child: Container(
-                                                  child: Text('검색한 결과가 없습니다'),
-                                                ),
-                                              ) // filteredRegions가 비어있을 경우 아무것도 나타나지 않도록 합니다.
-                                            : Scrollbar(
-                                                controller:
-                                                    _addressVerticalScrollController,
-                                                trackVisibility: false,
-                                                child: Container(
-                                                  constraints: BoxConstraints(
-                                                      minHeight: 0.0,
-                                                      maxHeight: 150),
-                                                  decoration: BoxDecoration(
-                                                    borderRadius:
-                                                        BorderRadius.all(
-                                                            Radius.circular(
-                                                                10.0)),
+                                        // 활동 탁구장 (최대 5개) 추가
+                                        Padding(
+                                          padding: newProfile.pingpongCourt!.isEmpty
+                                              ? EdgeInsets.zero
+                                              : EdgeInsets.only(
+                                                  left: 0.0,
+                                                  right: 0.0,
+                                                  top: 5.0,
+                                                  bottom: 10.0),
+                                          child: newProfile.pingpongCourt!.isEmpty
+                                              ? Container(
+                                                  height: 50.0,
+                                                  alignment: Alignment.center,
+                                                  child: Text(
+                                                    '데이터 없음',
+                                                    style:
+                                                        kProfileSubTextStyle.copyWith(
+                                                            color: Theme.of(context)
+                                                                        .brightness ==
+                                                                    Brightness.light
+                                                                ? Colors.black
+                                                                : Colors.grey),
                                                   ),
+                                                )
+                                              : Container(
+                                                  height: 35.0,
+                                                  alignment: Alignment.centerLeft,
                                                   child: ListView.builder(
-                                                    scrollDirection:
-                                                        Axis.vertical,
-                                                    controller:
-                                                        _addressVerticalScrollController,
+                                                    scrollDirection: Axis.horizontal,
+                                                    //controller: _SecondHorizontalScrollController,
                                                     shrinkWrap: true,
-                                                    padding: EdgeInsets.only(
-                                                        bottom: 0.0),
-                                                    // 여기를 추가 또는 수정합니다.
-                                                    itemCount:
-                                                        filteredRegions.length,
-                                                    itemBuilder:
-                                                        (context, index) {
-                                                      return Column(
-                                                        children: [
-                                                          Stack(
-                                                            alignment: Alignment
-                                                                .centerRight,
-                                                            children: [
-                                                              ListTile(
-                                                                title: Text(
-                                                                    filteredRegions[
-                                                                        index]),
-                                                                onTap: () {
-                                                                  Future.delayed(
-                                                                    Duration(
-                                                                        milliseconds:
-                                                                            200),
-                                                                    () {
-                                                                      _FirstHorizontalScrollController
-                                                                          .animateTo(
-                                                                        _FirstHorizontalScrollController
-                                                                            .position
-                                                                            .maxScrollExtent,
-                                                                        duration: Duration(
-                                                                            milliseconds:
-                                                                                500),
-                                                                        curve: Curves
-                                                                            .easeInOut,
-                                                                      );
-                                                                    },
-                                                                  );
+                                                    itemCount: newProfile
+                                                        .pingpongCourt?.length,
+                                                    itemBuilder: (context, index) {
+                                                      var padding = EdgeInsets.zero;
 
-                                                                  pickedLocation =
-                                                                      filteredRegions[
-                                                                          index];
+                                                      if (index == 0) {
+                                                        padding = EdgeInsets.only(
+                                                            left: 20.0);
+                                                      } else if (index ==
+                                                          newProfile.pingpongCourt!
+                                                                  .length -
+                                                              1) {
+                                                        padding = EdgeInsets.only(
+                                                            right: 20.0);
+                                                      }
 
-                                                                  if (!newProfile.address
-                                                                      .contains(
-                                                                          pickedLocation)) {
-                                                                    if (newProfile.address
-                                                                            .length <
-                                                                        3) {
-                                                                      _locationTextFormFieldController
-                                                                              .text =
-                                                                          pickedLocation;
-
-                                                                      newProfile.address
-                                                                          .add(
-                                                                              pickedLocation);
-
-                                                                      // filteredRegions = LocationData()
-                                                                      //     .address
-                                                                      //     .where((region) =>
-                                                                      //         region.contains(
-                                                                      //             pickedLocation))
-                                                                      //     .toList();
-
-
-                                                                    } else {
-                                                                      debugPrint(
-                                                                          '활동 지역 등록은 총 3개까지만 가능합니다.');
-
-                                                                      showDialog(
-                                                                        context:
-                                                                            context,
-                                                                        builder:
-                                                                            (context) {
-                                                                          return AlertDialog(
-                                                                            insetPadding: EdgeInsets.only(
-                                                                                left: 10.0,
-                                                                                right: 10.0),
-                                                                            shape:
-                                                                                kRoundedRectangleBorder,
-                                                                            title:
-                                                                                Text(
-                                                                              "알림",
-                                                                              textAlign:
-                                                                                  TextAlign.center,
-                                                                            ),
-                                                                            content:
-                                                                                Text(
-                                                                              "활동 지역 등록은\n총 3개까지만 가능합니다",
-                                                                              textAlign:
-                                                                                  TextAlign.center,
-                                                                            ),
-                                                                            actions: [
-                                                                              ButtonBar(
-                                                                                alignment: MainAxisAlignment.center,
-                                                                                // mainAxisSize: MainAxisSize.max,
-                                                                                children: [
-                                                                                  Container(
-                                                                                    width: kAlertDialogTextButtonWidth,
-                                                                                    child: TextButton(
-                                                                                      style: kConfirmButtonStyle,
-                                                                                      child: Text(
-                                                                                        "확인",
-                                                                                        textAlign: TextAlign.center,
-                                                                                        style: kTextButtonTextStyle,
-                                                                                      ),
-                                                                                      onPressed: () async {
-                                                                                        Navigator.pop(context);
-                                                                                      },
-                                                                                    ),
-                                                                                  ),
-                                                                                ],
-                                                                              ),
-                                                                            ],
-                                                                          );
-                                                                        },
-                                                                      );
-                                                                    }
-                                                                  } else {
-                                                                    debugPrint(
-                                                                        '이미 선택된 위치입니다.');
-
-                                                                    showDialog(
-                                                                      context:
-                                                                          context,
-                                                                      builder:
-                                                                          (context) {
-                                                                        return AlertDialog(
-                                                                          insetPadding: EdgeInsets.only(
-                                                                              left:
-                                                                                  10.0,
-                                                                              right:
-                                                                                  10.0),
-                                                                          shape:
-                                                                              kRoundedRectangleBorder,
-                                                                          title:
-                                                                              Text(
-                                                                            "이미 선택된 지역입니다",
-                                                                            textAlign:
-                                                                                TextAlign.center,
-                                                                          ),
-                                                                          content:
-                                                                              Text(
-                                                                            "다른 지역을 선택해주세요",
-                                                                            textAlign:
-                                                                                TextAlign.center,
-                                                                          ),
-                                                                          actions: [
-                                                                            ButtonBar(
-                                                                              alignment:
-                                                                                  MainAxisAlignment.center,
-                                                                              children: [
-                                                                                Container(
-                                                                                  width: kAlertDialogTextButtonWidth,
-                                                                                  child: ElevatedButton(
-                                                                                    style: kConfirmButtonStyle,
-                                                                                    child: Text(
-                                                                                      "확인",
-                                                                                      textAlign: TextAlign.center,
-                                                                                      style: kTextButtonTextStyle,
-                                                                                    ),
-                                                                                    onPressed: () async {
-                                                                                      Navigator.pop(context);
-                                                                                    },
-                                                                                  ),
-                                                                                ),
-                                                                              ],
-                                                                            ),
-                                                                          ],
-                                                                        );
-                                                                      },
-                                                                    );
-                                                                  }
-
-                                                                  setState(() {
-                                                                    _locationTextFormFieldController
-                                                                        .text = '';
-                                                                  });
-                                                                },
+                                                      return Padding(
+                                                        padding: padding,
+                                                        child: Stack(
+                                                          alignment:
+                                                              Alignment.centerRight,
+                                                          children: [
+                                                            Container(
+                                                              margin: EdgeInsets.only(
+                                                                  right: 7.0),
+                                                              padding:
+                                                                  EdgeInsets.only(
+                                                                      left: 10.0,
+                                                                      right: 5.0,
+                                                                      top: 5.0,
+                                                                      bottom: 5.0),
+                                                              decoration:
+                                                                  BoxDecoration(
+                                                                border: Border.all(
+                                                                    color:
+                                                                        kMainColor),
+                                                                borderRadius:
+                                                                    BorderRadius
+                                                                        .circular(
+                                                                            20.0),
                                                               ),
-                                                              Padding(
-                                                                padding:
-                                                                    const EdgeInsets
-                                                                        .only(
-                                                                        right:
-                                                                            8.0),
-                                                                child: Icon(
-                                                                  Icons
-                                                                      .arrow_forward_ios_rounded,
-                                                                  size: 15,
-                                                                ),
-                                                              ),
-                                                              if (index ==
-                                                                  filteredRegions
-                                                                          .length -
-                                                                      1)
-                                                                Positioned(
-                                                                  bottom: 0.0,
-                                                                  left: 0.0,
-                                                                  right: 0.0,
-                                                                  child:
-                                                                      Container(
-                                                                    height: 10,
-                                                                    decoration:
-                                                                        BoxDecoration(
-                                                                      borderRadius: BorderRadius.only(
-                                                                          bottomLeft:
-                                                                              Radius.circular(
-                                                                                  10.0),
-                                                                          bottomRight:
-                                                                              Radius.circular(10.0)),
-                                                                      gradient:
-                                                                          LinearGradient(
-                                                                        colors: [
-                                                                          Colors
-                                                                              .grey
-                                                                              .withOpacity(0.2),
-                                                                          // 시작 색상
-                                                                          Colors
-                                                                              .grey
-                                                                              .withOpacity(0.0),
-                                                                          // 끝 색상 (투명)
-                                                                        ],
-                                                                        begin: Alignment
-                                                                            .bottomCenter,
-                                                                        end: Alignment
-                                                                            .topCenter,
-                                                                      ),
-                                                                    ),
+                                                              child: Row(
+                                                                children: [
+                                                                  Text(
+                                                                    newProfile
+                                                                        .pingpongCourt![
+                                                                            index]
+                                                                        .title,
+                                                                    style: TextStyle(
+                                                                        color:
+                                                                            kMainColor),
                                                                   ),
-                                                                )
-                                                            ],
-                                                          ),
-                                                          if (index !=
-                                                              filteredRegions
-                                                                      .length -
-                                                                  1)
-                                                            Divider(
-                                                              height: 1,
-                                                              color: Colors.grey
-                                                                  .withOpacity(
-                                                                      0.3),
+                                                                  SizedBox(
+                                                                    width: 24.0,
+                                                                  )
+                                                                ],
+                                                              ),
                                                             ),
-                                                        ],
+                                                            IconButton(
+                                                              onPressed: () {
+                                                                debugPrint(
+                                                                    'IconButton 클릭');
+
+                                                                LaunchUrl().alertOkAndCancelFunc(
+                                                                    context,
+                                                                    '선택한 탁구장을 삭제할까요?',
+                                                                    '삭제를 원한다면\n확인 버튼을 클릭해주세요',
+                                                                    '취소',
+                                                                    '확인',
+                                                                    kMainColor,
+                                                                    kMainColor, () {
+                                                                  Navigator.pop(
+                                                                      context);
+                                                                }, () {
+                                                                  //Navigator.pop(context);
+                                                                  setState(() {
+                                                                    debugPrint(
+                                                                        'profileUpdate.userProfile: ${profileUpdate.userProfile.pingpongCourt}');
+
+                                                                    newProfile
+                                                                        .pingpongCourt
+                                                                        ?.removeAt(
+                                                                            index);
+                                                                    debugPrint(
+                                                                        'PprofileUpdate.userProfile: ${profileUpdate.userProfile.pingpongCourt}');
+                                                                    // profileUpdate
+                                                                    //     .removeByIndexPingpongList(
+                                                                    //         index);
+                                                                  });
+                                                                });
+                                                              },
+                                                              icon: Icon(
+                                                                CupertinoIcons
+                                                                    .clear_circled,
+                                                                color: Colors.grey,
+                                                              ),
+                                                              style: ButtonStyle(
+                                                                padding:
+                                                                    MaterialStateProperty
+                                                                        .all(EdgeInsets
+                                                                            .zero),
+                                                              ),
+                                                              iconSize:
+                                                                  18.0, // IconButton의 크기 설정
+                                                            ),
+                                                          ],
+                                                        ),
                                                       );
                                                     },
                                                   ),
                                                 ),
-                                              ),
-                                      ),
-                                    ),
-                                    // 활동 지역 검색 결과
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ), // 어느 지역에서 활동하시나요?
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.only(
-                                    top: 20.0,
-                                    bottom: 10.0,
-                                    left: 20.0,
-                                    right: 20.0),
-                                child: Text(
-                                  '어떤 탁구 스타일이세요?',
-                                  style: kAppointmentTextStyle,
-                                  textAlign: TextAlign.left,
-                                ),
-                              ),
-                              Container(
-                                margin: EdgeInsets.symmetric(
-                                    vertical: 10.0, horizontal: 10.0),
-                                padding: EdgeInsets.symmetric(
-                                    vertical: 15.0, horizontal: 0.0),
-                                decoration: BoxDecoration(
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.grey.withOpacity(0.5),
-                                        //spreadRadius: 3,
-                                        blurRadius: 3,
-                                        offset: Offset(3, 3),
-                                      ),
-                                    ],
-                                    color: sectionColor,
-                                    borderRadius:
-                                        BorderRadius.all(Radius.circular(10.0))),
-                                child: Column(
-                                  children: [
-                                    Padding(
-                                      padding: EdgeInsets.symmetric(
-                                          horizontal: 25.0, vertical: 10.0),
-                                      child: Column(
-                                        children: [
-                                          Row(
+                                        ),
+                                        // 탁구장 등록 리스트
+                                        Padding(
+                                          padding: EdgeInsets.only(
+                                              left: 25.0, right: 25.0, top: 10.0),
+                                          child: Row(
                                             mainAxisAlignment:
                                                 MainAxisAlignment.spaceBetween,
                                             children: [
-                                              Text('경력',
-                                                  style: kProfileTextStyle),
-                                              Text(
-                                                  UserProfile.playedYearsList[
+                                              Row(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.end,
+                                                children: [
+                                                  Text('활동 지역',
+                                                      style: kProfileTextStyle),
+                                                  SizedBox(width: 5.0),
+                                                  Text('읍/면/동까지 입력 (최대 3개)',
+                                                      style: kProfileSubTextStyle),
+                                                ],
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        // 활동 지역 Text
+                                        Padding(
+                                          padding: newProfile.address.isEmpty
+                                              ? EdgeInsets.zero
+                                              : EdgeInsets.only(top: 10.0),
+                                          child: newProfile.address.isEmpty
+                                              ? null
+                                              : Container(
+                                                  height: 35.0,
+                                                  alignment: Alignment.centerLeft,
+                                                  child: ListView.builder(
+                                                    scrollDirection: Axis.horizontal,
+                                                    //reverse: true,
+                                                    controller:
+                                                        _FirstHorizontalScrollController,
+                                                    shrinkWrap: true,
+                                                    itemCount:
+                                                        newProfile.address.length,
+                                                    itemBuilder: (context, index) {
+                                                      var padding = EdgeInsets.zero;
+                                                      //debugPrint('index: $index');
+
+                                                      //debugPrint('pickedLocationList.length: ${pickedLocationList.length}');
+
+                                                      if (index == 0) {
+                                                        padding = EdgeInsets.only(
+                                                            left: 20.0);
+                                                      }
+                                                      if (index ==
+                                                          newProfile.address.length -
+                                                              1) {
+                                                        padding = EdgeInsets.only(
+                                                            right: 20.0);
+                                                      }
+                                                      if (newProfile.address
+                                                              .length ==
+                                                          1) {
+                                                        padding = EdgeInsets.only(
+                                                            left: 20.0);
+                                                      }
+                                                      return Padding(
+                                                        padding: padding,
+                                                        child: Stack(
+                                                          alignment:
+                                                              Alignment.centerRight,
+                                                          children: [
+                                                            Container(
+                                                              margin: EdgeInsets.only(
+                                                                  right: 7.0),
+                                                              padding:
+                                                                  EdgeInsets.only(
+                                                                      left: 10.0,
+                                                                      right: 5.0,
+                                                                      top: 5.0,
+                                                                      bottom: 5.0),
+                                                              decoration:
+                                                                  BoxDecoration(
+                                                                border: Border.all(
+                                                                    color:
+                                                                        kMainColor),
+                                                                borderRadius:
+                                                                    BorderRadius
+                                                                        .circular(
+                                                                            20.0),
+                                                              ),
+                                                              child: Row(
+                                                                children: [
+                                                                  Text(
+                                                                    newProfile.address[
+                                                                        index],
+                                                                    style: TextStyle(
+                                                                        color:
+                                                                            kMainColor),
+                                                                  ),
+                                                                  SizedBox(
+                                                                    width: 24.0,
+                                                                  )
+                                                                ],
+                                                              ),
+                                                            ),
+                                                            //SizedBox(width: 5.0,),
+
+                                                            IconButton(
+                                                              onPressed: () {
+                                                                LaunchUrl().alertOkAndCancelFunc(
+                                                                    context,
+                                                                    '선택한 지역을 삭제할까요?',
+                                                                    '삭제를 원한다면\n확인 버튼을 클릭해주세요',
+                                                                    '취소',
+                                                                    '확인',
+                                                                    kMainColor,
+                                                                    kMainColor, () {
+                                                                  Navigator.pop(
+                                                                      context);
+                                                                }, () {
+                                                                  //Navigator.pop(context);
+                                                                  setState(() {
+                                                                    String
+                                                                        deleteLocation =
+                                                                        newProfile.address[
+                                                                            index];
+                                                                    newProfile.address
+                                                                        .remove(
+                                                                            deleteLocation);
+                                                                  });
+                                                                });
+                                                              },
+                                                              icon: Icon(
+                                                                CupertinoIcons
+                                                                    .clear_circled,
+                                                                color: Colors.grey,
+                                                              ),
+                                                              style: ButtonStyle(
+                                                                padding:
+                                                                    MaterialStateProperty
+                                                                        .all(EdgeInsets
+                                                                            .zero),
+                                                              ),
+                                                              iconSize:
+                                                                  18.0, // IconButton의 크기 설정
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      );
+                                                    },
+                                                  ),
+                                                ),
+                                        ),
+                                        // 등록된 활동 지역
+                                        Padding(
+                                          padding: EdgeInsets.symmetric(
+                                              horizontal: 25.0, vertical: 10.0),
+                                          child: TextFormField(
+                                            autocorrect: false,
+                                            enableSuggestions: false,
+                                            controller:
+                                                _locationTextFormFieldController,
+                                            decoration: InputDecoration(
+                                              hintText: '예) 신사동, 흥업면',
+                                              labelStyle:
+                                                  TextStyle(color: Colors.grey),
+                                              focusedBorder: UnderlineInputBorder(
+                                                borderSide: BorderSide(
+                                                    color: Colors.grey), // 밑줄 색상
+                                              ),
+                                              suffixIcon: IconButton(
+                                                icon: Icon(Icons.clear),
+                                                onPressed: clearTextField,
+                                              ),
+                                            ),
+                                            onChanged: (text) {
+                                              setState(() {
+                                                if (text == '') {
+                                                  filteredRegions.clear();
+                                                  debugPrint('text == 111');
+                                                } else {
+                                                  pickedLocation = text;
+                                                  filteredRegions = LocationData()
+                                                      .address
+                                                      .where((region) =>
+                                                          region.contains(text))
+                                                      .toList();
+                                                }
+                                              });
+                                            },
+                                          ),
+                                        ),
+                                        // 활동 지역 텍스트필드 // 화순 혜화동
+                                        Padding(
+                                          padding: EdgeInsets.fromLTRB(
+                                              20.0, 0.0, 20.0, 5.0),
+                                          child: Container(
+                                            child: filteredRegions.isEmpty
+                                                ? Center(
+                                                    child: Container(
+                                                      child: Text('검색한 결과가 없습니다'),
+                                                    ),
+                                                  ) // filteredRegions가 비어있을 경우 아무것도 나타나지 않도록 합니다.
+                                                : Scrollbar(
+                                                    controller:
+                                                        _addressVerticalScrollController,
+                                                    trackVisibility: false,
+                                                    child: Container(
+                                                      constraints: BoxConstraints(
+                                                          minHeight: 0.0,
+                                                          maxHeight: 150),
+                                                      decoration: BoxDecoration(
+                                                        borderRadius:
+                                                            BorderRadius.all(
+                                                                Radius.circular(
+                                                                    10.0)),
+                                                      ),
+                                                      child: ListView.builder(
+                                                        scrollDirection:
+                                                            Axis.vertical,
+                                                        controller:
+                                                            _addressVerticalScrollController,
+                                                        shrinkWrap: true,
+                                                        padding: EdgeInsets.only(
+                                                            bottom: 0.0),
+                                                        // 여기를 추가 또는 수정합니다.
+                                                        itemCount:
+                                                            filteredRegions.length,
+                                                        itemBuilder:
+                                                            (context, index) {
+                                                          return Column(
+                                                            children: [
+                                                              Stack(
+                                                                alignment: Alignment
+                                                                    .centerRight,
+                                                                children: [
+                                                                  ListTile(
+                                                                    title: Text(
+                                                                        filteredRegions[
+                                                                            index]),
+                                                                    onTap: () {
+                                                                      Future.delayed(
+                                                                        Duration(
+                                                                            milliseconds:
+                                                                                200),
+                                                                        () {
+                                                                          _FirstHorizontalScrollController
+                                                                              .animateTo(
+                                                                            _FirstHorizontalScrollController
+                                                                                .position
+                                                                                .maxScrollExtent,
+                                                                            duration: Duration(
+                                                                                milliseconds:
+                                                                                    500),
+                                                                            curve: Curves
+                                                                                .easeInOut,
+                                                                          );
+                                                                        },
+                                                                      );
+
+                                                                      pickedLocation =
+                                                                          filteredRegions[
+                                                                              index];
+
+                                                                      if (!newProfile.address
+                                                                          .contains(
+                                                                              pickedLocation)) {
+                                                                        if (newProfile.address
+                                                                                .length <
+                                                                            3) {
+                                                                          _locationTextFormFieldController
+                                                                                  .text =
+                                                                              pickedLocation;
+
+                                                                          newProfile.address
+                                                                              .add(
+                                                                                  pickedLocation);
+
+                                                                          // filteredRegions = LocationData()
+                                                                          //     .address
+                                                                          //     .where((region) =>
+                                                                          //         region.contains(
+                                                                          //             pickedLocation))
+                                                                          //     .toList();
+
+
+                                                                        } else {
+                                                                          debugPrint(
+                                                                              '활동 지역 등록은 총 3개까지만 가능합니다.');
+
+                                                                          showDialog(
+                                                                            context:
+                                                                                context,
+                                                                            builder:
+                                                                                (context) {
+                                                                              return AlertDialog(
+                                                                                insetPadding: EdgeInsets.only(
+                                                                                    left: 10.0,
+                                                                                    right: 10.0),
+                                                                                shape:
+                                                                                    kRoundedRectangleBorder,
+                                                                                title:
+                                                                                    Text(
+                                                                                  "알림",
+                                                                                  textAlign:
+                                                                                      TextAlign.center,
+                                                                                ),
+                                                                                content:
+                                                                                    Text(
+                                                                                  "활동 지역 등록은\n총 3개까지만 가능합니다",
+                                                                                  textAlign:
+                                                                                      TextAlign.center,
+                                                                                ),
+                                                                                actions: [
+                                                                                  ButtonBar(
+                                                                                    alignment: MainAxisAlignment.center,
+                                                                                    // mainAxisSize: MainAxisSize.max,
+                                                                                    children: [
+                                                                                      Container(
+                                                                                        width: kAlertDialogTextButtonWidth,
+                                                                                        child: TextButton(
+                                                                                          style: kConfirmButtonStyle,
+                                                                                          child: Text(
+                                                                                            "확인",
+                                                                                            textAlign: TextAlign.center,
+                                                                                            style: kTextButtonTextStyle,
+                                                                                          ),
+                                                                                          onPressed: () async {
+                                                                                            Navigator.pop(context);
+                                                                                          },
+                                                                                        ),
+                                                                                      ),
+                                                                                    ],
+                                                                                  ),
+                                                                                ],
+                                                                              );
+                                                                            },
+                                                                          );
+                                                                        }
+                                                                      } else {
+                                                                        debugPrint(
+                                                                            '이미 선택된 위치입니다.');
+
+                                                                        showDialog(
+                                                                          context:
+                                                                              context,
+                                                                          builder:
+                                                                              (context) {
+                                                                            return AlertDialog(
+                                                                              insetPadding: EdgeInsets.only(
+                                                                                  left:
+                                                                                      10.0,
+                                                                                  right:
+                                                                                      10.0),
+                                                                              shape:
+                                                                                  kRoundedRectangleBorder,
+                                                                              title:
+                                                                                  Text(
+                                                                                "이미 선택된 지역입니다",
+                                                                                textAlign:
+                                                                                    TextAlign.center,
+                                                                              ),
+                                                                              content:
+                                                                                  Text(
+                                                                                "다른 지역을 선택해주세요",
+                                                                                textAlign:
+                                                                                    TextAlign.center,
+                                                                              ),
+                                                                              actions: [
+                                                                                ButtonBar(
+                                                                                  alignment:
+                                                                                      MainAxisAlignment.center,
+                                                                                  children: [
+                                                                                    Container(
+                                                                                      width: kAlertDialogTextButtonWidth,
+                                                                                      child: ElevatedButton(
+                                                                                        style: kConfirmButtonStyle,
+                                                                                        child: Text(
+                                                                                          "확인",
+                                                                                          textAlign: TextAlign.center,
+                                                                                          style: kTextButtonTextStyle,
+                                                                                        ),
+                                                                                        onPressed: () async {
+                                                                                          Navigator.pop(context);
+                                                                                        },
+                                                                                      ),
+                                                                                    ),
+                                                                                  ],
+                                                                                ),
+                                                                              ],
+                                                                            );
+                                                                          },
+                                                                        );
+                                                                      }
+
+                                                                      setState(() {
+                                                                        _locationTextFormFieldController
+                                                                            .text = '';
+                                                                      });
+                                                                    },
+                                                                  ),
+                                                                  Padding(
+                                                                    padding:
+                                                                        const EdgeInsets
+                                                                            .only(
+                                                                            right:
+                                                                                8.0),
+                                                                    child: Icon(
+                                                                      Icons
+                                                                          .arrow_forward_ios_rounded,
+                                                                      size: 15,
+                                                                    ),
+                                                                  ),
+                                                                  if (index ==
+                                                                      filteredRegions
+                                                                              .length -
+                                                                          1)
+                                                                    Positioned(
+                                                                      bottom: 0.0,
+                                                                      left: 0.0,
+                                                                      right: 0.0,
+                                                                      child:
+                                                                          Container(
+                                                                        height: 10,
+                                                                        decoration:
+                                                                            BoxDecoration(
+                                                                          borderRadius: BorderRadius.only(
+                                                                              bottomLeft:
+                                                                                  Radius.circular(
+                                                                                      10.0),
+                                                                              bottomRight:
+                                                                                  Radius.circular(10.0)),
+                                                                          gradient:
+                                                                              LinearGradient(
+                                                                            colors: [
+                                                                              Colors
+                                                                                  .grey
+                                                                                  .withOpacity(0.2),
+                                                                              // 시작 색상
+                                                                              Colors
+                                                                                  .grey
+                                                                                  .withOpacity(0.0),
+                                                                              // 끝 색상 (투명)
+                                                                            ],
+                                                                            begin: Alignment
+                                                                                .bottomCenter,
+                                                                            end: Alignment
+                                                                                .topCenter,
+                                                                          ),
+                                                                        ),
+                                                                      ),
+                                                                    )
+                                                                ],
+                                                              ),
+                                                              if (index !=
+                                                                  filteredRegions
+                                                                          .length -
+                                                                      1)
+                                                                Divider(
+                                                                  height: 1,
+                                                                  color: Colors.grey
+                                                                      .withOpacity(
+                                                                          0.3),
+                                                                ),
+                                                            ],
+                                                          );
+                                                        },
+                                                      ),
+                                                    ),
+                                                  ),
+                                          ),
+                                        ),
+                                        // 활동 지역 검색 결과
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ), // 어느 지역에서 활동하시나요?
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Padding(
+                                    padding: const EdgeInsets.only(
+                                        top: 20.0,
+                                        bottom: 10.0,
+                                        left: 20.0,
+                                        right: 20.0),
+                                    child: Text(
+                                      '어떤 탁구 스타일이세요?',
+                                      style: kAppointmentTextStyle,
+                                      textAlign: TextAlign.left,
+                                    ),
+                                  ),
+                                  Container(
+                                    margin: EdgeInsets.symmetric(
+                                        vertical: 10.0, horizontal: 10.0),
+                                    padding: EdgeInsets.symmetric(
+                                        vertical: 15.0, horizontal: 0.0),
+                                    decoration: BoxDecoration(
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.grey.withOpacity(0.5),
+                                            //spreadRadius: 3,
+                                            blurRadius: 3,
+                                            offset: Offset(3, 3),
+                                          ),
+                                        ],
+                                        color: sectionColor,
+                                        borderRadius:
+                                            BorderRadius.all(Radius.circular(10.0))),
+                                    child: Column(
+                                      children: [
+                                        Padding(
+                                          padding: EdgeInsets.symmetric(
+                                              horizontal: 25.0, vertical: 10.0),
+                                          child: Column(
+                                            children: [
+                                              Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.spaceBetween,
+                                                children: [
+                                                  Text('경력',
+                                                      style: kProfileTextStyle),
+                                                  Text(
+                                                      UserProfile.playedYearsList[
+                                                          _currentPlayedYearsSliderValue
+                                                              .toInt()],
+                                                      style: kProfileTextStyle),
+                                                ],
+                                              ),
+                                              SliderTheme(
+                                                data: SliderThemeData(
+                                                  thumbColor:
+                                                      Theme.of(context).primaryColor,
+                                                  activeTrackColor: Theme.of(context)
+                                                      .primaryColor
+                                                      .withOpacity(0.7),
+                                                  inactiveTrackColor:
+                                                      Theme.of(context)
+                                                          .primaryColor
+                                                          .withOpacity(0.3),
+                                                  showValueIndicator:
+                                                      ShowValueIndicator.never,
+                                                ),
+                                                child: Slider(
+                                                  value:
+                                                      _currentPlayedYearsSliderValue,
+                                                  min: 0.0,
+                                                  max: UserProfile
+                                                          .playedYearsList.length
+                                                          .toDouble() -
+                                                      1,
+                                                  divisions: UserProfile
+                                                          .playedYearsList.length
+                                                          .toInt() -
+                                                      1,
+                                                  label: UserProfile.playedYearsList[
                                                       _currentPlayedYearsSliderValue
                                                           .toInt()],
-                                                  style: kProfileTextStyle),
-                                            ],
-                                          ),
-                                          SliderTheme(
-                                            data: SliderThemeData(
-                                              thumbColor:
-                                                  Theme.of(context).primaryColor,
-                                              activeTrackColor: Theme.of(context)
-                                                  .primaryColor
-                                                  .withOpacity(0.7),
-                                              inactiveTrackColor:
-                                                  Theme.of(context)
-                                                      .primaryColor
-                                                      .withOpacity(0.3),
-                                              showValueIndicator:
-                                                  ShowValueIndicator.never,
-                                            ),
-                                            child: Slider(
-                                              value:
-                                                  _currentPlayedYearsSliderValue,
-                                              min: 0.0,
-                                              max: UserProfile
-                                                      .playedYearsList.length
-                                                      .toDouble() -
-                                                  1,
-                                              divisions: UserProfile
-                                                      .playedYearsList.length
-                                                      .toInt() -
-                                                  1,
-                                              label: UserProfile.playedYearsList[
-                                                  _currentPlayedYearsSliderValue
-                                                      .toInt()],
-                                              onChanged: (double value) {
-                                                setState(() {
-                                                  _currentPlayedYearsSliderValue =
-                                                      value;
-                                                  newProfile
-                                                      .playedYears = UserProfile
-                                                          .playedYearsList[
-                                                      _currentPlayedYearsSliderValue
-                                                          .toInt()];
-                                                });
-                                              },
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    // 경력
-                                    Padding(
-                                      padding: EdgeInsets.symmetric(
-                                          horizontal: 25.0, vertical: 10.0),
-                                      child: Column(
-                                        children: [
-                                          Align(
-                                              alignment: Alignment.topLeft,
-                                              child: Text('플레이 스타일',
-                                                  style: kProfileTextStyle)),
-                                          Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.center,
-                                            children: [
-                                              ToggleButtons(
-                                                  borderRadius:
-                                                      BorderRadius.circular(4.0),
-                                                  color: kMainColor,
-                                                  selectedColor: kMainColor,
-                                                  isSelected:
-                                                      Provider.of<ProfileUpdate>(
-                                                              context,
-                                                              listen: false)
-                                                          .playStyleIsSelected,
-                                                  constraints: BoxConstraints(
-                                                    minHeight: 40.0,
-                                                    minWidth: _buttonwidth(
-                                                        context,
-                                                        Provider.of<ProfileUpdate>(
-                                                                context,
-                                                                listen: false)
-                                                            .playStyleIsSelected
-                                                            .length),
-                                                  ),
-                                                  onPressed: (index) async {
+                                                  onChanged: (double value) {
                                                     setState(() {
-                                                      Provider.of<ProfileUpdate>(
-                                                              context,
-                                                              listen: false)
-                                                          .updatePlayStyleIsSelected(
-                                                              index);
-                                                      newProfile.playStyle =
-                                                          UserProfile
-                                                                  .playStyleList[
-                                                              index];
+                                                      _currentPlayedYearsSliderValue =
+                                                          value;
+                                                      newProfile
+                                                          .playedYears = UserProfile
+                                                              .playedYearsList[
+                                                          _currentPlayedYearsSliderValue
+                                                              .toInt()];
                                                     });
                                                   },
-                                                  children: [
-                                                    Padding(
-                                                      padding: const EdgeInsets
-                                                          .symmetric(
-                                                          horizontal: 8.0),
-                                                      child: Text(UserProfile
-                                                          .playStyleList[0]),
-                                                    ),
-                                                    Padding(
-                                                      padding: const EdgeInsets
-                                                          .symmetric(
-                                                          horizontal: 8.0),
-                                                      child: Text(UserProfile
-                                                          .playStyleList[1]),
-                                                    ),
-                                                  ]),
+                                                ),
+                                              ),
                                             ],
                                           ),
-                                        ],
-                                      ),
-                                    ),
-                                    // 플레이 스타일
-                                    Padding(
-                                      padding: EdgeInsets.symmetric(
-                                          horizontal: 25.0, vertical: 10.0),
-                                      child: Column(
-                                        children: [
-                                          Align(
-                                            alignment: Alignment.topLeft,
-                                            child: Text('러버',
-                                                style: kProfileTextStyle),
-                                          ),
-                                          Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.center,
+                                        ),
+                                        // 경력
+                                        Padding(
+                                          padding: EdgeInsets.symmetric(
+                                              horizontal: 25.0, vertical: 10.0),
+                                          child: Column(
                                             children: [
-                                              ToggleButtons(
-                                                  borderRadius:
-                                                      BorderRadius.circular(4.0),
-                                                  color: kMainColor,
-                                                  selectedColor: kMainColor,
-                                                  isSelected:
-                                                      Provider.of<ProfileUpdate>(
-                                                              context,
-                                                              listen: false)
-                                                          .rubberIsSelected,
-                                                  constraints: BoxConstraints(
-                                                    minHeight: 40.0,
-                                                    minWidth: _buttonwidth(
-                                                        context,
-                                                        Provider.of<ProfileUpdate>(
-                                                                context,
-                                                                listen: false)
-                                                            .rubberIsSelected
-                                                            .length),
-                                                  ),
-                                                  onPressed: (index) async {
-                                                    setState(() {
-                                                      Provider.of<ProfileUpdate>(
-                                                              context,
-                                                              listen: false)
-                                                          .updateRubberIsSelected(
-                                                              index);
-                                                      newProfile.rubber =
-                                                          UserProfile
-                                                              .rubberList[index];
-                                                    });
-                                                  },
-                                                  children: [
-                                                    Padding(
-                                                      padding:
-                                                          EdgeInsets.symmetric(
+                                              Align(
+                                                  alignment: Alignment.topLeft,
+                                                  child: Text('플레이 스타일',
+                                                      style: kProfileTextStyle)),
+                                              Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.center,
+                                                children: [
+                                                  ToggleButtons(
+                                                      borderRadius:
+                                                          BorderRadius.circular(4.0),
+                                                      color: kMainColor,
+                                                      selectedColor: kMainColor,
+                                                      isSelected:
+                                                      profileUpdate
+                                                              .playStyleIsSelected,
+                                                      constraints: BoxConstraints(
+                                                        minHeight: 40.0,
+                                                        minWidth: _buttonwidth(
+                                                            context,
+                                                            profileUpdate
+                                                                .playStyleIsSelected
+                                                                .length),
+                                                      ),
+                                                      onPressed: (index) async {
+                                                        setState(() {
+                                                          profileUpdate
+                                                              .updatePlayStyleIsSelected(
+                                                                  index);
+                                                          newProfile.playStyle =
+                                                              UserProfile
+                                                                      .playStyleList[
+                                                                  index];
+                                                        });
+                                                      },
+                                                      children: [
+                                                        Padding(
+                                                          padding: const EdgeInsets
+                                                              .symmetric(
                                                               horizontal: 8.0),
-                                                      child: Text(UserProfile
-                                                          .rubberList[0]),
-                                                    ),
-                                                    Padding(
-                                                      padding:
-                                                          EdgeInsets.symmetric(
+                                                          child: Text(UserProfile
+                                                              .playStyleList[0]),
+                                                        ),
+                                                        Padding(
+                                                          padding: const EdgeInsets
+                                                              .symmetric(
                                                               horizontal: 8.0),
-                                                      child: Text(UserProfile
-                                                          .rubberList[1]),
-                                                    ),
-                                                    Padding(
-                                                      padding:
-                                                          EdgeInsets.symmetric(
-                                                              horizontal: 8.0),
-                                                      child: Text(UserProfile
-                                                          .rubberList[2]),
-                                                    ),
-                                                    Padding(
-                                                      padding:
-                                                          EdgeInsets.symmetric(
-                                                              horizontal: 8.0),
-                                                      child: Text(UserProfile
-                                                          .rubberList[3]),
-                                                    ),
-                                                  ]),
+                                                          child: Text(UserProfile
+                                                              .playStyleList[1]),
+                                                        ),
+                                                      ]),
+                                                ],
+                                              ),
                                             ],
                                           ),
-                                        ],
-                                      ),
-                                    ),
-                                    // 러버
-                                    Padding(
-                                      padding: EdgeInsets.symmetric(
-                                          horizontal: 25.0, vertical: 10.0),
-                                      child: Column(
-                                        children: [
-                                          Align(
-                                            alignment: Alignment.topLeft,
-                                            child: Text('라켓',
-                                                style: kProfileTextStyle),
-                                          ),
-                                          Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.center,
+                                        ),
+                                        // 플레이 스타일
+                                        Padding(
+                                          padding: EdgeInsets.symmetric(
+                                              horizontal: 25.0, vertical: 10.0),
+                                          child: Column(
                                             children: [
-                                              ToggleButtons(
-                                                  borderRadius:
-                                                      BorderRadius.circular(4.0),
-                                                  color: kMainColor,
-                                                  selectedColor: kMainColor,
-                                                  isSelected:
-                                                      Provider.of<ProfileUpdate>(
-                                                              context,
-                                                              listen: false)
-                                                          .racketIsSelected,
-                                                  constraints: BoxConstraints(
-                                                    minHeight: 40.0,
-                                                    minWidth: _buttonwidth(
-                                                        context,
-                                                        Provider.of<ProfileUpdate>(
-                                                                context,
-                                                                listen: false)
-                                                            .racketIsSelected
-                                                            .length),
-                                                  ),
-                                                  onPressed: (index) async {
-                                                    setState(() {
-                                                      Provider.of<ProfileUpdate>(
-                                                              context,
-                                                              listen: false)
-                                                          .updateRacketIsSelected(
-                                                              index);
-                                                      newProfile.racket =
-                                                          UserProfile
-                                                              .racketList[index];
-                                                    });
-                                                  },
-                                                  children: [
-                                                    Padding(
-                                                      padding:
-                                                          EdgeInsets.symmetric(
-                                                              horizontal: 8.0),
-                                                      child: Text(UserProfile
-                                                          .racketList[0]),
-                                                    ),
-                                                    Padding(
-                                                      padding:
-                                                          EdgeInsets.symmetric(
-                                                              horizontal: 8.0),
-                                                      child: Text(UserProfile
-                                                          .racketList[1]),
-                                                    ),
-                                                    Padding(
-                                                      padding:
-                                                          EdgeInsets.symmetric(
-                                                              horizontal: 8.0),
-                                                      child: Text(UserProfile
-                                                          .racketList[2]),
-                                                    ),
-                                                    Padding(
-                                                      padding:
-                                                          EdgeInsets.symmetric(
-                                                              horizontal: 8.0),
-                                                      child: Text(UserProfile
-                                                          .racketList[3]),
-                                                    ),
-                                                  ]),
+                                              Align(
+                                                alignment: Alignment.topLeft,
+                                                child: Text('러버',
+                                                    style: kProfileTextStyle),
+                                              ),
+                                              Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.center,
+                                                children: [
+                                                  ToggleButtons(
+                                                      borderRadius:
+                                                          BorderRadius.circular(4.0),
+                                                      color: kMainColor,
+                                                      selectedColor: kMainColor,
+                                                      isSelected:
+                                                      profileUpdate
+                                                              .rubberIsSelected,
+                                                      constraints: BoxConstraints(
+                                                        minHeight: 40.0,
+                                                        minWidth: _buttonwidth(
+                                                            context,
+                                                            profileUpdate
+                                                                .rubberIsSelected
+                                                                .length),
+                                                      ),
+                                                      onPressed: (index) async {
+                                                        setState(() {
+                                                          profileUpdate
+                                                              .updateRubberIsSelected(
+                                                                  index);
+                                                          newProfile.rubber =
+                                                              UserProfile
+                                                                  .rubberList[index];
+                                                        });
+                                                      },
+                                                      children: [
+                                                        Padding(
+                                                          padding:
+                                                              EdgeInsets.symmetric(
+                                                                  horizontal: 8.0),
+                                                          child: Text(UserProfile
+                                                              .rubberList[0]),
+                                                        ),
+                                                        Padding(
+                                                          padding:
+                                                              EdgeInsets.symmetric(
+                                                                  horizontal: 8.0),
+                                                          child: Text(UserProfile
+                                                              .rubberList[1]),
+                                                        ),
+                                                        Padding(
+                                                          padding:
+                                                              EdgeInsets.symmetric(
+                                                                  horizontal: 8.0),
+                                                          child: Text(UserProfile
+                                                              .rubberList[2]),
+                                                        ),
+                                                        Padding(
+                                                          padding:
+                                                              EdgeInsets.symmetric(
+                                                                  horizontal: 8.0),
+                                                          child: Text(UserProfile
+                                                              .rubberList[3]),
+                                                        ),
+                                                      ]),
+                                                ],
+                                              ),
                                             ],
                                           ),
-                                        ],
-                                      ),
+                                        ),
+                                        // 러버
+                                        Padding(
+                                          padding: EdgeInsets.symmetric(
+                                              horizontal: 25.0, vertical: 10.0),
+                                          child: Column(
+                                            children: [
+                                              Align(
+                                                alignment: Alignment.topLeft,
+                                                child: Text('라켓',
+                                                    style: kProfileTextStyle),
+                                              ),
+                                              Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.center,
+                                                children: [
+                                                  ToggleButtons(
+                                                      borderRadius:
+                                                          BorderRadius.circular(4.0),
+                                                      color: kMainColor,
+                                                      selectedColor: kMainColor,
+                                                      isSelected:
+                                                      profileUpdate
+                                                              .racketIsSelected,
+                                                      constraints: BoxConstraints(
+                                                        minHeight: 40.0,
+                                                        minWidth: _buttonwidth(
+                                                            context,
+                                                            profileUpdate
+                                                                .racketIsSelected
+                                                                .length),
+                                                      ),
+                                                      onPressed: (index) async {
+                                                        setState(() {
+                                                          profileUpdate
+                                                              .updateRacketIsSelected(
+                                                                  index);
+                                                          newProfile.racket =
+                                                              UserProfile
+                                                                  .racketList[index];
+                                                        });
+                                                      },
+                                                      children: [
+                                                        Padding(
+                                                          padding:
+                                                              EdgeInsets.symmetric(
+                                                                  horizontal: 8.0),
+                                                          child: Text(UserProfile
+                                                              .racketList[0]),
+                                                        ),
+                                                        Padding(
+                                                          padding:
+                                                              EdgeInsets.symmetric(
+                                                                  horizontal: 8.0),
+                                                          child: Text(UserProfile
+                                                              .racketList[1]),
+                                                        ),
+                                                        Padding(
+                                                          padding:
+                                                              EdgeInsets.symmetric(
+                                                                  horizontal: 8.0),
+                                                          child: Text(UserProfile
+                                                              .racketList[2]),
+                                                        ),
+                                                        Padding(
+                                                          padding:
+                                                              EdgeInsets.symmetric(
+                                                                  horizontal: 8.0),
+                                                          child: Text(UserProfile
+                                                              .racketList[3]),
+                                                        ),
+                                                      ]),
+                                                ],
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        // 라켓
+                                      ],
                                     ),
-                                    // 라켓
-                                  ],
-                                ),
+                                  ),
+                                ],
+                              ), // 어떤 탁구 스타일이세요?
+                              SizedBox(
+                                height: 5.0,
                               ),
+                              ElevatedButton(
+                                  onPressed: () async {
+                                    // newProfile.pingpongCourt = _pingpongList;
+                                    // newProfile.address = _pickedLocationList;
+                                    await uploadProfile(context);
+                                  },
+                                  child: Text('저장'))
                             ],
-                          ), // 어떤 탁구 스타일이세요?
-                          SizedBox(
-                            height: 5.0,
                           ),
-                          ElevatedButton(
-                              onPressed: () async {
-                                // newProfile.pingpongCourt = _pingpongList;
-                                // newProfile.address = _pickedLocationList;
-                                await uploadProfile(context);
-                              },
-                              child: Text('저장'))
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
-              ),
-            ),
-          )),
+              ));
+        }
+      ),
     );
   }
 
@@ -1660,7 +1640,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         );
 
 //updateUserProfile
-//           Provider.of<ProfileUpdate>(context, listen: false)
+//           profileUpdate
 //               .userProfile
 //               .pingpongCourt = newProfile.pingpongCourt;
 
@@ -1746,7 +1726,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               Navigator.pop(context);
 
               //toggleLoading(false, context);
-            } else if (message == '수정이 완료되었습니다') {
+            } else if (message != '수정이 완료되었습니다') {
               Navigator.pop(context);
 
               toggleLoading(false, context);
