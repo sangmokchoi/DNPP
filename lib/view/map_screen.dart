@@ -5,15 +5,12 @@ import 'package:dnpp/statusUpdate/profileUpdate.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-import 'package:dnpp/RemoteDataSource/naver_map_search.dart';
 import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
 import '../models/launchUrl.dart';
 import '../models/pingpongList.dart';
 import '../repository/naver_map.dart';
 import '../statusUpdate/ShowToast.dart';
-import '../statusUpdate/googleAnalytics.dart';
-import '../statusUpdate/CurrentPageProvider.dart';
 import '../statusUpdate/mapWidgetUpdate.dart';
 import '../widgets/map/map_widget.dart';
 import '../widgets/map/map_pingpongList_element.dart';
@@ -46,12 +43,6 @@ class _MapScreenState extends State<MapScreen> {
 
     WidgetsBinding.instance!.addPostFrameCallback((_) async {
       debugPrint('맵 스크린 에서 실행됨');
-      await Provider.of<GoogleAnalyticsNotifier>(context, listen: false)
-          .startTimer('ProfileScreen');
-
-      await GoogleAnalytics().trackScreen(context, 'MapScreen');
-      await Provider.of<CurrentPageProvider>(context, listen: false)
-          .setCurrentPage('MapScreen');
     });
 
     super.initState();
@@ -130,9 +121,6 @@ class _MapScreenState extends State<MapScreen> {
                         Future.microtask(() async {
                           if (mounted) {
                             debugPrint('마운트 됨');
-                            await Provider.of<GoogleAnalyticsNotifier>(_context,
-                                    listen: false)
-                                .startTimer('MapScreen');
                           }
                         }).then((value) {
                           Navigator.pop(context, _pingpongList);

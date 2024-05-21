@@ -14,11 +14,10 @@ import '../constants.dart';
 import '../models/launchUrl.dart';
 import '../models/moveToOtherScreen.dart';
 import '../repository/firebase_realtime_users.dart';
-import '../statusUpdate/googleAnalytics.dart';
 import '../LocalDataSource/DS_Local_auth.dart';
 import '../repository/firebase_auth.dart';
 import '../LocalDataSource/firebase_fireStore/DS_Local_userData.dart';
-import '../statusUpdate/CurrentPageProvider.dart';
+
 import '../statusUpdate/courtAppointmentUpdate.dart';
 import '../statusUpdate/personalAppointmentUpdate.dart';
 import '../statusUpdate/profileUpdate.dart';
@@ -41,31 +40,25 @@ class SignupScreen extends StatelessWidget {
   Widget build(BuildContext context) {
 
     WidgetsBinding.instance!.addPostFrameCallback((_) async {
-      switch (previousScreen){
-        case 0:
-          Provider.of<GoogleAnalyticsNotifier>(context, listen: false)
-              .startTimer('MainScreen');
-        case 1:
-          Provider.of<GoogleAnalyticsNotifier>(context, listen: false)
-              .startTimer('CalendarScreen');
-        case 2:
-          Provider.of<GoogleAnalyticsNotifier>(context, listen: false)
-              .startTimer('MatchingScreen');
-        case 3:
-          Provider.of<GoogleAnalyticsNotifier>(context, listen: false)
-              .startTimer('SettingScreen');
-      }
-      await Provider.of<CurrentPageProvider>(context, listen: false).setCurrentPage('SignupScreen');
-      await GoogleAnalytics().trackScreen(context, 'SignupScreen');
+      // switch (previousScreen){
+      //   case 0:
+      //     await MoveToOtherScreen().initializeGASetting(context, 'MainScreen');
+      //   case 1:
+      //     await MoveToOtherScreen().initializeGASetting(context, 'CalendarScreen');
+      //   case 2:
+      //     await MoveToOtherScreen().initializeGASetting(context, 'MatchingScreen');
+      //   case 3:
+      //     await MoveToOtherScreen().initializeGASetting(context, 'SettingScreen');
+      // }
 
     });
 
     return PopScope(
       onPopInvoked: (_) {
-        Future.microtask(() async {
-          await Provider.of<GoogleAnalyticsNotifier>(context, listen: false)
-              .startTimer('SignupScreen');
-        });
+        // Future.microtask(() async {
+        //   await Provider.of<GoogleAnalyticsNotifier>(context, listen: false)
+        //       .startTimer('SignupScreen');
+        // });
       },
       child: Scaffold(
         resizeToAvoidBottomInset: false,
@@ -80,12 +73,7 @@ class SignupScreen extends StatelessWidget {
           leading: IconButton(
             icon: Icon(Icons.arrow_back),
             onPressed: () async {
-              Future.microtask(() async {
-                await Provider.of<GoogleAnalyticsNotifier>(context, listen: false)
-                    .startTimer('SignupScreen');
-              }).then((value) {
-                Navigator.pop(context);
-              });
+              Navigator.pop(context);
             },
           ),
           title: Text('로그인'),
@@ -100,20 +88,16 @@ class SignupScreen extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 30.0),
-                    child: Container(
-                      width: 100,
-                      height: 100,
-                      decoration: BoxDecoration(
-                          borderRadius: BorderRadius.all(Radius.circular(40.0)),
-                          image: DecorationImage(
-                            fit: BoxFit.cover,
-                            image: AssetImage('images/핑퐁플러스 로고.png')
-                                as ImageProvider<Object>,
-                          ) //가져온 이미지를 화면에 띄워주는 코드
-                          ),
+                  SizedBox(
+                    width: 100,
+                    height: 100,
+                    child: CircleAvatar(
+                      backgroundImage: AssetImage(
+                          'images/logo.png') as ImageProvider<Object>,
                     ),
+                  ),
+                  SizedBox(
+                    height: 30,
                   ),
                   Text(
                     'Pingpong Plus',

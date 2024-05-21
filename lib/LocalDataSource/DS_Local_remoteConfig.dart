@@ -19,17 +19,23 @@ class LocalDSRemoteConfig {
   //String getString(String key) => _firebaseRemoteConfig.getString(key);
 
   Future<void> remoteConfigFetchAndActivate() async {
+    try {
+      // 데이터 가져오기 시간 간격 : 12시간
+      await _firebaseRemoteConfig.setConfigSettings(RemoteConfigSettings(
+        fetchTimeout: const Duration(minutes: 1),
+        minimumFetchInterval: const Duration(minutes: 5),
+      ));
 
-    // 데이터 가져오기 시간 간격 : 12시간
-    await _firebaseRemoteConfig.setConfigSettings(RemoteConfigSettings(
-      fetchTimeout: const Duration(minutes: 1),
-      minimumFetchInterval: const Duration(minutes: 5),
-    ));
+      await _firebaseRemoteConfig.fetchAndActivate();
+      debugPrint('remoteConfigFetchAndActivate done');
+      //return _firebaseRemoteConfig;
 
-    await _firebaseRemoteConfig.fetchAndActivate();
-    debugPrint('remoteConfigFetchAndActivate done');
-    //return _firebaseRemoteConfig;
+    } catch (e) {
+      debugPrint('remoteConfigFetchAndActivate e: $e');
+    }
   }
+
+
 
   // 앱 버전 확인
   Future<bool> checkAppVersion() async {

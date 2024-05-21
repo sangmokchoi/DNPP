@@ -140,12 +140,7 @@ class _ChatListViewState extends State<ChatListView> {
 
     debugPrint('chatlist 이닛스테이츠!!!');
 
-    Future.microtask(() {
-      Provider.of<GoogleAnalyticsNotifier>(context, listen: false)
-          .startTimer('MatchingScreen');
-    });
-    //
-    // WidgetsBinding.instance!.addPostFrameCallback((_) async {
+    // Future.microtask(() {
     //   Provider.of<GoogleAnalyticsNotifier>(context, listen: false)
     //       .startTimer('MatchingScreen');
     // });
@@ -171,19 +166,20 @@ class _ChatListViewState extends State<ChatListView> {
   }
 
   //int removeUserCount = 0;
-  List<String> popUpMenuList = ["모두 읽음 처리", "친구 관리", "운영정책", "유저 차단"];
+  // List<String> popUpMenuList = ["모두 읽음 처리", "친구 관리", "운영정책", "유저 차단"];
+  List<String> popUpMenuList = ["모두 읽음 처리", "운영정책", "유저 차단"];
 
   //String initialPopUpMenu = "모두 읽음 처리";
 
   int badgeCount = 0;
+  int listTileCount = 0;
 
   bool absorbPointing = false;
 
   @override
   Widget build(BuildContext context) {
     WidgetsBinding.instance!.addPostFrameCallback((_) async {
-      await Provider.of<CurrentPageProvider>(context, listen: false)
-          .setCurrentPage('ChatListView');
+
 
       //Provider.of<LoadingScreenViewModel>(context, listen: false).initialize(context);
 
@@ -194,13 +190,10 @@ class _ChatListViewState extends State<ChatListView> {
 
     return PopScope(
       onPopInvoked: (_) {
-        Future.microtask(() async {
-          Provider.of<CurrentPageProvider>(context, listen: false)
-              .setInitialCurrentPage();
-          await Provider.of<GoogleAnalyticsNotifier>(context, listen: false)
-              .startTimer('ChatListScreen');
-          //}
-        });
+        // Future.microtask(() async {
+        //   Provider.of<CurrentPageProvider>(context, listen: false)
+        //       .setInitialCurrentPage();
+        // });
       },
       child: Scaffold(
         resizeToAvoidBottomInset: false,
@@ -213,15 +206,16 @@ class _ChatListViewState extends State<ChatListView> {
             icon: Icon(Icons.arrow_back),
             onPressed: () {
               //WidgetsBinding.instance!.addPostFrameCallback((_) async {
-              Future.microtask(() async {
-                Provider.of<CurrentPageProvider>(context, listen: false)
-                    .setInitialCurrentPage();
-                await Provider.of<GoogleAnalyticsNotifier>(context, listen: false)
-                    .startTimer('ChatListScreen');
-                //}
-              }).then((value) {
-                Navigator.pop(context);
-              });
+              // Future.microtask(() async {
+              //   Provider.of<CurrentPageProvider>(context, listen: false)
+              //       .setInitialCurrentPage();
+              //
+              // }).then((value) {
+                setState(() {
+                  Navigator.pop(context);
+                });
+
+              // });
             },
           ),
           actions: (Provider.of<LoginStatusUpdate>(context, listen: false)
@@ -268,80 +262,70 @@ class _ChatListViewState extends State<ChatListView> {
                         final data = snapshot.data;
                         if (data == true) {
                           return IconButton(
-                            onPressed: () async {
-                              //data 가 true 이면 수신되는 상태이고 수신 불가로 아이콘이 바뀌어야 함, false 이면, 알림수신이 안되는 상태
-                              LaunchUrl().alertOkAndCancelFunc(
-                                  context,
-                                  '현재 채팅 알림을 수신하고 있습니다',
-                                  '채팅 알림을 비활성화하시겠습니까?\n(확인 버튼을 누르면 채팅이 도착해도 알림이 울리지 않습니다)',
-                                  '뒤로',
-                                  '확인',
-                                  kMainColor,
-                                  kMainColor, () {
-                                // 뒤로
-                                Navigator.pop(context);
-
-                              }, () async {
-                                // 확인
-                                try {
-                                  await RepositoryRealtimeUsers()
-                                      .getToggleNotification(false);
-
-                                  notiStream = RepositoryRealtimeUsers()
-                                      .getCheckUserNotification(
-                                      currentUserProfileUid);
-
-                                  setState((){
-
-                                  });
-                                } catch (e) {
-                                  debugPrint('채팅 알림을 비활성화 e: $e');
-                                }
-                              });
-                            },
-                            icon: Icon(Icons.notifications_none)
-                          );
-                        } else {
-                          return IconButton(
-                            onPressed: () async {
+                              onPressed: () async {
                                 //data 가 true 이면 수신되는 상태이고 수신 불가로 아이콘이 바뀌어야 함, false 이면, 알림수신이 안되는 상태
                                 LaunchUrl().alertOkAndCancelFunc(
                                     context,
-                                    '현재 채팅 알림을 수신하지 않고 있습니다',
-                                    '채팅 알림을 활성화하시겠습니까?\n(확인 버튼을 누르면 채팅이 도착했을때 알림이 울립니다)',
+                                    '현재 채팅 알림을 수신하고 있습니다',
+                                    '채팅 알림을 비활성화하시겠습니까?\n(확인 버튼을 누르면 채팅이 도착해도 알림이 울리지 않습니다)',
                                     '뒤로',
                                     '확인',
                                     kMainColor,
                                     kMainColor, () {
                                   // 뒤로
-
                                   Navigator.pop(context);
-
                                 }, () async {
                                   // 확인
-
                                   try {
                                     await RepositoryRealtimeUsers()
-                                        .getToggleNotification(true);
+                                        .getToggleNotification(false);
 
                                     notiStream = RepositoryRealtimeUsers()
                                         .getCheckUserNotification(
-                                        currentUserProfileUid);
+                                            currentUserProfileUid);
 
-                                    setState((){
-
-                                    });
-
+                                    setState(() {});
                                   } catch (e) {
-                                    debugPrint('채팅 알림을 활성화 e: $e');
+                                    debugPrint('채팅 알림을 비활성화 e: $e');
                                   }
                                 });
+                              },
+                              icon: Icon(Icons.notifications_none));
+                        } else {
+                          return IconButton(
+                            onPressed: () async {
+                              //data 가 true 이면 수신되는 상태이고 수신 불가로 아이콘이 바뀌어야 함, false 이면, 알림수신이 안되는 상태
+                              LaunchUrl().alertOkAndCancelFunc(
+                                  context,
+                                  '현재 채팅 알림을 수신하지 않고 있습니다',
+                                  '채팅 알림을 활성화하시겠습니까?\n(확인 버튼을 누르면 채팅이 도착했을때 알림이 울립니다)',
+                                  '뒤로',
+                                  '확인',
+                                  kMainColor,
+                                  kMainColor, () {
+                                // 뒤로
 
+                                Navigator.pop(context);
+                              }, () async {
+                                // 확인
+
+                                try {
+                                  await RepositoryRealtimeUsers()
+                                      .getToggleNotification(true);
+
+                                  notiStream = RepositoryRealtimeUsers()
+                                      .getCheckUserNotification(
+                                          currentUserProfileUid);
+
+                                  setState(() {});
+                                } catch (e) {
+                                  debugPrint('채팅 알림을 활성화 e: $e');
+                                }
+                              });
                             },
                             icon: Icon(Icons.notifications_off_outlined),
                           );
                         }
-
                       }),
                   PopupMenuButton<String>(
                     //initialValue: initialPopUpMenu,
@@ -354,17 +338,19 @@ class _ChatListViewState extends State<ChatListView> {
                         setState(() {
                           _stream = getRoomsStream(true);
                         });
-                      } else if (item == popUpMenuList[1]) {
-                        // 친구 관리
-                        LaunchUrl().alertFunc(
-                            context, '알림', '친구 관리 기능은 준비중입니다', '확인', () {
-                          Navigator.pop(context);
-                        });
-                      } else if (item == popUpMenuList[2]) {
+                      }
+                      // else if (item == popUpMenuList[1]) {
+                      //   // 친구 관리
+                      //   LaunchUrl().alertFunc(
+                      //       context, '알림', '친구 관리 기능은 준비중입니다', '확인', () {
+                      //     Navigator.pop(context);
+                      //   });
+                      // }
+                      else if (item == popUpMenuList[1]) {
                         // 운영정책
                         await LaunchUrl().myLaunchUrl(
                             'https://sites.google.com/view/pingponplus-operationpolicy/%ED%99%88');
-                      } else if (item == popUpMenuList[3]) {
+                      } else if (item == popUpMenuList[2]) {
                         // 운영정책
                         LaunchUrl().alertFunc(context, '알림',
                             '유저를 차단하려면 차단하려는 유저의 채팅방을 왼쪽으로 슬리이드해주세요', '확인', () {
@@ -374,10 +360,11 @@ class _ChatListViewState extends State<ChatListView> {
                     },
                     itemBuilder: (BuildContext context) =>
                         <PopupMenuEntry<String>>[
-                      ...popUpMenuList.map((String item) => PopupMenuItem<String>(
-                            value: item,
-                            child: Text(item),
-                          )),
+                      ...popUpMenuList
+                          .map((String item) => PopupMenuItem<String>(
+                                value: item,
+                                child: Text(item),
+                              )),
                     ],
                   ),
                 ]
@@ -393,7 +380,8 @@ class _ChatListViewState extends State<ChatListView> {
                   stream: _stream,
                   builder: (context, snapshot) {
                     //debugPrint('chatlist snapshot: $snapshot');
-                    debugPrint('채팅 리스트 snapshot.connectionState ${snapshot.connectionState}');
+                    debugPrint(
+                        '채팅 리스트 snapshot.connectionState ${snapshot.connectionState}');
                     var data = snapshot.data; //List<Room>?
                     //debugPrint('chatlist data : ${data}');
                     //debugPrint('chatlist data.length : ${data.length}');
@@ -426,8 +414,8 @@ class _ChatListViewState extends State<ChatListView> {
 
                           // badgeCount 계산 로직 (이미 위에 작성하신 로직을 활용)
                           for (var chat in data) {
-                            debugPrint('chat: ${chat}');
-                            debugPrint('chat: ${chat.metadata}');
+                            //debugPrint('chat: ${chat}');
+                            //debugPrint('chat: ${chat.metadata}');
 
                             Map<String, dynamic> chatMetadata = chat.metadata;
 
@@ -520,9 +508,9 @@ class _ChatListViewState extends State<ChatListView> {
                                     lastMessages?.first as types.TextMessage?;
                                 final latestChat = lastMessage?.text ?? '';
 
-                                debugPrint('latestChat: $latestChat');
-                                debugPrint(
-                                    'currentUserProfileUid: $currentUserProfileUid');
+                                //debugPrint('latestChat: $latestChat');
+                                //debugPrint(
+                                //    'currentUserProfileUid: $currentUserProfileUid');
 
                                 // 상대방이 회원 탈퇴한 경우는 users 에서 나가버리기 때문에 noCurrentUser가 []로 나타날 수 밖에 없음
 
@@ -569,8 +557,8 @@ class _ChatListViewState extends State<ChatListView> {
                                 debugPrint(
                                     'filteredMyItems: $filteredMyItems'); // [{userId: XRxDio7Cxec67Nbl3Q4mBy0Ahkh2, lastSeen: 2}]
 
-                                List<Map<String, dynamic>> filteredOpponentItems =
-                                    lastSeenList
+                                List<Map<String, dynamic>>
+                                    filteredOpponentItems = lastSeenList
                                         .whereType<Map<String, dynamic>>()
                                         .where((item) =>
                                             item['userId'] !=
@@ -586,34 +574,34 @@ class _ChatListViewState extends State<ChatListView> {
                                 debugPrint(
                                     '배지 3: ${(filteredOpponentItems.first['lastSeen'] as int) - (filteredMyItems.first['lastSeen'] as int)}');
 
-                                if ((filteredOpponentItems.first['lastSeen']
+                                final int eachBadgeCount =
+                                    ((filteredOpponentItems.first['lastSeen']
                                             as int) -
                                         (filteredMyItems.first['lastSeen']
-                                            as int) >
-                                    0) {
+                                            as int));
+
+                                if (eachBadgeCount > 0) {
                                   debugPrint(
                                       '배지 3가 0보다 크거나 같음 badgeCount: $badgeCount');
-                                  badgeCount = badgeCount +
-                                      (filteredOpponentItems.first['lastSeen']
-                                          as int) -
-                                      (filteredMyItems.first['lastSeen'] as int);
+                                  badgeCount = badgeCount + eachBadgeCount;
 
                                   //debugPrint('badgeCount: $badgeCount');
                                 } else {
-                                  debugPrint('배지 3가 0보다 작음 badgeCount: $badgeCount');
-                                  badgeCount = badgeCount + 0;
+                                  debugPrint(
+                                      '배지 3가 0보다 작음 badgeCount: $badgeCount');
+                                  //badgeCount = 0;
                                 }
 
-                                // if (badgeCount < 0) {
-                                //   debugPrint('');
-                                //   badgeCount = 0;
-                                // }
+                                listTileCount = listTileCount + 1;
+
+                                debugPrint('listTileCount: $listTileCount');
                                 debugPrint(
                                     'chatlist listview builder badgeCount: $badgeCount');
-                                if (badgeCount > 0) {
+                                if (listTileCount != 0 && itemCount == listTileCount) {
                                   RepositoryRealtimeUsers()
                                       .getUpdateMyBadge(badgeCount);
                                   badgeCount = 0; // 업로드 이후 badgeCount 초기화
+                                  listTileCount = 0;
                                 }
 
                                 if (element != null) {
@@ -635,22 +623,32 @@ class _ChatListViewState extends State<ChatListView> {
                                         setState(() {
                                           Navigator.pop(context);
                                           completer.complete(false);
+                                          _stream = getRoomsStream(false);
                                         });
                                       }, () async {
                                         // currentUser에다가 상대방을 차단 목록에 추가
+
+                                        // 해당 유저가 보낸 메시지 개수만든 나의 badge에서 빼기
 
                                         await RepositoryRealtimeBlockedList()
                                             .getAddToBlockList(
                                                 currentUserProfileUid, element)
                                             .then((value) async {
-                                          // final List<Map<String, dynamic>> messagesJson =
-                                          // messages.map((message) => message.toJson()).toList();
-                                          //
-                                          // // 업데이트된 Room 객체를 Firebase에 저장
-                                          // await messagesRef.set(messagesJson);
+                                          int lastBadgeCount =
+                                              badgeCount - eachBadgeCount;
 
-                                          //await blockRef.set(element);
-                                          //debugPrint('차단 목록에 추가');
+                                          debugPrint("badgeCount: $badgeCount");
+                                          debugPrint(
+                                              "eachBadgeCount: $eachBadgeCount");
+                                          debugPrint(
+                                              "lastBadgeCount: $lastBadgeCount");
+
+                                          if (lastBadgeCount < 0) {
+                                            lastBadgeCount = 0;
+                                          }
+
+                                          await RepositoryRealtimeUsers()
+                                              .getUpdateMyBadge(lastBadgeCount);
 
                                           await RepositoryRealtimeUsers()
                                               .getAdjustOpponentBadge(
@@ -667,6 +665,7 @@ class _ChatListViewState extends State<ChatListView> {
                                             setState(() {
                                               data.removeAt(index);
                                               //data = List.from(data)..removeAt(index);
+                                              _stream = getRoomsStream(false);
                                               debugPrint(
                                                   'data.length : ${data.length}');
                                             });
@@ -680,8 +679,10 @@ class _ChatListViewState extends State<ChatListView> {
                                     background: Container(
                                       alignment: Alignment.centerRight,
                                       decoration: BoxDecoration(
-                                        color: Colors.red, // 슬라이드 할 때 보여지는 배경 색상
-                                        borderRadius: BorderRadius.circular(10.0),
+                                        color: Colors.red,
+                                        // 슬라이드 할 때 보여지는 배경 색상
+                                        borderRadius:
+                                            BorderRadius.circular(10.0),
                                       ),
                                       child: Padding(
                                         padding:
@@ -780,8 +781,8 @@ class _ChatListViewState extends State<ChatListView> {
                                                   : Colors.transparent,
                                               smallSize: 10.0,
                                               //largeSize: 20.0,
-                                              child:
-                                                  Icon(Icons.chat_bubble_outline),
+                                              child: Icon(
+                                                  Icons.chat_bubble_outline),
                                             ),
                                             onTap: () async {
                                               debugPrint('index: $index');
@@ -809,7 +810,13 @@ class _ChatListViewState extends State<ChatListView> {
 
                                                   absorbPointing = false;
 
-                                                  MoveToOtherScreen()
+
+                                                });
+
+                                                await MoveToOtherScreen().initializeGASetting(
+                                                    context, 'ChatScreen').then((value) async {
+
+                                                  await MoveToOtherScreen()
                                                       .persistentNavPushNewScreen(
                                                     context,
                                                     ChatScreen(
@@ -817,8 +824,15 @@ class _ChatListViewState extends State<ChatListView> {
                                                     false,
                                                     PageTransitionAnimation
                                                         .cupertino,
-                                                  );
+                                                  ).then((value) async {
+
+                                                    await MoveToOtherScreen().initializeGASetting(
+                                                        context, 'ChatListScreen');
+                                                  });
+
                                                 });
+
+
                                                 // });
                                               });
                                             },
@@ -848,6 +862,7 @@ class _ChatListViewState extends State<ChatListView> {
                                         setState(() {
                                           Navigator.pop(context);
                                           completer.complete(false);
+                                          _stream = getRoomsStream(false);
                                         });
                                       }, () async {
                                         await RepositoryRealtimeMessages()
@@ -858,7 +873,9 @@ class _ChatListViewState extends State<ChatListView> {
                                           setState(() {
                                             data.removeAt(index);
                                             //data = List.from(data)..removeAt(index);
-                                            debugPrint('data.length : ${data.length}');
+                                            _stream = getRoomsStream(false);
+                                            debugPrint(
+                                                'data.length : ${data.length}');
                                           });
                                         });
                                       });
@@ -869,8 +886,10 @@ class _ChatListViewState extends State<ChatListView> {
                                     background: Container(
                                       alignment: Alignment.centerRight,
                                       decoration: BoxDecoration(
-                                        color: Colors.red, // 슬라이드 할 때 보여지는 배경 색상
-                                        borderRadius: BorderRadius.circular(10.0),
+                                        color: Colors.red,
+                                        // 슬라이드 할 때 보여지는 배경 색상
+                                        borderRadius:
+                                            BorderRadius.circular(10.0),
                                       ),
                                       child: Padding(
                                         padding:
@@ -912,10 +931,13 @@ class _ChatListViewState extends State<ChatListView> {
                                           ),
                                           trailing: Badge(
                                             label: (filteredMyItems != [] &&
-                                                    filteredOpponentItems != [] &&
-                                                    (filteredOpponentItems.first[
+                                                    filteredOpponentItems !=
+                                                        [] &&
+                                                    (filteredOpponentItems
+                                                                    .first[
                                                                 'lastSeen'] -
-                                                            filteredMyItems.first[
+                                                            filteredMyItems
+                                                                    .first[
                                                                 'lastSeen'] >
                                                         0))
                                                 ? Text(
@@ -924,10 +946,13 @@ class _ChatListViewState extends State<ChatListView> {
                                             // 여기서 lastseen 을 그대로 내보내는게 아니라, (메시지 개수 - lastSeen)으로 표현되어야 함
                                             backgroundColor: (filteredMyItems !=
                                                         [] &&
-                                                    filteredOpponentItems != [] &&
-                                                    (filteredOpponentItems.first[
+                                                    filteredOpponentItems !=
+                                                        [] &&
+                                                    (filteredOpponentItems
+                                                                    .first[
                                                                 'lastSeen'] -
-                                                            filteredMyItems.first[
+                                                            filteredMyItems
+                                                                    .first[
                                                                 'lastSeen'] >
                                                         0))
                                                 ? Colors.red
@@ -958,7 +983,8 @@ class _ChatListViewState extends State<ChatListView> {
                                               debugPrint(
                                                   'lastMessages: ${lastMessages}');
 
-                                              for (final types.TextMessage message
+                                              for (final types
+                                                  .TextMessage message
                                                   in lastMessages) {
                                                 //final author = message.author as types.User;
                                                 final author = types.User(
@@ -977,9 +1003,8 @@ class _ChatListViewState extends State<ChatListView> {
                                                       FirebaseDatabase.instance.ref(
                                                           "messages/$chatRoomId/users");
 
-                                                  await ref
-                                                      .once()
-                                                      .then((dataSnapshot) async {
+                                                  await ref.once().then(
+                                                      (dataSnapshot) async {
                                                     debugPrint(
                                                         'dataSnapshot: $dataSnapshot');
                                                     debugPrint(
@@ -990,21 +1015,23 @@ class _ChatListViewState extends State<ChatListView> {
                                                                 .snapshot.value
                                                             as List<Object?>;
                                                     final authorListMe =
-                                                        authorList?.first as Map<
-                                                            Object?, Object?>;
+                                                        authorList?.first
+                                                            as Map<Object?,
+                                                                Object?>;
 
                                                     final authorMe = types.User(
                                                       id: authorListMe['id']
                                                           as String,
-                                                      imageUrl:
-                                                          authorListMe['imageUrl']
-                                                              as String,
+                                                      imageUrl: authorListMe[
+                                                          'imageUrl'] as String,
                                                       firstName: authorListMe[
-                                                          'firstName'] as String,
+                                                              'firstName']
+                                                          as String,
                                                       lastSeen: 0,
                                                     );
 
-                                                    debugPrint('authorMe: $authorMe');
+                                                    debugPrint(
+                                                        'authorMe: $authorMe');
 
                                                     final _list = [
                                                       author,
@@ -1012,10 +1039,12 @@ class _ChatListViewState extends State<ChatListView> {
                                                     ];
 
                                                     final List<
-                                                            Map<String, dynamic>>
+                                                            Map<String,
+                                                                dynamic>>
                                                         _listJson = _list
                                                             .map((message) =>
-                                                                message.toJson())
+                                                                message
+                                                                    .toJson())
                                                             .toList();
 
                                                     await ref.set(_listJson);
@@ -1031,7 +1060,8 @@ class _ChatListViewState extends State<ChatListView> {
                                                 //final lastSeenListIndex = lastSeenList[index]['lastSeen'] as int;
                                                 final lastSeenListIndex =
                                                     filteredMyItems
-                                                        .first['lastSeen'] as int;
+                                                            .first['lastSeen']
+                                                        as int;
                                                 final currentBadge =
                                                     badge - lastSeenListIndex;
 
@@ -1040,13 +1070,18 @@ class _ChatListViewState extends State<ChatListView> {
                                                 await RepositoryRealtimeUsers()
                                                     .getUpdateMyBadge(
                                                         currentBadge)
-                                                    .then((value) {
+                                                    .then((value) async {
                                                   setState(() {
                                                     //lastSeenList[index] = 0;
                                                     filteredMyItems
                                                         .first['lastSeen'] = 0;
 
-                                                    MoveToOtherScreen()
+                                                  });
+
+                                                  await MoveToOtherScreen().initializeGASetting(
+                                                      context, 'ChatScreen').then((value) async {
+
+                                                    await MoveToOtherScreen()
                                                         .persistentNavPushNewScreen(
                                                       context,
                                                       ChatScreen(receivedData: {
@@ -1055,8 +1090,14 @@ class _ChatListViewState extends State<ChatListView> {
                                                       false,
                                                       PageTransitionAnimation
                                                           .cupertino,
-                                                    );
+                                                    ).then((value) async {
+                                                      await MoveToOtherScreen().initializeGASetting(
+                                                          context, 'ChatListScreen');
+                                                    });
+
                                                   });
+
+
                                                 });
                                               });
                                             });
@@ -1093,7 +1134,8 @@ class _ChatListViewState extends State<ChatListView> {
                                     style: TextStyle(),
                                   ));
                                 } else {
-                                  if (_blockedUser.id != currentUserProfileUid) {
+                                  if (_blockedUser.id !=
+                                      currentUserProfileUid) {
                                     return ListTile(
                                       leading: CircleAvatar(
                                         backgroundImage:
@@ -1115,11 +1157,16 @@ class _ChatListViewState extends State<ChatListView> {
                                         ),
                                         child: Text('해제'),
                                         onPressed: () async {
-                                          LaunchUrl().alertFunc(
+                                          LaunchUrl().alertOkAndCancelFuncNoPop(
                                               context,
                                               '알림',
                                               '해당 유저를 차단 해제하시겠습니까?',
-                                              '확인', () async {
+                                              '취소',
+                                              '확인',
+                                              kMainColor,
+                                              kMainColor, () {
+                                            Navigator.pop(context);
+                                          }, () async {
                                             DatabaseReference blockRef =
                                                 FirebaseDatabase.instance.ref(
                                                     "blockedList/${currentUserProfileUid}");
@@ -1197,6 +1244,8 @@ class _ChatListViewState extends State<ChatListView> {
     );
   }
 
+  StreamController<int> _controller = StreamController<int>();
+
   Stream<List<types.User>> getBlockedUsers() async* {
     DatabaseReference blockedRef =
         FirebaseDatabase.instance.ref('blockedList/${currentUserProfileUid}');
@@ -1233,86 +1282,65 @@ class _ChatListViewState extends State<ChatListView> {
   }
 
   Stream<List<types.Room>> getRoomsStream(bool makeAllRead) async* {
-    DatabaseReference blockedRef =
-        FirebaseDatabase.instance.ref('blockedList/${currentUserProfileUid}');
-    final result = await blockedRef.once();
 
+    DatabaseReference messageRef = FirebaseDatabase.instance.ref('messages');
+
+    DatabaseReference blockedRef =
+    FirebaseDatabase.instance.ref('blockedList/${currentUserProfileUid}');
+
+    final blockedRefResult = await blockedRef.once();
     List<String> _blockedList = [];
 
-    if (result.snapshot.value != null) {
-      //debugPrint('result.snapshot.valuexs: ${result.snapshot.value}');
-      final _user = result.snapshot.value as Map<Object?, Object?>;
-      debugPrint('_user: $_user');
-
-      final _userMap = result.snapshot.value as Map<Object?, Object?>;
-
+    // 블록된 유저의 값은 가져오지 않아야 함
+    if (blockedRefResult.snapshot.value != null) {
+      final _userMap = blockedRefResult.snapshot.value as Map<Object?, Object?>;
       _userMap.forEach((key, value) {
         final finalValue = value as Map<Object?, Object?>;
-
         final user = types.User(
           id: finalValue['id'] as String,
           imageUrl: finalValue['imageUrl'] as String,
           firstName: finalValue['firstName'] as String,
           lastSeen: finalValue['lastSeen'] as int,
         );
-
         _blockedList.add(user.id);
       });
-    } // 차단 유저 찾기
+    }
 
-    ///////
+    await for (final event in messageRef.onValue) {
+      debugPrint('getroom 스트림 리스너 동작함');
 
-    DatabaseReference messageRef = FirebaseDatabase.instance.ref('messages');
-
-    yield* messageRef.onValue.map((event) {
       List<types.Room> _roomsList = [];
 
       final dataSnapshot = event.snapshot;
       final List<DataSnapshot> snapshot = dataSnapshot.children.toList();
 
-      // 데이터 스냅샷에서 Room 객체를 생성하는 함수
       types.Room roomFromSnapshot(DataSnapshot snapshot) {
         final _map = snapshot.value as Map<Object?, Object?>?;
         final data = _map?.cast<String, dynamic>() ?? {};
 
-        //final metadata = data['metadata'] as Map<Object?, Object?>?;
         final metadata =
             (data['metadata'] as Map<Object?, Object?>?)?.map<String, dynamic>(
           (key, value) => MapEntry(key.toString(), value),
         );
-        // debugPrint('metadata: $metadata');
-        // debugPrint('metadata: ${metadata.runtimeType}');
-        // Room 객체 생성 및 반환
-        //debugPrint('data[users]: ${data['users']}');
+
         return types.Room(
           id: data['id'].toString(),
           type: types.RoomType.direct,
           users: ((data['users'] as List<dynamic>).map((userData) {
-            //debugPrint('userData: $userData');
-            // if (userData == null){
-            //   return types.User(
-            //       id: 'id',
-            //       imageUrl: 'imageUrl',
-            //       firstName: '(알 수 없는 사용자)',
-            //       lastSeen: 0);
-            // } else {
-            //   // User 객체를 생성하고 반환
             return types.User(
                 id: userData['id'],
                 imageUrl: userData['imageUrl'],
                 firstName: userData['firstName'],
                 lastSeen: userData['lastSeen']);
-            //}
           }).toList()),
           lastMessages:
               (data['lastMessages'] as List<dynamic>?)?.map((userData) {
             final authorData = userData['author'] as Map<Object?, Object?>;
             final author = types.User(
-                id: authorData['id'] as String, // 문자열로 캐스팅
+                id: authorData['id'] as String,
                 imageUrl: authorData['imageUrl'] as String?,
                 firstName: authorData['firstName'] as String?,
                 lastSeen: userData['lastSeen'] as int?);
-
             return types.TextMessage(
               id: userData['id'],
               createdAt: userData['createdAt'],
@@ -1325,47 +1353,25 @@ class _ChatListViewState extends State<ChatListView> {
       }
 
       final List<types.Room> allRooms = snapshot
-          .map((snapshot) => roomFromSnapshot(snapshot)) // 각 스냅샷을 Room 객체로 변환
-          .where((room) =>
-              room.metadata?[currentUserProfileUid] !=
-              null) // 조건을 만족하는 Room만 필터링
-          .toList(); // 필터링된 Room 객체들을 리스트로 변환
-      // 기존의 채팅방은 리스트에 안 보일 수 있음. 메타데이터 필드가 없기 때문
-
-      // 모든 채팅방을 반복하여 사용자가 속한 채팅방을 식별
-      // ( 채팅방의 채팅 개수 - 현재 유저의 lastSeen )을 이용해 읽지 않은 편지 개수를 표현해야 함
+          .map((snapshot) => roomFromSnapshot(snapshot))
+          .where((room) => room.metadata?[currentUserProfileUid] != null)
+          .toList();
 
       for (final room in allRooms) {
-        //debugPrint('Room Length: ${room.lastMessages?.length}');
-        //final lastMessagesLength = room.lastMessages?.length ?? 0;
-
         bool containsBlockedUser = false;
 
-        // int lastSeenInt;
-
-        //final myLastSeen =  room.metadata?[currentUserProfileUid]['lastSeen'] as int;
-
-        //debugPrint('roomMetadata mylastSeen: $mylastSeen');
-        //
-        // //setState(() {
-        // lastSeenInt = (lastMessagesLength - lastSeen);
-        // debugPrint('lastSeenInt: $lastSeenInt');
-        //lastSeenList.add(lastSeenInt);
-        //});
-
         for (final user in room.users) {
-          // 차단된 사용자 포함 여부 확인
           if (_blockedList.contains(user.id)) {
+            debugPrint('if (_blockedList.contains(user.id)) {');
             containsBlockedUser = true;
           }
         }
 
-        if (!containsBlockedUser) {
+        if (containsBlockedUser == false) {
           _roomsList.add(room);
         }
 
         /////////// 모두 읽음 처리 하는 경우에만
-
         if (makeAllRead == true) {
           int myLastSeen = 0;
           String myKey = '';
@@ -1373,9 +1379,6 @@ class _ChatListViewState extends State<ChatListView> {
           String opponentKey = '';
 
           room.metadata?.forEach((key, value) {
-            debugPrint('room.metadata key: $key');
-            debugPrint('room.metadata value: $value');
-
             if (key.toString() == currentUserProfileUid) {
               myKey = key.toString();
               myLastSeen = room.metadata?[key.toString()]['lastSeen'] as int;
@@ -1387,28 +1390,20 @@ class _ChatListViewState extends State<ChatListView> {
           });
 
           if (myLastSeen < opponentLastSeen) {
-            debugPrint('if (myLastSeen < opponentLastSeen) { 진입');
-
             if (_roomsList.contains(room)) {
-              debugPrint('if (_roomsList.contains(room)) { 진입');
-
               DatabaseReference ref = FirebaseDatabase.instance
                   .ref("messages/${room.id}/metadata/${myKey}/lastSeen");
-
-              // await ref.set(currentBadge);
               ref.set(opponentLastSeen);
-
-              //room.metadata?[myKey]['lastSeen'] == opponentLastSeen;
             }
           }
 
           RepositoryRealtimeUsers().getInitializeMyBadge();
         }
-
         /////////// 모두 읽음 처리 하는 경우에만
       }
 
-      return _roomsList;
-    });
+      yield _roomsList;
+    }
   }
+
 }

@@ -113,17 +113,18 @@ class LoadingScreenViewModel extends ChangeNotifier {
                         style: kAppointmentTextButtonStyle.copyWith(color: kMainColor)
                     )),
                 onPressed: () async {
-                  await RepositoryRealtimeUsers().getUploadFcmToken(token).then((value) async {
-                    ShowToast().showToast("로그인이 완료되었습니다");
+                  //await RepositoryRealtimeUsers().getUploadFcmToken(token).then((value) async {
+                    //ShowToast().showToast("로그인이 완료되었습니다");
                     await RepositoryRealtimeUsers().getUploadMyDeviceId(uniqueDeviceId).then((value) async {
+
+                      ShowToast().showToast("로그인이 완료되었습니다");
+
                       await RepositoryRealtimeUsers().getUploadFcmToken(token!).then((value) {
                         lateOverlayEntries.first.remove();
 
                       });
                     });
-
-
-                  });
+                  //});
                   //overlayRemove;
                   //Navigator.pop(context); // 다이얼로그 닫기는 여기서 호출
                 },

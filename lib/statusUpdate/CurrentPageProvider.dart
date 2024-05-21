@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
 class CurrentPageProvider with ChangeNotifier {
-  String currentPage = '';
-  String initialCurrentPage = '';
+  String currentPage = 'MainScreen';
+  String initialCurrentPage = 'MainScreen';
 
   Future<void> setCurrentPage(String page) async {
     currentPage = page;

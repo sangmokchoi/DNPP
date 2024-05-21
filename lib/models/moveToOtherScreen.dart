@@ -7,8 +7,11 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:persistent_bottom_nav_bar/persistent_tab_view.dart';
+import 'package:provider/provider.dart';
 
 import '../constants.dart';
+import '../statusUpdate/CurrentPageProvider.dart';
+import '../statusUpdate/googleAnalytics.dart';
 import '../view/chatList_Screen.dart';
 import '../view/chat_screen.dart';
 
@@ -269,6 +272,17 @@ class MoveToOtherScreen {
         );
       },
     );
+  }
+
+  Future<void> initializeGASetting(BuildContext defaultContext, String screenName) async {
+    final previousScreen = Provider.of<CurrentPageProvider>(defaultContext, listen: false).currentPage;
+    debugPrint('previousScreen: $previousScreen');
+    await Provider.of<GoogleAnalyticsNotifier>(defaultContext, listen: false)
+        .startTimer(previousScreen);
+
+    await GoogleAnalytics().trackScreen(defaultContext, screenName);
+    await Provider.of<CurrentPageProvider>(defaultContext, listen: false)
+        .setCurrentPage(screenName);
   }
 
 }

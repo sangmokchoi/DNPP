@@ -1,8 +1,12 @@
 import 'package:app_settings/app_settings.dart';
 import 'package:dnpp/repository/firebase_realtime_users.dart';
 import 'package:dnpp/statusUpdate/CurrentPageProvider.dart';
+import 'package:dnpp/statusUpdate/googleAnalytics.dart';
+import 'package:dnpp/view/PrivateMail_Screen.dart';
 import 'package:dnpp/view/chatList_Screen.dart';
 import 'package:dnpp/view/home_screen.dart';
+import 'package:dnpp/view/signup_screen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -39,8 +43,8 @@ class FlutterLocalNotification {
     );
 
     await flutterLocalNotificationsPlugin.initialize(initializationSettings,
+      /// 포그라운드에서 노티를 열때 작동
       onDidReceiveNotificationResponse: (NotificationResponse notificationResponse) async {
-      // 포그라운드에서 노티를 열때 작동
 
         debugPrint('onDidReceiveNotificationResponse 작동');
         debugPrint('notificationResponse id: ${notificationResponse}');
@@ -59,37 +63,78 @@ class FlutterLocalNotification {
         debugPrint('navigatorKey.currentWidget: ${navigatorKey.currentWidget}');
         debugPrint('navigatorKey.currentWidget?.key: ${navigatorKey.currentWidget?.key}');
 
-
         final currentPage = Provider.of<CurrentPageProvider>(navigatorKey.currentState!.context, listen: false).currentPage;
         debugPrint('currentPage: $currentPage');
 
         if ( notificationResponse.payload == 'server') {
           // 이 경우는 안내문, 이벤트 내용등을 수신할 떄
-          if (currentPage == 'HomeScreen' || currentPage == 'MainScreen'){
+          // if (currentPage == 'HomeScreen' || currentPage == 'MainScreen'){
+          //
+          // } else { // 홈 화면에 있는게 아니라면 홈화면으로 보내서 배너 보게끔 함
+          await GoogleAnalytics().setNotificationOpen('server');
 
-          } else {
-            // 홈 화면에 있는게 아니라면 홈화면으로 보내서 배너 보게끔 함
+        if (currentPage == 'PrivateMailScreen') {
+          // 현재 페이지가 PrivateMailScreen인 경우에는 동작하지 않도록 처리
 
-            // MoveToOtherScreen().persistentNavPushNewScreen(
-            //     context, HomeScreen(), false, PageTransitionAnimation.cupertino);
+        } else {
+          /// 서버에서 수신 시, 프라이빗 메일함으로 보냄
 
+          await MoveToOtherScreen()
+              .initializeGASetting(navigatorKey.currentContext!, 'PrivateMailScreen').then((value) async {
+
+          }).then((value) {
             MoveToOtherScreen().persistentNavPushNewScreen(
-                navigatorKey.currentContext!, HomeScreen(), false, PageTransitionAnimation.cupertino);
-          }
+                navigatorKey.currentContext!, PrivateMailScreen(), false, PageTransitionAnimation.cupertino).then((value) async {
+
+              await MoveToOtherScreen().initializeGASetting(
+                  navigatorKey.currentContext!, '$currentPage');
+
+            }); // ga 세팅을 살려야 함
+          });
+        }
+
+
+          //}
           // final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
           // NavigatorState? currentState = navigatorKey.currentState;
 
         } else {
           // 이 경우는 다른 유저가 현재 유저에게 메시지를 보냈을때
+          await GoogleAnalytics().setNotificationOpen('user');
+          
           if (currentPage == 'ChatListView') {
             // 현재 페이지가 ChatListView인 경우에는 동작하지 않도록 처리
+          } else if (currentPage == 'ChatScreen') {
+            // 다른 유저와의 채팅방에 있다면, 그냥 뒤로 가게끔 유도
+            await MoveToOtherScreen()
+                .initializeGASetting(navigatorKey.currentContext!, 'ChatScreen').then((value) async {
+
+            }).then((value) async {
+
+              Navigator.of(navigatorKey.currentContext!).pop();
+
+            });
+
           } else {
             // 채팅방 화면에 있는게 아니라면 채팅방 화면으로 보게끔 함
 
             // MoveToOtherScreen().persistentNavPushNewScreen(
             //     context, ChatListView(), false, PageTransitionAnimation.cupertino);
-            MoveToOtherScreen().persistentNavPushNewScreen(
-                navigatorKey.currentContext!, ChatListView(), false, PageTransitionAnimation.cupertino);
+
+
+            await MoveToOtherScreen()
+                .initializeGASetting(navigatorKey.currentContext!, 'ChatListScreen').then((value) async {
+
+            }).then((value) {
+              MoveToOtherScreen().persistentNavPushNewScreen(
+                  navigatorKey.currentContext!, ChatListView(), false, PageTransitionAnimation.cupertino).then((value) async {
+
+                await MoveToOtherScreen().initializeGASetting(
+                    navigatorKey.currentContext!, '$currentPage');
+
+              }); // ga 세팅을 살려야 함
+            });
+
           }
         }
       },
@@ -102,7 +147,7 @@ class FlutterLocalNotification {
 
 
   @pragma('vm:entry-point')
-  static void notificationTapBackground(NotificationResponse notificationResponse) {
+  static Future<void> notificationTapBackground(NotificationResponse notificationResponse) async {
     // final payload = notificationResponse.payload;
     // flutterLocalNotificationsPlugin.show(
     //     message.hashCode,
@@ -115,8 +160,8 @@ class FlutterLocalNotification {
     //         channelDescription: 'Pingpong Plus', //channelDescription: channel.description,
     //         icon: 'mipmap/ic_launcher', //'launch_background',
     //         //importance: Importance.max,
-    //         importance: Importance.high,
-    //         //priority: Priority.max,
+    //         importance: Importance.max,
+    //         //priority: Priority.high,
     //         //showWhen: false,
     //
     //       ),
@@ -124,13 +169,14 @@ class FlutterLocalNotification {
     //       //   'high_importance_channel',
     //       //   'high_importance_notification',
     //       //   importance: Importance.max,
-    //       //   priority: Priority.max,
+    //       //   priority: Priority.high,
     //       //   showWhen: false,
     //       // ),
     //     ),
     //     payload: payload // == 'server'
     // );
-    debugPrint('onDidReceiveNotificationResponse 작동');
+
+    debugPrint('notificationTapBackground 작동');
     debugPrint('notificationResponse id: ${notificationResponse.id}');
     debugPrint('notificationResponse actionId: ${notificationResponse.actionId}');
     debugPrint('notificationResponse input: ${notificationResponse.input}');
@@ -146,35 +192,128 @@ class FlutterLocalNotification {
     debugPrint('navigatorKey.currentWidget: ${navigatorKey.currentWidget}');
     debugPrint('navigatorKey.currentWidget?.key: ${navigatorKey.currentWidget?.key}');
 
+    final currentContext = navigatorKey.currentContext!;
+    // 로그인을 한 경우와 로그인을 하지 않은 경우 구분 필요
+    final uid = FirebaseAuth.instance.currentUser?.uid.toString();
+    debugPrint('setupInteractedMessage uid: $uid');
+    //로그인 안하면 null로 나타남
+
+    if (uid == null) {
+      // 로그인이 안된 상태
+      // 로그인 하는 페이지로 가야함
+      await MoveToOtherScreen()
+          .initializeGASetting(currentContext, 'SignupScreen').then((value) async {
+
+        await MoveToOtherScreen()
+            .persistentNavPushNewScreen(
+            currentContext,
+            SignupScreen(0),
+            false,
+            PageTransitionAnimation.cupertino)
+            .then((value) async {
+
+          await MoveToOtherScreen().initializeGASetting(
+              currentContext, 'MainScreen');
+
+        });
+      });
+    } else {
+
+    }
+
 
     final currentPage = Provider.of<CurrentPageProvider>(navigatorKey.currentState!.context, listen: false).currentPage;
-    debugPrint('currentPage: $currentPage');
+    debugPrint('노티 탭해서 열림 currentPage: $currentPage');
 
-    if ( notificationResponse.payload == 'server') {
+    if (notificationResponse.payload == 'server') {
       // 이 경우는 안내문, 이벤트 내용등을 수신할 떄
-      if (currentPage == 'HomeScreen'){
+      // if (currentPage == 'HomeScreen'){
+      //
+      // } else {
+      //   // MoveToOtherScreen().persistentNavPushNewScreen(
+      //   //     context, HomeScreen(), false, PageTransitionAnimation.cupertino);
+      //
+      //   // await MoveToOtherScreen()
+      //   //     .initializeGASetting(context, 'PrivateMailScreen').then((value) async {
+      //   //
+      //   //   await MoveToOtherScreen()
+      //   //       .persistentNavPushNewScreen(
+      //   //       context,
+      //   //       PrivateMailScreen(),
+      //   //       false,
+      //   //       PageTransitionAnimation.cupertino)
+      //   //       .then((value) async {
+      //   //
+      //   //         debugPrint('main.dart에서 돌아옴');
+      //   //
+      //   //     await MoveToOtherScreen().initializeGASetting(
+      //   //         context, 'MainScreen');
+      //   //
+      //   //   });
+      //   // });
+      //
+      //   // MoveToOtherScreen().persistentNavPushNewScreen(
+      //   //     currentContext, HomeScreen(), false, PageTransitionAnimation.cupertino);
+      // }
+      await GoogleAnalytics().setNotificationOpen('server');
 
-      } else {
-        // MoveToOtherScreen().persistentNavPushNewScreen(
-        //     context, HomeScreen(), false, PageTransitionAnimation.cupertino);
+      await MoveToOtherScreen()
+          .initializeGASetting(currentContext, 'PrivateMailScreen').then((value) async {
 
+      }).then((value) {
         MoveToOtherScreen().persistentNavPushNewScreen(
-            navigatorKey.currentContext!, HomeScreen(), false, PageTransitionAnimation.cupertino);
-      }
+            currentContext, PrivateMailScreen(), false, PageTransitionAnimation.cupertino).then((value) async {
+
+          await MoveToOtherScreen().initializeGASetting(
+              currentContext, 'MainScreen');
+
+        }); // ga 세팅을 살려야 함
+      });
+
+
       // final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
       // NavigatorState? currentState = navigatorKey.currentState;
 
     } else {
+      await GoogleAnalytics().setNotificationOpen('user');
       // 이 경우는 다른 유저가 현재 유저에게 메시지를 보냈을때
       if (currentPage == 'ChatListView') {
         // 현재 페이지가 ChatListView인 경우에는 동작하지 않도록 처리
+      } else if (currentPage == 'ChatScreen') {
+        // 다른 유저와의 채팅방에 있다면, 그냥 뒤로 가게끔 유도
+        await MoveToOtherScreen()
+            .initializeGASetting(currentContext, 'ChatScreen').then((value) async {
+
+        }).then((value) async {
+
+          Navigator.of(currentContext).pop();
+
+        });
+
       } else {
         // MoveToOtherScreen().persistentNavPushNewScreen(
         //     context, ChatListView(), false, PageTransitionAnimation.cupertino);
-        MoveToOtherScreen().persistentNavPushNewScreen(
-            navigatorKey.currentContext!, ChatListView(), false, PageTransitionAnimation.cupertino);
+
+        await MoveToOtherScreen()
+            .initializeGASetting(currentContext, 'ChatListScreen').then((value) async {
+
+        }).then((value) {
+          MoveToOtherScreen().persistentNavPushNewScreen(
+              currentContext, ChatListView(), false, PageTransitionAnimation.cupertino).then((value) async {
+
+            await MoveToOtherScreen().initializeGASetting(
+                currentContext, 'MainScreen');
+
+          }); // ga 세팅을 살려야 함
+        });
+
+        // MoveToOtherScreen().persistentNavPushNewScreen(
+        //     currentContext, ChatListView(), false, PageTransitionAnimation.cupertino);
       }
     }
+
+    //await GoogleAnalytics().setNotificationOpen();
+
 
   }
 
@@ -288,7 +427,7 @@ class FlutterLocalNotification {
     const AndroidNotificationDetails androidNotificationDetails =
         AndroidNotificationDetails('channel id', 'channel name',
             channelDescription: 'channel description',
-            importance: Importance.high,
+            importance: Importance.max,
             priority: Priority.high,
             showWhen: false,
           icon: null
@@ -298,7 +437,7 @@ class FlutterLocalNotification {
         android: androidNotificationDetails,
         iOS: DarwinNotificationDetails(badgeNumber: 1));
 
-    await flutterLocalNotificationsPlugin.show(
-        0, 'test title', 'test body', notificationDetails);
+    // await flutterLocalNotificationsPlugin.show(
+    //     0, 'test title', 'test body', notificationDetails);
   }
 }

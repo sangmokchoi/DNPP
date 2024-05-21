@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 import '../constants.dart';
+import '../models/moveToOtherScreen.dart';
 import '../models/userProfile.dart';
 import '../statusUpdate/googleAnalytics.dart';
 import '../statusUpdate/CurrentPageProvider.dart';
@@ -21,9 +22,6 @@ class SettingScreen extends StatelessWidget {
     // currentPageProvider.setCurrentPage('SettingScreen');
 
     WidgetsBinding.instance!.addPostFrameCallback((_) async {
-      await GoogleAnalytics().trackScreen(defaultContext, 'SettingScreen');
-      await Provider.of<CurrentPageProvider>(defaultContext, listen: false)
-          .setCurrentPage('SettingScreen');
       await appBuildNumber();
     });
 
@@ -151,12 +149,28 @@ class SettingScreen extends StatelessWidget {
                                         switch (index) {
                                           case 0:
                                             debugPrint('프로필 수정');
-                                            await viewModel
-                                                .settingScreenProfile(context);
+                                            await MoveToOtherScreen().initializeGASetting(
+                                                context, 'ProfileScreen').then((value) async {
+                                              await viewModel
+                                                  .settingScreenProfile(context).then((value) async {
+                                                await MoveToOtherScreen().initializeGASetting(
+                                                    context, 'SettingScreen');
+                                              });
+                                            });
+
                                           case 1:
                                             debugPrint('오픈소스 라이센스');
-                                            await viewModel
-                                                .settingScreenOss(context);
+
+                                            await MoveToOtherScreen().initializeGASetting(
+                                                context, 'OssLicenseScreen').then((value) async {
+                                              await viewModel
+                                                  .settingScreenOss(context).then((value) async {
+                                                await MoveToOtherScreen().initializeGASetting(
+                                                    context, 'SettingScreen');
+                                              });
+
+                                            });
+
                                             break;
                                           case 2:
                                             debugPrint('이용약관');
@@ -188,66 +202,6 @@ class SettingScreen extends StatelessWidget {
                                             debugPrint('로그아웃');
                                             await viewModel
                                                 .settingScreenLogout(context);
-
-                                            // showDialog(
-                                            //     context: context,
-                                            //     builder: (builder) {
-                                            //       return AlertDialog(
-                                            //         insetPadding:
-                                            //         EdgeInsets.only(left: 10.0, right: 10.0),
-                                            //         shape: kRoundedRectangleBorder,
-                                            //         title: Text(
-                                            //           '알림',
-                                            //           style: kAppointmentDateTextStyle,
-                                            //           textAlign: TextAlign.center,
-                                            //         ),
-                                            //         content: Text(
-                                            //           '로그아웃을 진행합니다',
-                                            //           style: TextStyle(
-                                            //             fontSize: 14.0,
-                                            //           ),
-                                            //           textAlign: TextAlign.center,
-                                            //         ),
-                                            //         actions: [
-                                            //           Row(
-                                            //             mainAxisAlignment: MainAxisAlignment.end,
-                                            //             children: [
-                                            //               TextButton(
-                                            //                 style: TextButton.styleFrom(
-                                            //                   textStyle: Theme.of(context).textTheme.labelLarge,
-                                            //                 ),
-                                            //                 child: Center(
-                                            //                     child: Text(
-                                            //                       '취소',
-                                            //                       style: kAppointmentTextButtonStyle.copyWith(color: kMainColor),
-                                            //                     )),
-                                            //                 onPressed: () {
-                                            //                   Navigator.of(context, rootNavigator: true).pop();
-                                            //
-                                            //                   // 다이얼로그 닫기는 여기서 호출
-                                            //
-                                            //                 },
-                                            //               ),
-                                            //               TextButton(
-                                            //                 style: TextButton.styleFrom(
-                                            //                   textStyle: Theme.of(context).textTheme.labelLarge,
-                                            //                 ),
-                                            //                 child: Center(
-                                            //                     child: Text(
-                                            //                         '로그아웃',
-                                            //                         style: kAppointmentTextButtonStyle.copyWith(color: kMainColor)
-                                            //                     )),
-                                            //                 onPressed: () async {
-                                            //                   Navigator.of(context, rootNavigator: true).pop();
-                                            //                   await viewModel.settingScreenLogout(context);
-                                            //
-                                            //                 },
-                                            //               ),
-                                            //             ],
-                                            //           ),
-                                            //         ],
-                                            //       );
-                                            //     });
                                             break;
                                           case 8:
                                             debugPrint('회원 탈퇴');
@@ -277,20 +231,13 @@ class SettingScreen extends StatelessWidget {
                                 const EdgeInsets.only(top: 25.0, bottom: 25.0),
                             child: Column(
                               children: [
-                                Container(
-                                  width: 80,
-                                  height: 80,
-                                  decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.all(
-                                          Radius.circular(40.0)),
-                                      image: DecorationImage(
-                                        fit: BoxFit.cover,
-                                        image: AssetImage(
-                                                //'images/empty_profile_${Random().nextInt(5)+1}.png'
-                                                'images/핑퐁플러스 로고.png')
-                                            as ImageProvider<Object>,
-                                      ) //가져온 이미지를 화면에 띄워주는 코드
-                                      ),
+                                SizedBox(
+                                    width: 80,
+                                    height: 80,
+                                  child: CircleAvatar(
+                                    backgroundImage: AssetImage(
+                                        'images/logo.png') as ImageProvider<Object>,
+                                  ),
                                 ),
                                 SizedBox(
                                   height: 15.0,
@@ -443,4 +390,5 @@ class SettingScreen extends StatelessWidget {
 
     return returnValue;
   }
+
 }

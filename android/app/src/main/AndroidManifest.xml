@@ -1,6 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application
-        android:label="dnpp"
+        android:label="핑퐁플러스"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

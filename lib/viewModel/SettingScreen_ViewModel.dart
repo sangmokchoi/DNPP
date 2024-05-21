@@ -73,6 +73,7 @@ class SettingScreenViewModel extends ChangeNotifier {
         .then((value) async {
       notifyListeners();
     });
+    notifyListeners();
   }
 
   Future<void> settingScreenOss(BuildContext context) async {

@@ -22,9 +22,6 @@ class LocalDSBadge {
 
     ref.onValue.listen((event) {
       final eventSnapshot = event.snapshot;
-      //debugPrint('myBadgeListen eventSnapshot: $eventSnapshot');
-      //debugPrint('myBadgeListen eventSnapshot: ${eventSnapshot.key}'); // badge
-      //debugPrint('myBadgeListen eventSnapshot: ${eventSnapshot.value}'); // badge 의 개수
 
       if (eventSnapshot.value != null) {
         myBadgeCount = eventSnapshot.value as int;
@@ -72,7 +69,8 @@ class LocalDSBadge {
       await ref.set(currentBadge);
       debugPrint('appbadger currentBadge: $currentBadge');
 
-      await FlutterAppBadger.updateBadgeCount(currentBadge);
+      //await FlutterAppBadger.updateBadgeCount(currentBadge);
+      await setDeviceBadge();
       return;
 
     } catch (e) {
@@ -91,7 +89,8 @@ class LocalDSBadge {
 
       await ref.set(0);
       debugPrint('initializeMyBadge updateBadgeCount');
-      await FlutterAppBadger.updateBadgeCount(0);
+      //await FlutterAppBadger.updateBadgeCount(0);
+      await setDeviceBadge();
       return;
 
     } catch (e) {
@@ -164,4 +163,111 @@ class LocalDSBadge {
     }
 
   }
+
+  ///////////////
+
+  Stream<int> myPrivateMailBadgeListen() async* {
+
+    int privateMailBadge = 0;
+
+    DatabaseReference ref =
+    FirebaseDatabase.instance.ref("users/${currentUser?.uid}/privateMailBadge");
+
+    StreamController<int> controller = StreamController<int>();
+
+    ref.onValue.listen((event) {
+      final eventSnapshot = event.snapshot;
+
+      if (eventSnapshot.value != null) {
+        privateMailBadge = eventSnapshot.value as int;
+      } else {
+        privateMailBadge = 0;
+      }
+
+      controller.add(privateMailBadge);
+    });
+
+    //yield myBadgeCount;
+    yield* controller.stream; // 생성된 스트림을 반환
+
+  }
+
+  Future<int> downloadPrivateMailBadge() async {
+
+    try {
+
+      DatabaseReference ref =
+      FirebaseDatabase.instance.ref("users/${currentUser?.uid}/privateMailBadge");
+
+      final oldBadge = await ref.once();
+
+      if (oldBadge.snapshot.value == null) {
+        return 0;
+      } else {
+        final badge = oldBadge.snapshot.value as int;
+        return badge;
+      }
+
+    } catch (e) {
+      debugPrint('downloadMyBadge e: $e');
+      return 0;
+    }
+  }
+
+  Future<void> updatePrivateMailBadge() async {
+
+    try {
+
+      DatabaseReference ref =
+      FirebaseDatabase.instance.ref("users/${currentUser?.uid}/privateMailBadge");
+
+      final int privateMailBadge = await downloadPrivateMailBadge();
+
+      await ref.set(privateMailBadge + 1); // 기존 프라이빗 메일에 1을 추가
+      debugPrint('updatePrivateMailBadge privateMailBadge: $privateMailBadge');
+
+      await setDeviceBadge();
+      return;
+
+    } catch (e) {
+      debugPrint('updateMyBadge e: $e');
+      return;
+
+    }
+  }
+
+  Future<void> initializePrivateMailBadge() async {
+
+    try {
+
+      DatabaseReference ref =
+      FirebaseDatabase.instance.ref("users/${currentUser?.uid}/privateMailBadge");
+
+      final int myPrivateMailBadge = await downloadPrivateMailBadge();
+
+      await ref.set(0);
+      debugPrint('initializeMyBadge updateBadgeCount');
+
+      //await FlutterAppBadger.updateBadgeCount(result);
+      await setDeviceBadge();
+      return;
+
+    } catch (e) {
+      debugPrint('initializeMyBadge e: $e');
+      return;
+
+    }
+  }
+  Future<void> setDeviceBadge() async {
+    final myBadge = await downloadMyBadge();
+    final privateMailBadge = await downloadPrivateMailBadge();
+
+    int result = myBadge + privateMailBadge;
+    if (result < 0) {
+      result = 0;
+    }
+
+    await FlutterAppBadger.updateBadgeCount(result);
+  }
+
 }

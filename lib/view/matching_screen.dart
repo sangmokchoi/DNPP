@@ -136,15 +136,17 @@ class _MatchingScreenState extends State<MatchingScreen>
   }
 
   void startTimer() {
-    _timer = Timer.periodic(_timerDuration, (timer) {
-      if (Provider.of<LoadingScreenViewModel>(context, listen: false)
-              .refStringListMatchingScreen
-              .length >
-          1) {
+
+    if (Provider.of<LoadingScreenViewModel>(context, listen: false)
+        .refStringListMatchingScreen
+        .length > 1) {
+
+      _timer = Timer.periodic(_timerDuration, (timer) {
+
         if (_currentImage <
             Provider.of<LoadingScreenViewModel>(context, listen: false)
-                    .refStringListMatchingScreen
-                    .length -
+                .refStringListMatchingScreen
+                .length -
                 1) {
           _currentImage++;
         } else {
@@ -156,8 +158,9 @@ class _MatchingScreenState extends State<MatchingScreen>
           duration: Duration(seconds: 1),
           curve: Curves.easeInOut,
         );
-      }
-    });
+
+      });
+    }
   }
 
   @override
@@ -177,25 +180,17 @@ class _MatchingScreenState extends State<MatchingScreen>
 
 //final badge = await ChatBackgroundListen().downloadMyBadge();
 
-    // final currentPageProvider = Provider.of<CurrentPageProvider>(context, listen: false);
-    // currentPageProvider.setCurrentPage('MatchingScreen');
-
     debugPrint('매칭스크린 build!');
 
     WidgetsBinding.instance!.addPostFrameCallback((_) async {
-      // Timer.periodic(Duration(seconds: 7), (timer) {
-      //   // if (_imagePageController.page! < _currentimage) {
-      //   //
-      //   // }
-      //   if (Provider.of<LoadingScreenViewModel>(context, listen: false)
-      //       .refStringListMatchingScreen
-      //       .length > 1) {
+
+      // if (Provider.of<LoadingScreenViewModel>(context, listen: false)
+      //     .refStringListMatchingScreen
+      //     .length > 1) {
+      //
+      //   Timer.periodic(Duration(seconds: 5), (timer) {
       //
       //     _currentImage = _imagePageController.page!.toInt();
-      //     debugPrint('matchingScreen _currentimage: $_currentImage');
-      //     debugPrint('matchingScreen _currentimage: ${Provider.of<LoadingScreenViewModel>(context, listen: false)
-      //         .refStringListMatchingScreen
-      //         .length}');
       //
       //     if (_currentImage <
       //         Provider
@@ -207,6 +202,7 @@ class _MatchingScreenState extends State<MatchingScreen>
       //     } else {
       //       _currentImage = 0;
       //     }
+      //     debugPrint('_currentImage: $_currentImage');
       //
       //     _imagePageController.animateToPage(
       //       _currentImage,
@@ -214,12 +210,14 @@ class _MatchingScreenState extends State<MatchingScreen>
       //       curve: Curves.easeInOut,
       //     );
       //
-      //   }
-      // });
+      //
+      //   });
+      //
+      // }
 
-      await GoogleAnalytics().trackScreen(context, 'MatchingScreen');
-      await Provider.of<CurrentPageProvider>(context, listen: false)
-          .setCurrentPage('MatchingScreen');
+      debugPrint('매칭스크린 addPostFrameCallback build!');
+      // floatingButtonStream =
+      //     RepositoryRealtimeUsers().getMyBadgeListen();
 
       await initMatchingScreen(context);
       //debugPrint('매칭스크린 build!');
@@ -275,7 +273,8 @@ class _MatchingScreenState extends State<MatchingScreen>
                             );
                           });
 
-                      Provider.of<LoadingScreenViewModel>(context, listen: false)
+                      Provider.of<LoadingScreenViewModel>(context,
+                              listen: false)
                           .loadData(context, isPersonal, '', '')
                           .then((value) {
                         setState(() {
@@ -314,16 +313,23 @@ class _MatchingScreenState extends State<MatchingScreen>
                           ),
                           onPressed: () async {
                             //Navigator.push(context, LaunchUrl.createRouteChatListView());
-                            await Provider.of<GoogleAnalyticsNotifier>(context,
-                                    listen: false)
-                                .startTimer('MatchingScreen')
-                                .then((value) {
-                              MoveToOtherScreen().persistentNavPushNewScreen(
+                            await MoveToOtherScreen()
+                                .initializeGASetting(context, 'ChatListScreen').then((value) async {
+                              await MoveToOtherScreen()
+                                  .persistentNavPushNewScreen(
                                   context,
                                   ChatListView(),
                                   false,
-                                  PageTransitionAnimation.cupertino);
+                                  PageTransitionAnimation.cupertino)
+                                  .then((value) async {
+                                await MoveToOtherScreen().initializeGASetting(
+                                    context, 'MatchingScreen');
+
+                                await initMatchingScreen(context);
+                              });
                             });
+
+
                           },
                         ),
                       ),
@@ -483,18 +489,21 @@ class _MatchingScreenState extends State<MatchingScreen>
                                     ),
                                   ],
                                 ),
-                                GestureDetector(
-                                  onTap: () {
-                                    LaunchUrl().alertFunc(
-                                        context, '알림', '필터 기능은 준비중입니다', '확인',
-                                        () {
-                                      Navigator.of(context, rootNavigator: true)
-                                          .pop();
-                                    });
-                                  },
-                                  child: Icon(
-                                    Icons.filter_alt_outlined,
-                                    color: Colors.grey,
+                                Visibility(
+                                  visible: false,
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      LaunchUrl().alertFunc(
+                                          context, '알림', '필터 기능은 준비중입니다', '확인',
+                                          () {
+                                        Navigator.of(context, rootNavigator: true)
+                                            .pop();
+                                      });
+                                    },
+                                    child: Icon(
+                                      Icons.filter_alt_outlined,
+                                      color: Colors.grey,
+                                    ),
                                   ),
                                 ),
                               ],
@@ -512,32 +521,40 @@ class _MatchingScreenState extends State<MatchingScreen>
                               ),
                               child: PageView.builder(
                                 controller: _imagePageController,
-                                itemCount: Provider.of<LoadingScreenViewModel>(context,
+                                itemCount: Provider.of<LoadingScreenViewModel>(
+                                        context,
                                         listen: false)
                                     .refStringListMatchingScreen
                                     .length,
                                 itemBuilder: (context, index) {
                                   return GestureDetector(
                                     onTap: () async {
-                                      await GoogleAnalytics().bannerClickEvent(
-                                          context,
-                                          'matchingScreen',
-                                          index,
-                                          Provider.of<LoadingScreenViewModel>(context,
-                                                      listen: false)
-                                                  .refStringListMatchingScreen[
-                                              '$index']!,
-                                          Provider.of<LoadingScreenViewModel>(context,
-                                                  listen: false)
-                                              .urlMapMatchingScreen[Provider.of<
-                                                          LoadingScreenViewModel>(
-                                                      context,
-                                                      listen: false)
-                                                  .refStringListMatchingScreen[
-                                              '$index']]!);
+                                      try {
 
-                                      await LaunchUrl().myLaunchUrl(
-                                          "${Provider.of<LoadingScreenViewModel>(context, listen: false).urlMapMatchingScreen[Provider.of<LoadingScreenViewModel>(context, listen: false).refStringListMatchingScreen['$index']]}");
+                                        await LaunchUrl().myLaunchUrl(
+                                            "${Provider.of<LoadingScreenViewModel>(context, listen: false).urlMapMatchingScreen[Provider.of<LoadingScreenViewModel>(context, listen: false).refStringListMatchingScreen['$index']]}");
+                                        await GoogleAnalytics().bannerClickEvent(
+                                            context,
+                                            'matchingScreen',
+                                            index,
+                                            Provider.of<LoadingScreenViewModel>(
+                                                context,
+                                                listen: false)
+                                                .refStringListMatchingScreen[
+                                            '$index']!,
+                                            Provider.of<LoadingScreenViewModel>(
+                                                context,
+                                                listen: false)
+                                                .urlMapMatchingScreen[Provider.of<
+                                                LoadingScreenViewModel>(
+                                                context,
+                                                listen: false)
+                                                .refStringListMatchingScreen[
+                                            '$index']]!);
+                                      } catch (e) {
+                                        debugPrint('matchingScreen banner click e: $e');
+                                      }
+
                                     },
                                     child: Container(
                                       decoration: BoxDecoration(
@@ -553,7 +570,8 @@ class _MatchingScreenState extends State<MatchingScreen>
                                             Radius.circular(10.0)),
                                         image: DecorationImage(
                                           image: MemoryImage(
-                                            Provider.of<LoadingScreenViewModel>(context,
+                                            Provider.of<LoadingScreenViewModel>(
+                                                            context,
                                                             listen: false)
                                                         .imageMapMatchingScreen[
                                                     Provider.of<LoadingScreenViewModel>(

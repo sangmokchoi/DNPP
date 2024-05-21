@@ -12,7 +12,6 @@ import '../view/chat_screen.dart';
 import 'moveToOtherScreen.dart';
 
 class LaunchUrl {
-
   Future<void> myLaunchUrl(String _url) async {
     debugPrint('myLaunchUrl 진입');
     final Uri _newUrl = Uri.parse(_url);
@@ -28,8 +27,7 @@ class LaunchUrl {
         //barrierDismissible: false,
         builder: (builder) {
           return AlertDialog(
-            insetPadding:
-            EdgeInsets.only(left: 10.0, right: 10.0),
+            insetPadding: EdgeInsets.only(left: 10.0, right: 10.0),
             shape: kRoundedRectangleBorder,
             title: Text(
               titleText,
@@ -49,13 +47,12 @@ class LaunchUrl {
                 ),
                 child: Center(
                     child: Text(
-                      okText,
-                    )),
+                  okText,
+                )),
                 onPressed: () {
                   if (onOkPressed != null) {
                     onOkPressed(); // 콜백 함수 실행
                   }
-
                 },
               ),
             ],
@@ -63,15 +60,14 @@ class LaunchUrl {
         });
   }
 
-  void alertFuncFalseBarrierDismissible(BuildContext context, String titleText, String contentText,
-      String okText, VoidCallback? onOkPressed) {
+  void alertFuncFalseBarrierDismissible(BuildContext context, String titleText,
+      String contentText, String okText, VoidCallback? onOkPressed) {
     showDialog(
         context: context,
         barrierDismissible: false,
         builder: (builder) {
           return AlertDialog(
-            insetPadding:
-            EdgeInsets.only(left: 10.0, right: 10.0),
+            insetPadding: EdgeInsets.only(left: 10.0, right: 10.0),
             shape: kRoundedRectangleBorder,
             title: Text(
               titleText,
@@ -91,13 +87,12 @@ class LaunchUrl {
                 ),
                 child: Center(
                     child: Text(
-                      okText,
-                    )),
+                  okText,
+                )),
                 onPressed: () {
                   if (onOkPressed != null) {
                     onOkPressed(); // 콜백 함수 실행
                   }
-
                 },
               ),
             ],
@@ -105,16 +100,23 @@ class LaunchUrl {
         });
   }
 
-  Future<void> alertOkAndCancelFunc(BuildContext context, String titleText, String contentText,
-      String cancelText, String okText, Color cancelColor, Color okColor, VoidCallback? onCancelPressed, VoidCallback? onOkPressed, ) async {
-
+  Future<void> alertOkAndCancelFunc(
+    BuildContext context,
+    String titleText,
+    String contentText,
+    String cancelText,
+    String okText,
+    Color cancelColor,
+    Color okColor,
+    VoidCallback? onCancelPressed,
+    VoidCallback? onOkPressed,
+  ) async {
     showDialog(
         context: context,
         barrierDismissible: false,
         builder: (builder) {
           return AlertDialog(
-            insetPadding:
-            EdgeInsets.only(left: 10.0, right: 10.0),
+            insetPadding: EdgeInsets.only(left: 10.0, right: 10.0),
             shape: kRoundedRectangleBorder,
             title: Text(
               titleText,
@@ -138,9 +140,10 @@ class LaunchUrl {
                     ),
                     child: Center(
                         child: Text(
-                          cancelText,
-                            style: kAppointmentTextButtonStyle.copyWith(color: cancelColor),
-                        )),
+                      cancelText,
+                      style: kAppointmentTextButtonStyle.copyWith(
+                          color: cancelColor),
+                    )),
                     onPressed: () {
                       if (onCancelPressed != null) {
                         onCancelPressed();
@@ -148,7 +151,6 @@ class LaunchUrl {
                       //Navigator.pop(context);
 
                       // 다이얼로그 닫기는 여기서 호출
-
                     },
                   ),
                   TextButton(
@@ -156,10 +158,9 @@ class LaunchUrl {
                       textStyle: Theme.of(context).textTheme.labelLarge,
                     ),
                     child: Center(
-                        child: Text(
-                          okText,
-                            style: kAppointmentTextButtonStyle.copyWith(color: okColor)
-                        )),
+                        child: Text(okText,
+                            style: kAppointmentTextButtonStyle.copyWith(
+                                color: okColor))),
                     onPressed: () {
                       debugPrint('onOkPressed: ${onOkPressed}');
                       if (onOkPressed != null) {
@@ -168,7 +169,6 @@ class LaunchUrl {
                       } else {
                         Navigator.pop(context); // 다이얼로그 닫기는 여기서 호출
                       }
-
                     },
                   ),
                 ],
@@ -178,16 +178,23 @@ class LaunchUrl {
         });
   }
 
-  Future<void> alertOkAndCancelFuncNoPop(BuildContext context, String titleText, String contentText,
-      String cancelText, String okText, Color cancelColor, Color okColor, VoidCallback? onCancelPressed, VoidCallback? onOkPressed, ) async {
-
+  Future<void> alertOkAndCancelFuncNoPop(
+    BuildContext context,
+    String titleText,
+    String contentText,
+    String cancelText,
+    String okText,
+    Color cancelColor,
+    Color okColor,
+    VoidCallback? onCancelPressed,
+    VoidCallback? onOkPressed,
+  ) async {
     showDialog(
         context: context,
         barrierDismissible: false,
         builder: (builder) {
           return AlertDialog(
-            insetPadding:
-            EdgeInsets.only(left: 10.0, right: 10.0),
+            insetPadding: EdgeInsets.only(left: 10.0, right: 10.0),
             shape: kRoundedRectangleBorder,
             title: Text(
               titleText,
@@ -211,9 +218,10 @@ class LaunchUrl {
                     ),
                     child: Center(
                         child: Text(
-                          cancelText,
-                          style: kAppointmentTextButtonStyle.copyWith(color: cancelColor),
-                        )),
+                      cancelText,
+                      style: kAppointmentTextButtonStyle.copyWith(
+                          color: cancelColor),
+                    )),
                     onPressed: () {
                       if (onCancelPressed != null) {
                         onCancelPressed();
@@ -221,7 +229,6 @@ class LaunchUrl {
                       //Navigator.pop(context);
 
                       // 다이얼로그 닫기는 여기서 호출
-
                     },
                   ),
                   TextButton(
@@ -229,10 +236,9 @@ class LaunchUrl {
                       textStyle: Theme.of(context).textTheme.labelLarge,
                     ),
                     child: Center(
-                        child: Text(
-                            okText,
-                            style: kAppointmentTextButtonStyle.copyWith(color: okColor)
-                        )),
+                        child: Text(okText,
+                            style: kAppointmentTextButtonStyle.copyWith(
+                                color: okColor))),
                     onPressed: () {
                       if (onOkPressed != null) {
                         onOkPressed(); // 콜백 함수 실행
@@ -246,13 +252,13 @@ class LaunchUrl {
         });
   }
 
-
   void openBottomSheetMoveToChat(BuildContext context, var user) {
     showModalBottomSheet(
       context: context,
       builder: (context) {
         debugPrint('openBottomSheetMoveToChat user: ${user}');
-        debugPrint('user[pingpongCourt].length: ${user['pingpongCourt'].length}');
+        debugPrint(
+            'user[pingpongCourt].length: ${user['pingpongCourt'].length}');
         return Container(
           height: 350,
           decoration: BoxDecoration(
@@ -267,93 +273,99 @@ class LaunchUrl {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                if (user['selfIntroduction'] != '' && user['selfIntroduction'] != null)
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text.rich(
+                if (user['selfIntroduction'] != '' &&
+                    user['selfIntroduction'] != null)
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text.rich(TextSpan(children: [
                         TextSpan(
-                          children: [
-                            TextSpan(
-                              text: '자기소개\n',
-                              style: TextStyle(
-                                fontSize: 16.0,
-                                fontWeight: FontWeight.bold
-                              ),
-                            ),
-                            TextSpan(
-                              text: '${user['selfIntroduction']}',
-                              style: TextStyle(
-                                fontSize: 16.0,
-                              ),
-                            ),
-                          ]
-                        )
-                      ),
-                  ],
-                ),
+                          text: '자기소개\n',
+                          style: TextStyle(
+                              fontSize: 16.0, fontWeight: FontWeight.bold),
+                        ),
+                        TextSpan(
+                          text: '${user['selfIntroduction']}',
+                          style: TextStyle(
+                            fontSize: 16.0,
+                          ),
+                        ),
+                      ])),
+                    ],
+                  ),
 
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('활동 탁구장:',
+                    Text(
+                      '활동 탁구장:',
                       style: TextStyle(
-                          fontSize: 16.0,
-                          fontWeight: FontWeight.bold
-                      ),
+                          fontSize: 16.0, fontWeight: FontWeight.bold),
                     ),
                     Container(
                       height: 35,
-                      width: MediaQuery.of(
-                          context)
-                          .size
-                          .width,
+                      width: MediaQuery.of(context).size.width,
                       margin: EdgeInsets.only(top: 5.0, bottom: 0.0),
                       child: ListView.builder(
                           scrollDirection: Axis.horizontal,
-                          itemCount: (user['pingpongCourt'].length != 0) ? user['pingpongCourt'].length : 1,
+                          itemCount: (user['pingpongCourt'].length != 0)
+                              ? user['pingpongCourt'].length
+                              : 1,
                           itemBuilder: (itemBuilder, index) {
-                            var padding =
-                                EdgeInsets.zero;
+                            var padding = EdgeInsets.zero;
 
-                            if (index ==
-                                0) {
+                            if (index == 0) {
                               padding = EdgeInsets.only(left: 0.0);
                             } else if (index ==
-                                Provider.of<ProfileUpdate>(context, listen: false).userProfile.pingpongCourt!.length - 1) {
+                                Provider.of<ProfileUpdate>(context,
+                                            listen: false)
+                                        .userProfile
+                                        .pingpongCourt!
+                                        .length -
+                                    1) {
                               padding = EdgeInsets.only(right: 0.0);
                             }
 
-                            if (user['pingpongCourt'].length != 0) { // 활동 탁구장이 있는 경우,
+                            if (user['pingpongCourt'].length != 0) {
+                              // 활동 탁구장이 있는 경우,
                               return Padding(
                                 padding: padding,
                                 child: Container(
                                     margin: EdgeInsets.only(right: 7.0),
-                                    padding: EdgeInsets.only(left: 10.0, right: 10.0, top: 5.0, bottom: 5.0),
+                                    padding: EdgeInsets.only(
+                                        left: 10.0,
+                                        right: 10.0,
+                                        top: 5.0,
+                                        bottom: 5.0),
                                     decoration: BoxDecoration(
                                       border: Border.all(color: kMainColor),
                                       borderRadius: BorderRadius.circular(20.0),
                                     ),
-                                    child: Text('${user['pingpongCourt'][index]['title']}',
-                                      style: TextStyle(color: kMainColor),)),
+                                    child: Text(
+                                      '${user['pingpongCourt'][index]['title']}',
+                                      style: TextStyle(color: kMainColor),
+                                    )),
                               );
-                            } else { //활동 탁구장이 없는 경우,
+                            } else {
+                              //활동 탁구장이 없는 경우,
                               return Center(
-                                child: Text('활동 탁구장이 아직 없습니다', style: TextStyle(color: Colors.grey),),
+                                child: Text(
+                                  '활동 탁구장이 아직 없습니다',
+                                  style: TextStyle(color: Colors.grey),
+                                ),
                               );
                             }
-
                           }),
                     ),
                   ],
                 ), // 활동 탁구장 리스트
                 Container(
                   width: double.infinity,
-                  padding:  EdgeInsets.symmetric(vertical: 15.0, horizontal: 10.0),
+                  padding:
+                      EdgeInsets.symmetric(vertical: 15.0, horizontal: 10.0),
                   decoration: BoxDecoration(
                       color: Colors.grey.withOpacity(0.3),
-                      borderRadius: BorderRadius.all(Radius.circular(10.0))
-                  ),
+                      borderRadius: BorderRadius.all(Radius.circular(10.0))),
                   child: Text(
                     '${user['nickName']}님에게\n함께 탁구를 쳐보자는 메시지를 보낼까요?',
                     style: TextStyle(
@@ -375,7 +387,10 @@ class LaunchUrl {
                         },
                         child: Text(
                           '취소',
-                          style: TextStyle(fontSize: 14.0, fontWeight: FontWeight.bold, color: Colors.red),
+                          style: TextStyle(
+                              fontSize: 14.0,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.red),
                         ),
                       ),
                     ),
@@ -388,15 +403,32 @@ class LaunchUrl {
                         style: ElevatedButton.styleFrom(
                           elevation: 3, // 그림자 깊이 조정
                         ),
-                        onPressed: () {
+                        onPressed: () async {
                           Navigator.pop(context);
                           //Navigator.push(context, createRouteChatView(user));
 
-                          MoveToOtherScreen().persistentNavPushNewScreen(context, ChatScreen(receivedData: user), false, PageTransitionAnimation.cupertino);
+                          await MoveToOtherScreen()
+                              .initializeGASetting(context, 'ChatScreen')
+                              .then((value) async {
+
+                            await MoveToOtherScreen()
+                                .persistentNavPushNewScreen(
+                                    context,
+                                    ChatScreen(receivedData: user),
+                                    false,
+                                    PageTransitionAnimation.cupertino).then((value) async {
+                              await MoveToOtherScreen()
+                                  .initializeGASetting(context, 'MatchingScreen');
+
+                            });
+                          });
                         },
                         child: Text(
                           '확인',
-                          style: TextStyle(fontSize: 14.0, fontWeight: FontWeight.bold, color: kMainColor),
+                          style: TextStyle(
+                              fontSize: 14.0,
+                              fontWeight: FontWeight.bold,
+                              color: kMainColor),
                         ),
                       ),
                     ),
@@ -409,5 +441,4 @@ class LaunchUrl {
       },
     );
   }
-
 }
