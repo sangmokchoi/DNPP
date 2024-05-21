@@ -2,6 +2,8 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 	<key>CFBundleDevelopmentRegion</key>
@@ -41,8 +43,7 @@
 			<string>kakao</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>kakao</string>
-				<string>93a20d717a6ee1439f15045a460ac4cd</string>
+				<string>kakao93a20d717a6ee1439f15045a460ac4cd</string>
 			</array>
 		</dict>
 		<dict>
@@ -69,8 +70,6 @@
 	<key>LSApplicationQueriesSchemes</key>
 	<array>
 		<string>nmap</string>
-<!--		<string>naversearchapp</string>-->
-<!--		<string>naversearchthirdlogin</string>-->
 	</array>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
@@ -106,13 +105,5 @@
 	<array>
 		<string>applinks:nmap</string>
 	</array>
-<!--	<key>naverConsumerKey</key>-->
-<!--	<string>fnA7onW12CtWy2n_z9a5</string>-->
-<!--	<key>naverConsumerSecret</key>-->
-<!--	<string>s13ITu_UsG</string>-->
-<!--	<key>naverServiceAppName</key>-->
-<!--	<string>DNPP</string>-->
-<!--	<key>naverServiceAppUrlScheme</key>-->
-<!--	<string>naver</string>-->
 </dict>
 </plist>

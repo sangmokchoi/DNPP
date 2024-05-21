@@ -21,6 +21,8 @@ class RepositoryFirebaseAuth {
 
     try {
 
+      debugPrint('currentUser: $currentUser');
+
       final providerData = currentUser?.providerData;
       debugPrint('providerData: $providerData');
       debugPrint('providerData?.isEmpty: ${providerData?.isEmpty}');
@@ -28,7 +30,9 @@ class RepositoryFirebaseAuth {
       //await ChatBackgroundListen().adjustOpponentBadgeCount(_fireAuth.currentUser!.uid.toString());
       await currentUser!.delete();
 
-      if (providerData!.isEmpty) {
+      if (providerData == null || providerData!.isEmpty) {
+        debugPrint('providerData == null || providerData!.isEmpty 진입');
+
         try {
           await UserApi.instance.unlink();
           debugPrint('연결 끊기 성공, SDK에서 토큰 삭제');
@@ -37,7 +41,6 @@ class RepositoryFirebaseAuth {
         }
       }
 
-      debugPrint('deleteUserAccount 완료');
     } on FirebaseAuthException catch (e) {
       debugPrint('$e');
 
@@ -48,7 +51,7 @@ class RepositoryFirebaseAuth {
         // Handle other Firebase exceptions
       }
     } catch (e) {
-      debugPrint('$e');
+      debugPrint('deleteUserAccount e: $e');
     }
   }
   Future<void> _reAuthenticateAndDelete() async {
