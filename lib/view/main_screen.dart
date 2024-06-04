@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'package:app_tracking_transparency/app_tracking_transparency.dart';
 import 'package:custom_refresh_indicator/custom_refresh_indicator.dart';
+import 'package:dnpp/main.dart';
 import 'package:dnpp/models/userProfile.dart';
 import 'package:dnpp/view/profile_screen.dart';
 import 'package:dnpp/view/signup_screen.dart';
@@ -14,9 +16,11 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:persistent_bottom_nav_bar/persistent_tab_view.dart';
 import 'package:provider/provider.dart';
+import '../GoogleAdMob.dart';
 import '../LocalDataSource/firebase_realtime/users/DS_Local_Announcement.dart';
 import '../models/launchUrl.dart';
 import '../models/moveToOtherScreen.dart';
+import '../repository/firebase_realtime_messages.dart';
 import '../repository/firebase_realtime_users.dart';
 import '../statusUpdate/googleAnalytics.dart';
 import '../statusUpdate/CurrentPageProvider.dart';
@@ -28,6 +32,13 @@ import '../viewModel/MainScreen_ViewModel.dart';
 import '../widgets/paging/main_personalChartPage.dart';
 import '../widgets/paging/main_courtChartPage.dart';
 import 'PrivateMail_Screen.dart';
+
+import 'package:google_mobile_ads/google_mobile_ads.dart';
+
+
+// 위젯을 저장할 Map을 선언합니다.
+Map<String, int> reportedCountMap = {};
+Map<String, int> limitDaysMap = {};
 
 class MainScreen extends StatefulWidget {
   static String id = '/MainScreenID';
@@ -53,6 +64,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
   late Future<bool> myFuture;
 
   FirebaseFirestore db = FirebaseFirestore.instance;
+  FirebaseAuth auth = FirebaseAuth.instance;
 
   int _currentPersonal = 0;
   int _currentCourt = 0;
@@ -69,7 +81,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
   late MainScreenViewModel viewModel;
 
   Timer? _timer;
-  final Duration _timerDuration = Duration(seconds: 7);
+  final Duration _timerDuration = Duration(seconds: 5);
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
@@ -86,6 +98,10 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
 
   void startTimer() {
 
+    if (_timer != null) {
+      return;
+    }
+
     if (Provider.of<LoadingScreenViewModel>(context, listen: false)
         .refStringListMain
         .length > 1 ){
@@ -95,18 +111,20 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
         if (_currentImage <
             Provider.of<LoadingScreenViewModel>(context, listen: false)
                 .refStringListMain
-                .length -
+                .length + (_inlineAdaptiveAd != null ? 1 : 0) -
                 1) {
           _currentImage++;
         } else {
           _currentImage = 0;
         }
 
-        _imagePageController.animateToPage(
-          _currentImage,
-          duration: Duration(seconds: 1),
-          curve: Curves.easeInOut,
-        );
+        if (_imagePageController.hasClients) {
+          _imagePageController.animateToPage(
+            _currentImage,
+            duration: Duration(seconds: 1),
+            curve: Curves.easeInOut,
+          );
+        }
 
 
       });
@@ -117,6 +135,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
 
   @override
   void initState() {
+
     _secondBarChartPageController.addListener(() async {
       final int newPage = _secondBarChartPageController.page?.round() ?? 0;
 
@@ -183,12 +202,44 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
     myFuture = calculateConfirmTime();
 
     super.initState(); // downloadAllImages()가 완료된 후에 initState()를 호출
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+
+      await RepositoryRealtimeUsers().getCheckMyReportedCount().then((reportedCount) async {
+
+        reportedCountMap['reportedCount'] = reportedCount;
+        debugPrint('reportedCount: $reportedCount');
+
+        debugPrint('reportedCountMap[reportedCount]: ${reportedCountMap['reportedCount']}');
+
+        if (reportedCount > 4) {
+
+          final limitDays = await RepositoryRealtimeUsers().getCheckMyReportLimitDays();
+          debugPrint('limitDays: $limitDays');
+
+          limitDaysMap['limitDays'] = limitDays;
+
+        }
+
+        debugPrint('limitDaysMap[limitDays]: ${limitDaysMap['limitDays']}');
+
+      });
+
+      debugPrint('TrackingStatus: ${TrackingStatus.values}');
+      // ios  TrackingStatus: [TrackingStatus.notDetermined, TrackingStatus.restricted, TrackingStatus.denied, TrackingStatus.authorized, TrackingStatus.notSupported]
+
+      final TrackingStatus status =
+      await AppTrackingTransparency.trackingAuthorizationStatus;
+
+      if (status != TrackingStatus.notDetermined) {
+
+      }
+
+    });
+
     debugPrint('메인 페이지 이닛스테이츠');
     WidgetsBinding.instance!.addObserver(this);
 
-    if (mounted) {
-      startTimer();
-    }
   }
 
   Stream<int>? privateButtonStream =
@@ -203,6 +254,8 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
     WidgetsBinding.instance!.removeObserver(this);
     _timer?.cancel();
 
+    _inlineAdaptiveAd?.dispose();
+
     super.dispose();
   }
 
@@ -211,6 +264,9 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
     debugPrint('메인 페이지 build');
     if (mounted) {
       debugPrint('메인 페이지 mount됨!');
+
+      startTimer();
+
     }
 
     WidgetsBinding.instance!.addPostFrameCallback((_) async {
@@ -257,7 +313,6 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
                 backgroundColor: Colors.transparent,
                 elevation: 0.0,
                 actions: [
-
                   IconButton(
                       onPressed: () async {
                         await viewModel.updateHowToUseCurrentPage(0);
@@ -287,7 +342,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
 
                       },
                       icon: Icon(
-                        Icons.notifications_rounded,
+                        Icons.announcement,
                         //color: kMainColor,
                       ),
                   ),
@@ -399,52 +454,133 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
                             itemCount: Provider.of<LoadingScreenViewModel>(context,
                                     listen: false)
                                 .refStringListMain
-                                .length,
+                                .length + (_inlineAdaptiveAd != null ? 1 : 0),
                             itemBuilder: (context, index) {
-                              return GestureDetector(
-                                onTap: () async {
 
-                                  try {
-                                    await LaunchUrl().myLaunchUrl(
-                                        "${Provider.of<LoadingScreenViewModel>(context, listen: false).urlMapMain[Provider.of<LoadingScreenViewModel>(context, listen: false).refStringListMain['$index']]}");
-                                    await GoogleAnalytics().bannerClickEvent(
-                                        context,
-                                        'mainScreen',
-                                        index,
-                                        Provider.of<LoadingScreenViewModel>(context,
-                                            listen: false)
-                                            .refStringListMain['$index']!,
-                                        Provider.of<LoadingScreenViewModel>(context,
-                                            listen: false)
-                                            .urlMapMain[
-                                        Provider.of<LoadingScreenViewModel>(
+                              if (_inlineAdaptiveAd != null) {
+
+                                if (index != Provider.of<LoadingScreenViewModel>(context,
+                                    listen: false)
+                                    .refStringListMain
+                                    .length) {
+                                  //debugPrint('_inlineAdaptiveAd != null');
+                                  return GestureDetector(
+                                    onTap: () async {
+                                      try {
+                                        await LaunchUrl().myLaunchUrl(
+                                            "${Provider
+                                                .of<LoadingScreenViewModel>(
+                                                context, listen: false)
+                                                .urlMapMain[Provider
+                                                .of<LoadingScreenViewModel>(
+                                                context, listen: false)
+                                                .refStringListMain['$index']]}");
+                                        await GoogleAnalytics().bannerClickEvent(
+                                            context,
+                                            'mainScreen',
+                                            index,
+                                            Provider
+                                                .of<LoadingScreenViewModel>(
+                                                context,
+                                                listen: false)
+                                                .refStringListMain['$index']!,
+                                            Provider
+                                                .of<LoadingScreenViewModel>(
+                                                context,
+                                                listen: false)
+                                                .urlMapMain[
+                                            Provider
+                                                .of<LoadingScreenViewModel>(
+                                                context,
+                                                listen: false)
+                                                .refStringListMain['$index']]!);
+                                      } catch (e) {
+                                        debugPrint(
+                                            'mainScreen banner click e: $e');
+                                      }
+                                    },
+                                    child: Container(
+                                      decoration: BoxDecoration(
+                                        image: DecorationImage(
+                                          image: MemoryImage(Provider
+                                              .of<
+                                              LoadingScreenViewModel>(
+                                              context,
+                                              listen: false)
+                                              .imageMapMain[
+                                          Provider
+                                              .of<LoadingScreenViewModel>(
+                                              context,
+                                              listen: false)
+                                              .refStringListMain['$index']] ??
+                                              Uint8List(0)),
+                                          fit: BoxFit.cover,
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                } else { // 마지막 인덱스인 경우
+                                  return _getAdWidget();
+                                }
+
+                              } else {
+                                debugPrint('일반 배너들');
+                                return GestureDetector(
+                                  onTap: () async {
+                                    try {
+                                      await LaunchUrl().myLaunchUrl(
+                                          "${Provider
+                                              .of<LoadingScreenViewModel>(
+                                              context, listen: false)
+                                              .urlMapMain[Provider
+                                              .of<LoadingScreenViewModel>(
+                                              context, listen: false)
+                                              .refStringListMain['$index']]}");
+                                      await GoogleAnalytics().bannerClickEvent(
+                                          context,
+                                          'mainScreen',
+                                          index,
+                                          Provider
+                                              .of<LoadingScreenViewModel>(
+                                              context,
+                                              listen: false)
+                                              .refStringListMain['$index']!,
+                                          Provider
+                                              .of<LoadingScreenViewModel>(
+                                              context,
+                                              listen: false)
+                                              .urlMapMain[
+                                          Provider
+                                              .of<LoadingScreenViewModel>(
+                                              context,
+                                              listen: false)
+                                              .refStringListMain['$index']]!);
+                                    } catch (e) {
+                                      debugPrint(
+                                          'mainScreen banner click e: $e');
+                                    }
+                                  },
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      image: DecorationImage(
+                                        image: MemoryImage(Provider
+                                            .of<
+                                            LoadingScreenViewModel>(
                                             context,
                                             listen: false)
-                                            .refStringListMain['$index']]!);
-
-                                  } catch (e) {
-                                    debugPrint('mainScreen banner click e: $e');
-                                  }
-
-                                },
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                    image: DecorationImage(
-                                      image: MemoryImage(Provider.of<
-                                                          LoadingScreenViewModel>(
-                                                      context,
-                                                      listen: false)
-                                                  .imageMapMain[
-                                              Provider.of<LoadingScreenViewModel>(
-                                                      context,
-                                                      listen: false)
-                                                  .refStringListMain['$index']] ??
-                                          Uint8List(0)),
-                                      fit: BoxFit.cover,
+                                            .imageMapMain[
+                                        Provider
+                                            .of<LoadingScreenViewModel>(
+                                            context,
+                                            listen: false)
+                                            .refStringListMain['$index']] ??
+                                            Uint8List(0)),
+                                        fit: BoxFit.cover,
+                                      ),
                                     ),
                                   ),
-                                ),
-                              );
+                                );
+                              }
                             },
                           ),
                         ),
@@ -1456,6 +1592,103 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
         ),
       );
     });
+  }
+
+  static const _insets = 8.0;
+  BannerAd? _inlineAdaptiveAd;
+  bool _isLoaded = false;
+  AdSize? _adSize;
+  late Orientation _currentOrientation;
+
+  double get _adWidth => MediaQuery.of(context).size.width - (2 * _insets);
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _currentOrientation = MediaQuery.of(context).orientation;
+    _loadAd();
+    debugPrint('메인 페이지 didChangeDependencies _loadAd 로딩');
+  }
+
+  void _loadAd() async {
+    await _inlineAdaptiveAd?.dispose();
+    //setState(() {
+    _inlineAdaptiveAd = null;
+    _isLoaded = false;
+    //});
+
+    // Get an inline adaptive size for the current orientation.
+    AdSize size = AdSize.getCurrentOrientationInlineAdaptiveBannerAdSize(
+        _adWidth.truncate());
+
+    _inlineAdaptiveAd = BannerAd(
+      // TODO: replace this test ad unit with your own ad unit.
+      adUnitId: AdHelper.mainBannerAdUnitId,//'ca-app-pub-3940256099942544/9214589741',
+      size: size,
+      request: AdRequest(),
+      listener: BannerAdListener(
+        onAdLoaded: (Ad ad) async {
+          print('Inline adaptive banner loaded: ${ad.responseInfo}');
+
+          // After the ad is loaded, get the platform ad size and use it to
+          // update the height of the container. This is necessary because the
+          // height can change after the ad is loaded.
+          BannerAd bannerAd = (ad as BannerAd);
+          final AdSize? size = await bannerAd.getPlatformAdSize();
+          if (size == null) {
+            print('Error: getPlatformAdSize() returned null for $bannerAd');
+            return;
+          }
+
+          //setState(() {
+          _inlineAdaptiveAd = bannerAd;
+          _isLoaded = true;
+          _adSize = size;
+          //});
+        },
+        onAdFailedToLoad: (Ad ad, LoadAdError error) {
+          print('Inline adaptive banner failedToLoad: $error');
+          ad.dispose();
+        },
+      ),
+    );
+    await _inlineAdaptiveAd!.load();
+  }
+
+  Widget _getAdWidget() {
+    return OrientationBuilder(
+      builder: (context, orientation) {
+        if (_currentOrientation == orientation &&
+            _inlineAdaptiveAd != null &&
+            _isLoaded &&
+            _adSize != null) {
+          return Align(
+              child: Container(
+                width: _adWidth,
+                height: _adSize!.height.toDouble(),
+                child: AdWidget(
+                  ad: _inlineAdaptiveAd!,
+                ),
+              ));
+        }
+        // Reload the ad if the orientation changes.
+        if (_currentOrientation != orientation) {
+          _currentOrientation = orientation;
+          _loadAd();
+        }
+        return Container(
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey.withOpacity(0.7)), // 테두리 색상 설정
+            borderRadius: BorderRadius.circular(15), // 모서리 반경 설정
+          ),
+          child: Center(
+            child: Text('배너를 불러오는 중입니다', style: TextStyle(
+                color: Colors.grey
+            ),),
+          ),
+        );
+      },
+    );
   }
 
   Future<bool> calculateConfirmTime() async {

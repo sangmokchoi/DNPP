@@ -178,7 +178,7 @@ class SettingScreen extends StatelessWidget {
                                                 .settingTermsOfUse(context);
                                             break;
                                           case 3:
-                                            debugPrint('개인정보 처리방침');
+                                            debugPrint('개인정보처리방침');
                                             await viewModel
                                                 .settingPrivacy(context);
                                             break;
@@ -306,7 +306,7 @@ class SettingScreen extends StatelessWidget {
                                                 .settingTermsOfUse(context);
                                             break;
                                           case 3:
-                                            debugPrint('개인정보 처리방침');
+                                            debugPrint('개인정보처리방침');
                                             await viewModel
                                                 .settingPrivacy(context);
 

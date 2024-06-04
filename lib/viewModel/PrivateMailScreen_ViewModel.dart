@@ -6,6 +6,7 @@ class PrivateMailScreenViewModel extends ChangeNotifier {
   bool isListTileVisible = false;
 
   ScrollController horizontalScrollController = ScrollController();
+  ScrollController verticalScrollController = ScrollController();
 
   List<String> menuList = ["전체", "공지사항", "안내"];
 
@@ -28,8 +29,8 @@ class PrivateMailScreenViewModel extends ChangeNotifier {
   }
 
   Future<void> updateListTileData(String _title, String _body, String _timeline, String _imageUrl, String _langingUrl) async {
-    title = _title;
-    body = _body;
+    title = _title.replaceAll(r'\n', '\n');
+    body = _body.replaceAll(r'\n', '\n');
     timeline = _timeline;
     imageUrl = _imageUrl;
     langingUrl = _langingUrl;

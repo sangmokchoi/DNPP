@@ -4,13 +4,16 @@ import 'package:dnpp/repository/firebase_realtime_users.dart';
 import 'package:dnpp/repository/firebase_remoteConfig.dart';
 import 'package:dnpp/statusUpdate/googleAnalytics.dart';
 import 'package:dnpp/statusUpdate/CurrentPageProvider.dart';
+import 'package:dnpp/statusUpdate/reportUpdate.dart';
 import 'package:dnpp/view/PrivateMail_Screen.dart';
 
 import 'package:dnpp/view/home_screen.dart';
 import 'package:dnpp/view/signup_screen.dart';
+import 'package:dnpp/viewModel/ChatScreen_ViewModel.dart';
 import 'package:dnpp/viewModel/PrivateMailScreen_ViewModel.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_remote_config/firebase_remote_config.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 // import 'package:html/dom.dart';
 // import 'package:html/dom_parsing.dart';
@@ -58,7 +61,7 @@ import 'LocalDataSource/firebase_realtime/users/DS_Local_badge.dart';
 import 'LocalDataSource/firebase_realtime/users/DS_Local_isUserInApp.dart';
 import 'firebase_options.dart';
 import 'models/moveToOtherScreen.dart';
-import 'norification.dart';
+import 'notification.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 
@@ -431,7 +434,7 @@ Future<void> main() async {
   }
 
   FlutterLocalNotification.init();
-  FlutterLocalNotification.requestNotificationPermission();
+  FlutterLocalNotification.requestNotificationPermission(); // 여기서 노티 권한 요청
 
   FirebaseAnalytics analytics = FirebaseAnalytics.instance;
   FirebaseAnalyticsObserver observer =
@@ -492,10 +495,16 @@ Future<void> main() async {
           create: (context) => SharedPreference(),
         ),
         ChangeNotifierProvider(
+          create: (context) => ReportUpdate(),
+        ),
+        ChangeNotifierProvider(
           create: (context) => GoogleAnalyticsNotifier(),
         ),
         ChangeNotifierProvider(
           create: (context) => CurrentPageProvider(),
+        ),
+        ChangeNotifierProvider(
+          create: (context) => ChatScreenViewModel(),
         )
       ],
       child: MaterialApp(
@@ -672,11 +681,19 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
+
+  Future<InitializationStatus> _initGoogleMobileAds() {
+    // TODO: Initialize Google Mobile Ads SDK
+    print('_initGoogleMobileAds 진입');
+    return MobileAds.instance.initialize();
+  }
+
   @override
   void initState() {
     // FlutterLocalNotification.init();
     // FlutterLocalNotification.requestNotificationPermission();
     //FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+    _initGoogleMobileAds();
     setupInteractedMessage();
     debugPrint('main에서 setupInteractedMessage(); 직후');
     WidgetsBinding.instance.addObserver(this);
@@ -865,7 +882,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
         .then((RemoteMessage? message) async {
 
       if (message != null) {
-        // terminate에서 오픈하면 오게되는 곳 (server에서 받는 경우를 처리하는 수정 필요)
+        // terminate에서 오픈하면 오게되는 곳
 
         // 로그인을 한 경우와 로그인을 하지 않은 경우 구분 필요
         final uid = FirebaseAuth.instance.currentUser?.uid.toString();
@@ -917,6 +934,9 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
 
           } else {
             //_handleMessage(message);
+
+            // isNotificationable이 true인 경우에만 보여야 함
+
             MoveToOtherScreen().persistentNavPushNewScreen(
                 context, ChatListView(), false, PageTransitionAnimation.cupertino);
 

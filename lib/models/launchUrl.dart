@@ -1,4 +1,7 @@
+import 'dart:ui';
+
 import 'package:dnpp/constants.dart';
+import 'package:dnpp/main.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
@@ -6,7 +9,9 @@ import 'package:persistent_bottom_nav_bar/persistent_tab_view.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../repository/firebase_realtime_blockedList.dart';
 import '../statusUpdate/profileUpdate.dart';
+import '../statusUpdate/reportUpdate.dart';
 import '../view/chatList_Screen.dart';
 import '../view/chat_screen.dart';
 import 'moveToOtherScreen.dart';
@@ -252,13 +257,294 @@ class LaunchUrl {
         });
   }
 
+  final List<String> buttonLabels = [
+    '스팸, 광고',
+    '부적절한 프로필',
+    '폭언, 비속어, 혐오 발언',
+    '불쾌감을 주는 발언',
+    '기타',
+  ];
+
+  Future<void> openBottomSheetToReport(
+      BuildContext context, double containerHeight, String messageText, Future<bool?> Function() reportFunc) async {
+
+    showModalBottomSheet<String>(
+        context: context,
+        isScrollControlled: true,
+        builder: (context) {
+
+          return Consumer<ReportUpdate>(
+              builder: (context, reportUpdate, child) {
+            return Container(
+              height: containerHeight,
+              width: double.infinity,
+              padding: EdgeInsets.only(left: 25.0, right: 25.0, bottom: 15.0),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.only(
+                  topRight: Radius.circular(10.0),
+                  topLeft: Radius.circular(10.0),
+                ),
+              ),
+              child: Column(
+                children: [
+                  SizedBox(
+                    height: 5.0,
+                  ),
+                  SizedBox(
+                    width: 50.0,
+                    child: Container(
+                      height: 3.0,
+                      decoration: BoxDecoration(
+                          color: Colors.grey,
+                          borderRadius: BorderRadius.all(Radius.circular(8.0))),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 15.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          '신고하기',
+                          style: TextStyle(
+                              fontSize: 16.0, fontWeight: FontWeight.bold),
+                        ),
+                        GestureDetector(
+                          onTap: () async {
+                            await reportUpdate.clearReportReasonList();
+                            Navigator.pop(context);
+                          },
+                          child: Icon(Icons.close),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 15.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '신고사유를 선택해주세요 (중복 가능)',
+                          style: TextStyle(
+                            fontSize: 14.0,
+                          ),
+                        ),
+                        Text(
+                          '누적 신고 횟수가 5회 이상인 유저는 채팅 기능이 이용 불가합니다.',
+                          style: TextStyle(
+                            fontSize: 14.0,
+                          ),
+                        ),
+                        Container(
+                          margin: EdgeInsets.symmetric(vertical: 10.0),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            children: [
+                              Text('신고할 채팅: $messageText', style: TextStyle(
+                                decoration: TextDecoration.underline,
+                              ), maxLines: 1, overflow: TextOverflow.ellipsis,)
+                            ],
+                          ),
+                        ),
+                        Center(
+                            child: Wrap(
+                          spacing: 7.0, // 각 버튼 사이의 가로 간격
+                          runSpacing: 4.0, // 각 버튼 사이의 세로 간격
+                          children: buttonLabels.map((label) {
+                            bool isSelected =
+                                reportUpdate.reportReasonList.contains(label);
+                            return ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                foregroundColor:
+                                    isSelected ? Colors.white : kMainColor,
+                                backgroundColor: isSelected
+                                    ? kMainColor
+                                    : (Theme.of(context).brightness ==
+                                            Brightness.light
+                                        ? Colors.white
+                                        : Colors.transparent),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(25.0),
+                                ),
+                                side: BorderSide(
+                                  color: isSelected
+                                      ? kMainColor
+                                      : (Theme.of(context).brightness ==
+                                              Brightness.light
+                                          ? Colors.blue
+                                          : Colors.grey),
+                                ),
+                              ),
+                              onPressed: () {
+                                if (isSelected) {
+                                  reportUpdate.removeReportReasonList(label);
+                                } else {
+                                  reportUpdate.addReportReasonList(label);
+                                }
+                              },
+                              child: Text(
+                                label,
+                                textAlign: TextAlign.center,
+                              ),
+                            );
+                          }).toList(),
+                        )),
+                        Container(
+                          height: containerHeight * 0.15,
+                          margin: EdgeInsets.only(top: 10.0),
+                          padding: EdgeInsets.symmetric(
+                              horizontal: 8.0, vertical: 0.0),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.all(Radius.circular(15)),
+                            border: Border.all(color: Colors.grey, width: 0.3),
+                          ),
+                          child: TextField(
+                            controller: reportUpdate.reportTextEditingController,
+                            //autofocus: true,
+                            autocorrect: false,
+                            enableSuggestions: false,
+                            decoration: InputDecoration(
+                                focusedBorder: InputBorder.none,
+                                border: InputBorder.none,
+                                labelText: '추가 사항'),
+                            maxLines: 1,
+                            style: kAppointmentDateTextStyle,
+                            onChanged: (text){
+                              if (!reportUpdate.reportReasonList.contains('기타')) {
+                                reportUpdate.addReportReasonList('기타');
+                              }
+                              if (text == '') {
+                                reportUpdate.removeReportReasonList('기타');
+                              }
+                            },
+                          ),
+                        ),
+                        SizedBox(
+                          height: 10.0,
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            Expanded(
+                              child: ElevatedButton(
+                                  onPressed: () {
+                                    Navigator.pop(context);
+                                  },
+                                  style: kCancelButtonStyle,
+                                  child: Text(
+                                    '취소',
+                                    style: TextStyle(color: Colors.white),
+                                  )),
+                            ),
+                            SizedBox(
+                              width: 20.0,
+                            ),
+                            Expanded(
+                              child: ElevatedButton(
+                                  onPressed: () async {
+
+                                    if (reportUpdate.reportReasonList.isEmpty) {
+                                      alertFunc(context, '알림', '신고 사유를 선택해주세요', '확인', () {
+                                        Navigator.pop(context);
+                                      });
+                                    } else {
+
+                                      await alertOkAndCancelFuncNoPop(
+                                          context,
+                                          '알림',
+                                          '이 유저를 정말 신고하시겠습니까?\n신고 완료 후 이 유저는 자동으로 차단됩니다',
+                                          '취소',
+                                          '확인',
+                                          Colors.red,
+                                          kMainColor,
+                                              () {
+                                            Navigator.pop(context);
+                                          },
+                                              () async {
+                                            Navigator.pop(context);
+
+
+                                            showDialog(
+                                              barrierDismissible: false,
+                                              context: context,
+                                              builder: (context) {
+                                                return Center(
+                                                  child: CircularProgressIndicator(), // 로딩 바 표시
+                                                );
+                                              },
+                                            );
+
+                                            await reportFunc().then((value) {
+
+                                              debugPrint(
+                                                'reportFunc().then((value): $value'
+                                              );
+
+                                              Navigator.pop(context);
+
+                                              if (value == false) {
+                                                alertFunc(
+                                                    context,
+                                                    '알림',
+                                                    '이미 신고되었습니다\n채팅방 목록으로 돌아갑니다',
+                                                    '확인', () async {
+
+                                                  Navigator.pop(context);
+                                                  Navigator.pop(context);
+                                                  Navigator.pop(context);
+
+                                                });
+                                              }
+
+                                              if (value == null || value == true) {
+                                                alertFunc(
+                                                    context,
+                                                    '알림',
+                                                    '신고가 완료되었습니다.\n검토까지는 최대 24시간이 소요됩니다.\n\n채팅방 목록으로 돌아갑니다',
+                                                    '확인', () async {
+
+                                                  Navigator.pop(context);
+                                                  Navigator.pop(context);
+                                                  Navigator.pop(context);
+
+                                                });
+                                              }
+
+                                            });
+
+                                          });
+                                    }
+
+                                  },
+                                  style: kConfirmButtonStyle.copyWith(
+                                    backgroundColor:
+                                        MaterialStateProperty.all(Colors.red),
+                                  ),
+                                  child: Text(
+                                    '신고',
+                                    style: TextStyle(color: Colors.white),
+                                  )),
+                            ),
+                          ],
+                        )
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            );
+          });
+        });
+  }
+
   void openBottomSheetMoveToChat(BuildContext context, var user) {
     showModalBottomSheet(
       context: context,
       builder: (context) {
-        debugPrint('openBottomSheetMoveToChat user: ${user}');
-        debugPrint(
-            'user[pingpongCourt].length: ${user['pingpongCourt'].length}');
+        // debugPrint('openBottomSheetMoveToChat user: ${user}');
+        // debugPrint(
+        //     'user[pingpongCourt].length: ${user['pingpongCourt'].length}');
         return Container(
           height: 350,
           decoration: BoxDecoration(
@@ -406,22 +692,37 @@ class LaunchUrl {
                         onPressed: () async {
                           Navigator.pop(context);
                           //Navigator.push(context, createRouteChatView(user));
+                          debugPrint('user: ${user}');
+                          debugPrint('user[uid]: ${user['uid']}');
+                          // 차단한 유저인지 확인 필요
+                          RepositoryRealtimeBlockedList().getCheckIsOpponentBlocked(user['uid']).then((boolValue) async {
 
-                          await MoveToOtherScreen()
-                              .initializeGASetting(context, 'ChatScreen')
-                              .then((value) async {
+                            if (boolValue == true) {
+                              LaunchUrl().alertFunc(navigatorKey.currentContext!, '알림', '차단 목록에 있는 유저입니다.\n차단을 먼저 해제해주세요.', '확인', () {
+                                Navigator.of(navigatorKey.currentContext!, rootNavigator: false).pop();
+                              });
+                            } else {
 
-                            await MoveToOtherScreen()
-                                .persistentNavPushNewScreen(
+                              await MoveToOtherScreen()
+                                  .initializeGASetting(context, 'ChatScreen')
+                                  .then((value) async {
+                                debugPrint('여기서 에러 발생2');
+                                await MoveToOtherScreen()
+                                    .persistentNavPushNewScreen(
                                     context,
                                     ChatScreen(receivedData: user),
                                     false,
-                                    PageTransitionAnimation.cupertino).then((value) async {
-                              await MoveToOtherScreen()
-                                  .initializeGASetting(context, 'MatchingScreen');
+                                    PageTransitionAnimation.cupertino)
+                                    .then((value) async {
+                                  debugPrint('여기서 에러 발생3');
+                                  await MoveToOtherScreen().initializeGASetting(
+                                      context, 'MatchingScreen');
+                                });
+                              });
+                            }
 
-                            });
                           });
+
                         },
                         child: Text(
                           '확인',

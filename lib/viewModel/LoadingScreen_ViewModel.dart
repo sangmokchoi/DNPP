@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dnpp/LocalDataSource/DS_Local_Auth.dart';
 import 'package:dnpp/constants.dart';
+import 'package:dnpp/main.dart';
 import 'package:dnpp/models/DeviceInfo.dart';
 import 'package:dnpp/LocalDataSource/DS_Local_auth.dart';
 
@@ -27,6 +28,7 @@ import '../repository/firebase_firestore_userData.dart';
 import '../repository/firebase_realtime_users.dart';
 import '../statusUpdate/ShowToast.dart';
 import '../statusUpdate/loginStatusUpdate.dart';
+import '../view/main_screen.dart';
 
 class LoadingScreenViewModel extends ChangeNotifier {
 
@@ -39,9 +41,9 @@ class LoadingScreenViewModel extends ChangeNotifier {
   late OverlayEntry lateOverlayEntry;
   List<OverlayEntry> lateOverlayEntries = [];
 
-  insertOverlay(BuildContext context, String token, String uniqueDeviceId) {
+  insertOverlay(BuildContext context, String token, String uniqueDeviceId, String? deviceName) {
 
-    OverlayEntry _overlay = OverlayEntry(builder: (_) => overlayBanner(token, uniqueDeviceId));
+    OverlayEntry _overlay = OverlayEntry(builder: (_) => overlayBanner(token, uniqueDeviceId, deviceName));
 
     debugPrint('insertOverlay 진입');
 
@@ -60,7 +62,8 @@ class LoadingScreenViewModel extends ChangeNotifier {
 
   }
 
-  Widget overlayBanner(String token, String uniqueDeviceId) {
+  Widget overlayBanner(String token, String uniqueDeviceId, String? deviceName) {
+
     return Container(
       width: double.infinity,
       height: double.infinity,
@@ -74,12 +77,25 @@ class LoadingScreenViewModel extends ChangeNotifier {
           style: kAppointmentDateTextStyle,
           textAlign: TextAlign.center,
         ),
-        content: Text(
-          '다른 기기에서 로그인한 이력이 있습니다\n이 기기에서 핑퐁플러스를 이용하시겠습니까?',
-          style: TextStyle(
-            fontSize: 14.0,
-          ),
-          textAlign: TextAlign.center,
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              '아래 기기에서 로그인한 이력이 있습니다\n이 기기에서 핑퐁플러스를 이용하시겠습니까?\n',
+              style: TextStyle(
+                fontSize: 14.0,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            if (deviceName != null && deviceName != "null" && deviceName != "deviceName")
+            Text(
+              '기기 정보: ${deviceName}',
+              style: TextStyle(
+                fontSize: 14.0,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
         ),
         actions: [
           Row(
@@ -115,14 +131,17 @@ class LoadingScreenViewModel extends ChangeNotifier {
                 onPressed: () async {
                   //await RepositoryRealtimeUsers().getUploadFcmToken(token).then((value) async {
                     //ShowToast().showToast("로그인이 완료되었습니다");
+
                     await RepositoryRealtimeUsers().getUploadMyDeviceId(uniqueDeviceId).then((value) async {
+                      await RepositoryRealtimeUsers().getUploadMyDeviceName(deviceName!).then((value) async {
+                        ShowToast().showToast("로그인이 완료되었습니다");
 
-                      ShowToast().showToast("로그인이 완료되었습니다");
+                        await RepositoryRealtimeUsers().getUploadFcmToken(token!).then((value) {
+                          lateOverlayEntries.first.remove();
 
-                      await RepositoryRealtimeUsers().getUploadFcmToken(token!).then((value) {
-                        lateOverlayEntries.first.remove();
-
+                        });
                       });
+
                     });
                   //});
                   //overlayRemove;
@@ -161,6 +180,7 @@ class LoadingScreenViewModel extends ChangeNotifier {
 
         await FirebaseMessaging.instance.getToken().then((token) async {
           debugPrint('FirebaseAuth.instance.idTokenChanges().listen token: $token');
+
           await RepositoryRealtimeUsers().getCheckFcmToken(user.uid).then((loadedToken) async {
             debugPrint('loadedToken == token: ${loadedToken == token}');
 
@@ -169,93 +189,111 @@ class LoadingScreenViewModel extends ChangeNotifier {
 
             debugPrint('기존의 fcmtoken과 다른 경우에만 새로운 fcmtoken을 업로드');
 
-            await RepositoryRealtimeUsers().getCheckMyDeviceId(user.uid).then((deviceId) async {
+            final deviceInfo = await DeviceInfo().initPlatformState();
+            debugPrint('deviceInfo: $deviceInfo'); //identifierForVendor
 
-              final deviceInfo = await DeviceInfo().initPlatformState();
-              debugPrint('deviceInfo: $deviceInfo'); //identifierForVendor
+            await RepositoryRealtimeUsers().getCheckMyDeviceName().then((deviceName) async {
 
-              String? uniqueDeviceId;
+              await RepositoryRealtimeUsers().getCheckMyDeviceId(user.uid).then((deviceId) async {
 
-              if (Platform.isIOS) {
-                uniqueDeviceId = deviceInfo['identifierForVendor'];
-                debugPrint('deviceInfo[identifierForVendor]: $uniqueDeviceId');
+                String? _deviceName;
+                String? _uniqueDeviceId;
 
-              } else if (Platform.isAndroid) {
-                uniqueDeviceId = deviceInfo['id'];
-                debugPrint('deviceInfo[id]: $uniqueDeviceId');
+                if (Platform.isIOS) {
+                  _deviceName = deviceInfo['name'];
+                  _uniqueDeviceId = deviceInfo['identifierForVendor'];
 
-              } else {
-                uniqueDeviceId = 'null';
-              }
+                } else if (Platform.isAndroid) {
+                  _deviceName = deviceInfo['device'];
+                  _uniqueDeviceId = deviceInfo['id'];
 
-              if (deviceId == 'deviceId') { // 디바이스 id가 기존에 없었던 상태
-                await RepositoryRealtimeUsers().getUploadMyDeviceId(uniqueDeviceId!);
-
-                if (loadedToken != token) { // 지금은 토큰을 이용했으나, 디바이스 id를 가져오는 것으로 변경 하기
-                  // LaunchUrl().alertOkAndCancelFunc(context, '알림', '다른 기기에서 로그인한 이력이 있습니다\n이 기기에서 핑퐁플러스를 이용하시겠습니까?', '아니오 (앱 종료)', '확인', Colors.red, kMainColor, () async {
-                  //   //Navigator.pop(context);
-                  //   // 앱 종료 함수
-                  //   await RepositoryAuth().signOut().then((value) => exit(0));
-                  //
-                  // }, () async {
-                  //
-                  //   await ChatBackgroundListen().uploadFcmToken(token!).then((value) {
-                  //     Navigator.pop(context);
-                  //
-                  //     //Navigator.of(context, rootNavigator: true).pop();
-                  //
-                  //   });
-                  //
-                  // });
-
-                  // insertOverlay(context, token!, uniqueDeviceId!);
-
-                  //ShowToast().showToast(); // 잘 작동됨
-
-                  await RepositoryRealtimeUsers().getUploadFcmToken(token!).then((value) {
-
-                  });
                 } else {
-
+                  _deviceName = 'null';
+                  _uniqueDeviceId = 'null';
                 }
 
-              } else if (deviceId == uniqueDeviceId) { // 이미 동일한 디바이스 id가 db에 있으므로 굳이 업로드 안함
-                debugPrint('Device ID already exists in the database.');
+                if (deviceId == 'deviceId') { // 디바이스 id가 기존에 없었던 상태
+                  await RepositoryRealtimeUsers().getUploadMyDeviceId(_uniqueDeviceId!);
+                  await RepositoryRealtimeUsers().getUploadMyDeviceName(_deviceName!);
 
-                if (loadedToken != token) { // 지금은 토큰을 이용했으나, 디바이스 id를 가져오는 것으로 변경 하기
-                  // LaunchUrl().alertOkAndCancelFunc(context, '알림', '다른 기기에서 로그인한 이력이 있습니다\n이 기기에서 핑퐁플러스를 이용하시겠습니까?', '아니오 (앱 종료)', '확인', Colors.red, kMainColor, () async {
-                  //   //Navigator.pop(context);
-                  //   // 앱 종료 함수
-                  //   await RepositoryAuth().signOut().then((value) => exit(0));
-                  //
-                  // }, () async {
-                  //
-                  //   await ChatBackgroundListen().uploadFcmToken(token!).then((value) {
-                  //     Navigator.pop(context);
-                  //
-                  //     //Navigator.of(context, rootNavigator: true).pop();
-                  //
-                  //   });
-                  //
-                  // });
+                  if (loadedToken != token) { // 지금은 토큰을 이용했으나, 디바이스 id를 가져오는 것으로 변경 하기
+                    // LaunchUrl().alertOkAndCancelFunc(context, '알림', '다른 기기에서 로그인한 이력이 있습니다\n이 기기에서 핑퐁플러스를 이용하시겠습니까?', '아니오 (앱 종료)', '확인', Colors.red, kMainColor, () async {
+                    //   //Navigator.pop(context);
+                    //   // 앱 종료 함수
+                    //   await RepositoryAuth().signOut().then((value) => exit(0));
+                    //
+                    // }, () async {
+                    //
+                    //   await ChatBackgroundListen().uploadFcmToken(token!).then((value) {
+                    //     Navigator.pop(context);
+                    //
+                    //     //Navigator.of(context, rootNavigator: true).pop();
+                    //
+                    //   });
+                    //
+                    // });
 
-                  // insertOverlay(context, token!, uniqueDeviceId!);
+                    // insertOverlay(context, token!, uniqueDeviceId!);
 
-                  //ShowToast().showToast(); // 잘 작동됨
+                    //ShowToast().showToast(); // 잘 작동됨
 
-                  await RepositoryRealtimeUsers().getUploadFcmToken(token!).then((value) {
+                    await RepositoryRealtimeUsers().getUploadFcmToken(token!).then((value) {
 
-                  });
-                } else {
+                    });
 
+                  } else {
+
+                  }
+
+                  // deviceId 는 서버에서 가져온 id
+                  // uniqueDeviceId 는 현재 앱을 연 디바이스의 id
+
+                } else if (deviceId == _uniqueDeviceId) { // 이미 동일한 디바이스 id가 db에 있으므로 굳이 업로드 안함
+                  debugPrint('Device ID already exists in the database.');
+
+                  if (loadedToken != token) { // 지금은 토큰을 이용했으나, 디바이스 id를 가져오는 것으로 변경 하기
+                    // LaunchUrl().alertOkAndCancelFunc(context, '알림', '다른 기기에서 로그인한 이력이 있습니다\n이 기기에서 핑퐁플러스를 이용하시겠습니까?', '아니오 (앱 종료)', '확인', Colors.red, kMainColor, () async {
+                    //   //Navigator.pop(context);
+                    //   // 앱 종료 함수
+                    //   await RepositoryAuth().signOut().then((value) => exit(0));
+                    //
+                    // }, () async {
+                    //
+                    //   await ChatBackgroundListen().uploadFcmToken(token!).then((value) {
+                    //     Navigator.pop(context);
+                    //
+                    //     //Navigator.of(context, rootNavigator: true).pop();
+                    //
+                    //   });
+                    //
+                    // });
+
+                    // insertOverlay(context, token!, uniqueDeviceId!);
+
+                    //ShowToast().showToast(); // 잘 작동됨
+
+                    await RepositoryRealtimeUsers().getUploadFcmToken(token!).then((value) {
+
+                    });
+                  } else {
+
+                  }
+
+                } else if (deviceId != _uniqueDeviceId && deviceId != 'null') { // 디바이스 id가 기존과 다른 경우
+                  insertOverlay(context, token!, _uniqueDeviceId!, deviceName);
+
+                } else if (deviceId == 'null') {
+                  // 함수 동작 중에 에러가 발생함
                 }
 
-              } else if (deviceId != uniqueDeviceId) { // 디바이스 id가 기존과 다른 경우
-                insertOverlay(context, token!, uniqueDeviceId!);
-              }
+
+              });
+
 
 
             });
+
+
 
           });
 
@@ -650,6 +688,23 @@ class LoadingScreenViewModel extends ChangeNotifier {
           //if (Provider.of<LoginStatusUpdate>(context, listen: false).isLoggedIn) {
           if (FirebaseAuth.instance.currentUser?.uid != '' || FirebaseAuth.instance.currentUser?.uid != null) {
             await RepositoryFirestoreUserData().getFetchUserData(context);
+            await RepositoryRealtimeUsers().getCheckMyReportedCount().then((reportedCount) async {
+
+              reportedCountMap['reportedCount'] = reportedCount;
+              debugPrint('reportedCountMap[reportedCount]: ${reportedCountMap['reportedCount']}');
+
+              debugPrint('DateTime.now().millisecondsSinceEpoch: ${DateTime.now().millisecondsSinceEpoch}');
+
+              if (reportedCount > 4) {
+
+                debugPrint('reportedCount: $reportedCount');
+
+                final limitDays = await RepositoryRealtimeUsers().getCheckMyReportLimitDays();
+                limitDaysMap['limitDays'] = limitDays;
+
+              }
+
+            });
 
             // await Provider.of<CourtAppointmentUpdate>(context, listen: false)
             //     .daywiseDurationsCalculate(
@@ -664,8 +719,6 @@ class LoadingScreenViewModel extends ChangeNotifier {
             // await Provider.of<PersonalAppointmentUpdate>(context, listen: false)
             //     .personalCountHours(
             //     false, isPersonal, courtTitle, courtRoadAddress);
-
-          } else {
 
           }
 

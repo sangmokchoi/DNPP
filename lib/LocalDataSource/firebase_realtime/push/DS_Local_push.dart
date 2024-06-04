@@ -48,8 +48,8 @@ class LocalDSPush {
       final publicPushRefResult = await publicPushRef.once();
       final snapshot = publicPushRefResult.snapshot;
 
-      //debugPrint('snapshot.value: ${snapshot.value}');
-      //debugPrint('snapshot.value.runtimeType :${snapshot.value.runtimeType }'); //as List<Object?>
+      //debugPrint('loadPublicPush snapshot.value: ${snapshot.value}');
+      //debugPrint('loadPublicPush snapshot.value.runtimeType :${snapshot.value.runtimeType }'); //as List<Object?>
       // key 말고 value들을 이용함
 
       final result = snapshot.value as List<Object?>;
@@ -60,7 +60,7 @@ class LocalDSPush {
         if (element is Map<Object?, Object?>) {
           // Object?를 String, dynamic으로 캐스팅
           final _element = element.cast<String, dynamic>(); // 각 푸시별 구분
-          //debugPrint('_element: $_element');
+          //debugPrint('loadPublicPush _element: $_element');
 
           if (_element['users'] is Map<Object?, Object?>) {
             // users에 *가 포함되어 있음 (모든 유저 대상으로 보여짐)
@@ -117,10 +117,11 @@ class LocalDSPush {
         }
       }
 
+      //debugPrint('public resultList: $resultList');
       return resultList;
 
     } catch (e) {
-      debugPrint('loadAllPush e: $e');
+      debugPrint('loadPublicPush e: $e');
       return [];
     }
 
@@ -136,19 +137,20 @@ class LocalDSPush {
       final publicPushRefResult = await publicPushRef.once();
       final snapshot = publicPushRefResult.snapshot;
 
-      debugPrint('snapshot.value: ${snapshot.value}');
-      debugPrint('snapshot.value.runtimeType :${snapshot.value.runtimeType }'); //as List<Object?>
+      //debugPrint('loadPrivatePush snapshot.value: ${snapshot.value}');
+      //debugPrint('loadPrivatePush snapshot.value.runtimeType :${snapshot.value.runtimeType }'); //as List<Object?>
       // key 말고 value들을 이용함
 
       final result = snapshot.value as List<Object?>;
-
+      //debugPrint('loadPrivatePush result: ${result.length}');
       List<Map<String, String>> resultList = [];
 
       for (var element in result) {
+
         if (element is Map<Object?, Object?>) {
           // Object?를 String, dynamic으로 캐스팅
           final _element = element.cast<String, dynamic>(); // 각 푸시별 구분
-          debugPrint('_element: $_element');
+          //debugPrint('loadPrivatePush _element: $_element');
 
           final usersResult = _element['users'] as List<Object?>;
 
@@ -158,7 +160,7 @@ class LocalDSPush {
             if (userElement is Map<Object?, Object?>) {
 
               final _userElement = userElement.cast<String, Object>(); // 각 유저별 구분
-              debugPrint('_userElement: $_userElement');
+              //debugPrint('_userElement: $_userElement');
 
               if (_userElement['uid'] == currentUser?.uid.toString()) {
                 final _usersResult = {
@@ -186,10 +188,11 @@ class LocalDSPush {
         }
       }
 
+      //debugPrint('private resultList: $resultList');
       return resultList;
 
     } catch (e) {
-      debugPrint('loadAllPush e: $e');
+      debugPrint('loadPrivatePush e: $e');
       return [];
     }
 

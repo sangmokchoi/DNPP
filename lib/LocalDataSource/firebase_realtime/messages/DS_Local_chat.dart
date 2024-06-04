@@ -55,74 +55,188 @@ class LocalDSChat {
     });
   }
 
+  // Future<void> deleteChatData(String uid) async { // 채팅방에서 해당 유저 관련 정보 삭제
+  //   DatabaseReference ref =
+  //   FirebaseDatabase.instance.ref('messages');
+  //   final once = await ref.once();
+  //
+  //   final map = once.snapshot.value as Map<Object?, Object?>;
+  //
+  //   debugPrint('map: ${map}');
+  //
+  //   await for (final event in ref.onValue) {
+  //
+  //     final dataSnapshot = event.snapshot;
+  //     final List<DataSnapshot> snapshot = dataSnapshot.children.toList();
+  //
+  //     debugPrint('deleteChatData snapshot: ${snapshot}');
+  //     // 모든 채팅방
+  //     // [Instance of 'DataSnapshot', Instance of 'DataSnapshot', Instance of 'DataSnapshot', Instance of 'DataSnapshot', Instance of 'DataSnapshot', Instance of 'DataSnapshot', Instance of 'DataSnapshot']
+  //
+  //     snapshot.forEach((element) async {
+  //       debugPrint('deleteChatData element.key: ${element.key}');
+  //       debugPrint('deleteChatData element.value: ${element.value}');
+  //       final chatRoomId = element.key;
+  //       final DatabaseReference keyRef = FirebaseDatabase.instance.ref('messages/$chatRoomId'); // 채팅방
+  //
+  //       final value = element.value as Map<Object?, Object?>;
+  //
+  //       if (value != null) {
+  //         final metadata = value['metadata'] as Map<Object?, Object?>;
+  //
+  //
+  //         debugPrint('deleteChatData metadata: ${metadata}');
+  //
+  //         final List<Object?> keysList = metadata.keys.toList();
+  //         debugPrint('keysList: ${keysList}');
+  //
+  //         if (keysList.contains(uid)){
+  //
+  //           debugPrint('keysList.contains(uid))');
+  //
+  //           if (keysList.length == 1) { // 이미 채팅방 유저가 1명인 경우에는 채팅방을 삭제해버림
+  //
+  //            await keyRef.remove();
+  //
+  //           } else {
+  //
+  //             keysList.remove(uid);
+  //             final opponent = keysList.first;
+  //             final newMetadata = metadata['$opponent'];
+  //
+  //             debugPrint('$opponent opponent: ${newMetadata}');
+  //
+  //             try {
+  //               keyRef.child('metadata').set({
+  //                 "$opponent": newMetadata
+  //               });
+  //
+  //             } catch (e) {
+  //               debugPrint('newMetadata set e: $e');
+  //
+  //             }
+  //
+  //             try {
+  //               final DatabaseReference usersRef = FirebaseDatabase.instance.ref('messages/$chatRoomId/users'); // 채팅방 내 유저
+  //               final usersOnce = await usersRef.once();
+  //
+  //               final list = usersOnce.snapshot.value as List<Object?>;
+  //               debugPrint('list: ${list}');
+  //
+  //               if (list.length == 1){ // 이미 채팅방 유저가 1명인 경우에는 채팅방을 삭제해버림
+  //                 await keyRef.remove();
+  //
+  //               } else {
+  //
+  //                 final filteredList = list.where((element) {
+  //                   final _ele = element as Map<Object?, Object?>;
+  //                   return _ele['id'] == uid;
+  //                 }).toList(); // 삭제 되어야 하는 유저 (현재 유저)
+  //                 debugPrint('filteredList: $filteredList');
+  //
+  //                 final notFilteredList = list.where((element) {
+  //                   final _ele = element as Map<Object?, Object?>;
+  //                   return _ele['id'] != uid;
+  //                 }).toList(); // 삭제 되지 않아야 하는 유저 (상대방)
+  //                 debugPrint('notFilteredList: $notFilteredList');
+  //
+  //                 try {
+  //                   Map<String, dynamic> updateData = {
+  //                     'users': notFilteredList,
+  //                   }; // 현재 유저를 채팅방에서 제거 후 업데이트
+  //
+  //                   await keyRef.update(updateData);
+  //
+  //                 } catch (e) {
+  //                   debugPrint('keyRef.update e: $e');
+  //                 }
+  //               }
+  //
+  //             } catch (e) {
+  //
+  //             }
+  //
+  //           }
+  //
+  //         }
+  //       } else {
+  //         debugPrint('if (value != null) { element.value: ${element.value}');
+  //       }
+  //
+  //
+  //     });
+  //
+  //   }
+  //
+  // }
+  //
+
   Future<void> deleteChatData(String uid) async {
-    DatabaseReference ref =
-    FirebaseDatabase.instance.ref('messages');
-    final once = await ref.once();
+    try {
+      DatabaseReference ref = FirebaseDatabase.instance.ref('messages');
+      final once = await ref.once();
+      final map = once.snapshot.value as Map<Object?, Object?>;
 
-    final map = once.snapshot.value as Map<Object?, Object?>;
+      debugPrint('map: $map');
 
-    debugPrint('map: ${map}');
-    debugPrint('map[users]: ${map['users']}');
+      // 'messages' 경로의 모든 채팅방 데이터 가져오기
+      final snapshot = await ref.once();
+      final List<DataSnapshot> chatRooms = snapshot.snapshot.children.toList();
 
-    map.forEach((key, value) async {
-      debugPrint('key: $key');
-      //debugPrint('Key: $key, Value: $value');
-      if (key.toString().contains('${uid}')) {
-        debugPrint('Key containing "uid": $key');
-        final DatabaseReference keyRef = FirebaseDatabase.instance.ref('messages/$key'); // 채팅방
+      // 모든 채팅방 데이터에 대해 반복 처리
+      await Future.forEach(chatRooms, (DataSnapshot chatRoom) async {
+        final chatRoomId = chatRoom.key;
+        final DatabaseReference chatRoomRef = FirebaseDatabase.instance.ref('messages/$chatRoomId');
 
-        // final deleteOnce = await keyRef.once();
-        // debugPrint('deleteOnce: ${deleteOnce.snapshot.key}');
-        // debugPrint('deleteOnce: ${deleteOnce.snapshot.value}');
+        final value = chatRoom.value as Map<Object?, Object?>?;
+        if (value == null) return;
 
-        final DatabaseReference usersRef = FirebaseDatabase.instance.ref('messages/$key/users'); // 채팅방 내 유저
-        final usersOnce = await usersRef.once();
+        final metadata = value['metadata'] as Map<Object?, Object?>?;
+        if (metadata == null) return;
 
-        final list = usersOnce.snapshot.value as List<Object?>;
-        debugPrint('list: ${list}');
+        debugPrint('deleteChatData metadata: $metadata');
 
-        if (list.length == 1){ // 이미 채팅방 유저가 1명인 경우에는 채팅방을 삭제해버림
-          await keyRef.remove();
+        if (metadata.containsKey(uid)) {
+          debugPrint('metadata.containsKey(uid)');
 
-        } else {
-          final filteredList = list.where((element) {
-            final _ele = element as Map<Object?, Object?>;
-            return _ele['id'] == uid;
-          }).toList(); // 삭제 되어야 하는 유저 (현재 유저)
-          debugPrint('filteredList: $filteredList');
+          if (metadata.length == 1) {
+            // 이미 채팅방 유저가 1명인 경우 채팅방 삭제
+            await chatRoomRef.remove();
+          } else {
+            // 유저 ID 제거 및 상대방 정보 업데이트
+            metadata.remove(uid);
+            final opponentUid = metadata.keys.first;
+            final newMetadata = metadata[opponentUid];
 
-          final notFilteredList = list.where((element) {
-            final _ele = element as Map<Object?, Object?>;
-            return _ele['id'] != uid;
-          }).toList(); // 삭제 되지 않아야 하는 유저 (상대방)
-          debugPrint('notFilteredList: $notFilteredList');
+            debugPrint('$opponentUid opponent: $newMetadata');
 
-          try {
-            Map<String, dynamic> updateData = {
-              'users': notFilteredList,
-            }; // 현재 유저를 채팅방에서 제거 후 업데이트
+            await chatRoomRef.child('metadata').set({opponentUid: newMetadata});
 
-            await keyRef.update(updateData);
+            // 채팅방 내 유저 목록 업데이트
+            final usersRef = FirebaseDatabase.instance.ref('messages/$chatRoomId/users');
+            final usersSnapshot = await usersRef.once();
+            final List<dynamic> usersList = usersSnapshot.snapshot.value as List<dynamic>;
 
-          } catch (e) {
-            debugPrint('keyRef.update e: $e');
+            final updatedUsersList = usersList.where((user) {
+              final userMap = user as Map<Object?, Object?>;
+              return userMap['id'] != uid;
+            }).toList();
 
+            if (updatedUsersList.isEmpty) {
+              await chatRoomRef.remove();
+            } else {
+              await chatRoomRef.child('users').set(updatedUsersList);
+            }
           }
         }
-
-
-        //debugPrint('deleteOnce: ${usersOnce.snapshot.key}');
-        //debugPrint('deleteOnce: ${usersOnce.snapshot.value as List<Object>?}');
-
-        // users 에서 currentUser를 삭제한 후, users에 아무 유저도 남지 않으면, 해당 채팅방을 삭제할 것
-        //await keyRef.remove();
-      }
-    });
+      });
+    } catch (e) {
+      debugPrint('deleteChatData e: $e');
+    }
   }
 
 
-  // Future<void> adjustOpponentBadgeCount(String uid) async { // 회원탈퇴 시,
+// Future<void> adjustOpponentBadgeCount(String uid) async { // 회원탈퇴 시,
   //
   //   DatabaseReference ref =
   //   FirebaseDatabase.instance.ref('messages');

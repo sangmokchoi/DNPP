@@ -1,5 +1,5 @@
 import 'dart:async';
-
+import 'package:intl/intl.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dnpp/LocalDataSource/firebase_fireStore/DS_Local_appointments.dart';
 import 'package:dnpp/repository/firebase_firestore_appointments.dart';
@@ -11,20 +11,21 @@ import 'package:provider/provider.dart';
 import 'package:syncfusion_flutter_calendar/calendar.dart';
 
 import '../constants.dart';
+import '../main.dart';
 import '../models/customAppointment.dart';
+import '../models/launchUrl.dart';
 import '../models/pingpongList.dart';
 import '../models/userProfile.dart';
 import '../LocalDataSource/firebase_fireStore/DS_Local_userData.dart';
 import '../statusUpdate/othersPersonalAppointmentUpdate.dart';
 import '../statusUpdate/personalAppointmentUpdate.dart';
+import '../view/main_screen.dart';
 
 class MatchingScreenViewModel extends ChangeNotifier {
 
   ScrollController scrollController = ScrollController();
   ScrollController courtScrollController = ScrollController();
-  ScrollController neighborhoodScrollController = ScrollController(
-
-  );
+  ScrollController neighborhoodScrollController = ScrollController();
 
   List<CustomAppointment> otherUserAppointments = [];
 
@@ -255,6 +256,116 @@ class MatchingScreenViewModel extends ChangeNotifier {
     );
   }
 
+  Future<bool> calculateRemainingDays(int reportedCount, int? limitDays) async{
+
+    final arti = DateTime.now().subtract(Duration(days: 3)).millisecondsSinceEpoch;
+    print('arti: $arti');
+    final artiTargetDate = DateTime.fromMillisecondsSinceEpoch(arti);
+    print('artiTargetDate: $artiTargetDate');
+
+    print('calculateRemainingDays limitDays: $limitDays');
+    if (limitDays == null) {
+      return true;
+    }
+
+    final now = DateTime.now();
+    final targetDate = DateTime.fromMillisecondsSinceEpoch(limitDays);
+
+    final difference = now.difference(targetDate);
+    final daysRemaining = difference.inDays;
+    debugPrint('daysRemaining: $daysRemaining');
+
+    if (reportedCount >= 5 && reportedCount < 10) {
+      debugPrint('채팅 기능 7일 정지');
+
+      if (daysRemaining > 7) {
+        debugPrint('이제는 사용 가능');
+        return true;
+      } else {
+        debugPrint('아직 사용 불가');
+        return false;
+      }
+
+    } else if (reportedCount < 15) {
+      debugPrint('채팅 기능 14일 정지');
+
+      if (daysRemaining > 14) {
+        debugPrint('이제는 사용 가능');
+        return true;
+      } else {
+        debugPrint('아직 사용 불가');
+        return false;
+      }
+
+    } else if (reportedCount >= 15) {
+      debugPrint('영구 채팅 기능 정지');
+
+      return false;
+    } else {
+      return true;
+    }
+
+  }
+
+  void showLimitDays(int reportedCount, int? limitDays) {
+    debugPrint('showLimitDays 진입');
+    // final reportedCount = reportedCountMap['reportedCount'] as int;
+    // final limitDays = limitDaysMap['limitDays'] as int;
+    final dateTimeLimitDay = DateTime.fromMillisecondsSinceEpoch(limitDays!);
+    String formattedDate = '';
+
+    debugPrint('showLimitDays reportedCount: $reportedCount');
+    debugPrint('showLimitDays limitDays: $limitDays');
+
+    if (reportedCount > 4) {
+
+      if (reportedCount < 10 && reportedCount >= 5) {
+        debugPrint('showLimitDays 채팅 기능 7일 이용 정지');
+
+        formattedDate = DateFormat('yyyy-MM-dd').format(dateTimeLimitDay.add(Duration(days: 8)));
+
+        LaunchUrl().alertFuncFalseBarrierDismissible(
+            navigatorKey.currentContext!,
+            '알림',
+            '채팅 이용 관련 누적 신고 건수가 $reportedCount건입니다.\n누적 신고 건수가 5회 이상을 기록한 날짜부터 7일간 매칭 기능 및 채팅 기능이 이용 불가합니다.\n\n채팅 기능 이용 가능 날짜: ${formattedDate}',
+            '확인',
+                () {
+              Navigator.of(navigatorKey.currentContext!, rootNavigator: false).pop();
+            }
+        );
+
+      } else if (reportedCount < 15 && reportedCount >= 10) {
+        debugPrint('showLimitDays 채팅 기능 14일 이용 정지');
+        formattedDate = DateFormat('yyyy-MM-dd').format(dateTimeLimitDay.add(Duration(days: 15)));
+
+        LaunchUrl().alertFuncFalseBarrierDismissible(
+            navigatorKey.currentContext!,
+            '알림',
+            '채팅 이용 관련 누적 신고 건수가 $reportedCount건입니다.\n누적 신고 건수가 10회 이상을 기록한 날짜부터 14일간 매칭 기능 및 채팅 기능이 이용 불가합니다.\n\n채팅 기능 이용 가능 날짜: ${formattedDate}',
+            '확인',
+                () {
+              Navigator.of(navigatorKey.currentContext!, rootNavigator: false).pop();
+            }
+        );
+
+      } else if (reportedCount >= 15) {
+        debugPrint('showLimitDays 채팅 이용 영구 정지');
+
+        LaunchUrl().alertFuncFalseBarrierDismissible(
+            navigatorKey.currentContext!,
+            '알림',
+            '채팅 이용 관련 누적 신고 건수가 $reportedCount건입니다.\n영구적으로 채팅 기능이 이용 불가합니다.',
+            '확인',
+                () {
+              Navigator.of(navigatorKey.currentContext!, rootNavigator: false).pop();
+            }
+        );
+      }
+
+
+    }
+  }
+
 // Future<List<CustomAppointment>> filterAppointments(
 //     List<CustomAppointment> otherUserAppointments,
 //     DateTime targetTime) async {
@@ -282,19 +393,19 @@ class MatchingScreenViewModel extends ChangeNotifier {
   late StreamSubscription<QuerySnapshot<Map<String, dynamic>>> appointmentsSubscription;
 
   Stream<QuerySnapshot<Map<String, dynamic>>> usersCourtStream = Stream.empty();
-  Stream<QuerySnapshot<Map<String, dynamic>>> similarUsersCourtStream = Stream.empty();
+  //Stream<QuerySnapshot<Map<String, dynamic>>> similarUsersCourtStream = Stream.empty();
   Stream<QuerySnapshot<Map<String, dynamic>>> usersNeighborhoodStream = Stream.empty();
   Stream<QuerySnapshot<Map<String, dynamic>>> appointmentsStream = Stream.empty();
 
   Future<void> updateUsersNeighborhoodStream(String value) async {
+
     usersNeighborhoodStream = RepositoryFirestoreUserData().getConstructNeighborhoodUsersStream(value);
-    //notifyListeners();
     //return;
   }
 
   Future<void> updateUsersCourtStream(PingpongList value) async {
+
     usersCourtStream = RepositoryFirestoreUserData().getConstructCourtUsersStream(value);
-    //notifyListeners();
     //return;
   }
 
@@ -309,7 +420,7 @@ class MatchingScreenViewModel extends ChangeNotifier {
     debugPrint('addStreamListener 시작');
 
     usersCourtSubscription = usersCourtStream.listen((data) { });
-    similarUsersCourtSubscription = similarUsersCourtStream.listen((data) { });
+    //similarUsersCourtSubscription = similarUsersCourtStream.listen((data) { });
     usersNeighborhoodSubscription = usersNeighborhoodStream.listen((data) { });
 
     appointmentsStream = RepositoryFirestoreAppointments().getAllAppointments(); // usersCourtStream;//
@@ -410,19 +521,19 @@ class MatchingScreenViewModel extends ChangeNotifier {
 
   Future<void> initializeListeners() async {
     debugPrint('매칭스크린 초기화');
-    similarUsersCourtSubscription.cancel();
-    usersCourtSubscription.cancel();
-    usersNeighborhoodSubscription.cancel();
-    appointmentsSubscription.cancel();
+    // similarUsersCourtSubscription.cancel();
+    // usersCourtSubscription.cancel();
+    // usersNeighborhoodSubscription.cancel();
+    // appointmentsSubscription.cancel();
 
-    // similarUsersCourtStream = Stream.empty();
-    // usersCourtStream = Stream.empty();
-    // usersNeighborhoodStream = Stream.empty();
-    // appointmentsStream = Stream.empty();
-
+    //similarUsersCourtStream = Stream.empty();
+    usersCourtStream = Stream.empty();
+    usersNeighborhoodStream = Stream.empty();
+    appointmentsStream = Stream.empty();
 
     notifyListeners();
   }
+
   Future notify() async {
     notifyListeners();
   }
