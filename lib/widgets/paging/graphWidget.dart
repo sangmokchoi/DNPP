@@ -62,7 +62,7 @@ class GraphsWidget extends StatelessWidget {
 
                         },
                           child: Icon(
-                            size: 20.0,
+                            size: 22.0,
                             CupertinoIcons.question_circle,
                             color: Colors.white,
                           ),

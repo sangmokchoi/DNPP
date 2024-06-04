@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../models/launchUrl.dart';
-import '/oss_licenses.dart';
+import 'package:dnpp/oss_licenses.dart';
 
 
 class OssLicenseScreen extends StatelessWidget {
@@ -18,7 +18,7 @@ class OssLicenseScreen extends StatelessWidget {
         lp.addAll(l.paragraphs.map((p) => p.text));
       }
     }
-    final licenses = ossLicenses.toList();
+    final licenses = allDependencies.toList();
     for (var key in lm.keys) {
       licenses.add(Package(
         name: key,
@@ -28,7 +28,7 @@ class OssLicenseScreen extends StatelessWidget {
         license: lm[key]!.join('\n\n'),
         isMarkdown: false,
         isSdk: false,
-        isDirectDependency: false,
+        dependencies: [],
       ));
     }
     return licenses..sort((a, b) => a.name.compareTo(b.name));

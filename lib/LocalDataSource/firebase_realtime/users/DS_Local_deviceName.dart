@@ -3,16 +3,16 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/cupertino.dart';
 
-class LocalDSDeviceId {
+class LocalDSDeviceName {
 
   final currentUser = FirebaseAuth.instance.currentUser;
 
 
-  Future<String> checkMyDeviceId(String uid) async {
+  Future<String> checkMyDeviceName() async {
     try {
 
       DatabaseReference ref =
-      FirebaseDatabase.instance.ref("users/${currentUser?.uid}/deviceId");
+      FirebaseDatabase.instance.ref("users/${currentUser?.uid}/deviceName");
 
       final result = await ref.once();
 
@@ -22,31 +22,31 @@ class LocalDSDeviceId {
         return deviceId;
 
       } else {
-        debugPrint('등록된 deviceId 없음');
+        debugPrint('등록된 deviceName 없음');
 
-        return "deviceId";
+        return "deviceName";
       }
 
     } catch (e) {
-      debugPrint('checkMyDeviceId e: $e');
+      debugPrint('checkMyDeviceName e: $e');
       return "null";
     }
   }
 
-  Future<void> uploadMyDeviceId(String deviceId) async {
+  Future<void> uploadMyDeviceName(String deviceName) async {
 
     try {
 
       DatabaseReference ref =
-      FirebaseDatabase.instance.ref("users/${currentUser?.uid}/deviceId");
+      FirebaseDatabase.instance.ref("users/${currentUser?.uid}/deviceName");
 
-      await ref.set(deviceId);
-      debugPrint('deviceId: $deviceId');
-      debugPrint('deviceId 업로드 완료');
+      await ref.set(deviceName);
+      debugPrint('deviceName: $deviceName');
+      debugPrint('deviceName 업로드 완료');
       return;
 
     } catch (e) {
-      debugPrint('uploadMyDeviceId e: $e');
+      debugPrint('uploadMyDeviceName e: $e');
       return;
     }
 

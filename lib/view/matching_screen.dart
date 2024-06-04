@@ -4,6 +4,7 @@ import 'dart:ui';
 import 'dart:math' as math;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:custom_refresh_indicator/custom_refresh_indicator.dart';
+import 'package:dnpp/main.dart';
 import 'package:dnpp/models/pingpongList.dart';
 import 'package:dnpp/models/userProfile.dart';
 import 'package:dnpp/statusUpdate/othersPersonalAppointmentUpdate.dart';
@@ -14,9 +15,11 @@ import 'package:dnpp/widgets/paging/graphWidget.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:persistent_bottom_nav_bar/persistent_tab_view.dart';
 import 'package:provider/provider.dart';
 
+import '../GoogleAdMob.dart';
 import '../LocalDataSource/firebase_realtime/users/DS_Local_badge.dart';
 import '../constants.dart';
 import '../models/launchUrl.dart';
@@ -27,6 +30,7 @@ import '../statusUpdate/CurrentPageProvider.dart';
 import '../statusUpdate/loginStatusUpdate.dart';
 import '../statusUpdate/profileUpdate.dart';
 import '../viewModel/LoadingScreen_ViewModel.dart';
+import 'main_screen.dart';
 
 class MatchingScreen extends StatefulWidget {
   @override
@@ -65,8 +69,6 @@ class _MatchingScreenState extends State<MatchingScreen>
     'nickName': '',
   };
 
-  Stream<QuerySnapshot<Map<String, dynamic>>> matchinStream = Stream.empty();
-
   Stream<int>? floatingButtonStream =
       RepositoryRealtimeUsers().getMyBadgeListen(); //Stream.empty();
 
@@ -74,6 +76,10 @@ class _MatchingScreenState extends State<MatchingScreen>
     debugPrint('매칭 스크린 initstate 진입');
     //if (Provider.of<LoginStatusUpdate>(context, listen: false).isLoggedIn) {
     debugPrint('매칭 스크린 initstate isloggedin');
+
+    reportedCount = reportedCountMap['reportedCount'] as int;
+    limitDays = limitDaysMap['limitDays'];
+
     //viewModel.addStreamListener(context);
     viewModel.setListener(context);
     viewModel.clearClickedIndex();
@@ -111,20 +117,48 @@ class _MatchingScreenState extends State<MatchingScreen>
           .title;
       debugPrint('chosenCourthood: $chosenCourthood');
     }
+
+    await RepositoryRealtimeUsers().getCheckMyReportedCount().then((reportedCount) async {
+
+      reportedCountMap['reportedCount'] = reportedCount;
+      debugPrint('reportedCountMap[reportedCount]: ${reportedCountMap['reportedCount']}');
+
+      debugPrint('DateTime.now().millisecondsSinceEpoch: ${DateTime.now().millisecondsSinceEpoch}');
+
+      if (reportedCount > 4) {
+
+        debugPrint('reportedCount: $reportedCount');
+
+        final limitDays = await RepositoryRealtimeUsers().getCheckMyReportLimitDays();
+        limitDaysMap['limitDays'] = limitDays;
+
+      }
+
+    });
   }
+
+  //BannerAd? _ad;
+  NativeAd? _ad;
+
+  int reportedCount = -1;
+  int? limitDays = -1;
 
   @override
   void initState() {
     viewModel = Provider.of<MatchingScreenViewModel>(context, listen: false);
     viewModel.addStreamListener(context);
 
+    reportedCount = reportedCountMap['reportedCount'] as int;
+    limitDays = limitDaysMap['limitDays'];
+
     super.initState();
     WidgetsBinding.instance!.addObserver(this);
+
     startTimer();
   }
 
   Timer? _timer;
-  final Duration _timerDuration = Duration(seconds: 7);
+  final Duration _timerDuration = Duration(seconds: 5);
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
@@ -136,29 +170,29 @@ class _MatchingScreenState extends State<MatchingScreen>
   }
 
   void startTimer() {
-
     if (Provider.of<LoadingScreenViewModel>(context, listen: false)
-        .refStringListMatchingScreen
-        .length > 1) {
-
+            .refStringListMatchingScreen
+            .length >
+        1) {
       _timer = Timer.periodic(_timerDuration, (timer) {
-
         if (_currentImage <
             Provider.of<LoadingScreenViewModel>(context, listen: false)
-                .refStringListMatchingScreen
-                .length -
+                    .refStringListMatchingScreen
+                    .length +
+                (_inlineAdaptiveAd != null ? 1 : 0) -
                 1) {
           _currentImage++;
         } else {
           _currentImage = 0;
         }
 
-        _imagePageController.animateToPage(
-          _currentImage,
-          duration: Duration(seconds: 1),
-          curve: Curves.easeInOut,
-        );
-
+        if (_imagePageController.hasClients) {
+          _imagePageController.animateToPage(
+            _currentImage,
+            duration: Duration(seconds: 1),
+            curve: Curves.easeInOut,
+          );
+        }
       });
     }
   }
@@ -183,7 +217,6 @@ class _MatchingScreenState extends State<MatchingScreen>
     debugPrint('매칭스크린 build!');
 
     WidgetsBinding.instance!.addPostFrameCallback((_) async {
-
       // if (Provider.of<LoadingScreenViewModel>(context, listen: false)
       //     .refStringListMatchingScreen
       //     .length > 1) {
@@ -312,24 +345,29 @@ class _MatchingScreenState extends State<MatchingScreen>
                             //size: 30,
                           ),
                           onPressed: () async {
-                            //Navigator.push(context, LaunchUrl.createRouteChatListView());
-                            await MoveToOtherScreen()
-                                .initializeGASetting(context, 'ChatListScreen').then((value) async {
+                            final bool isOkToChat = await viewModel.calculateRemainingDays(reportedCount, limitDays);
+
+                            if (!isOkToChat) {
+                              viewModel.showLimitDays(reportedCount, limitDays);
+                            } else {
+                              //Navigator.push(context, LaunchUrl.createRouteChatListView());
                               await MoveToOtherScreen()
-                                  .persistentNavPushNewScreen(
-                                  context,
-                                  ChatListView(),
-                                  false,
-                                  PageTransitionAnimation.cupertino)
+                                  .initializeGASetting(context, 'ChatListScreen')
                                   .then((value) async {
-                                await MoveToOtherScreen().initializeGASetting(
-                                    context, 'MatchingScreen');
+                                await MoveToOtherScreen()
+                                    .persistentNavPushNewScreen(
+                                    context,
+                                    ChatListView(),
+                                    false,
+                                    PageTransitionAnimation.cupertino)
+                                    .then((value) async {
+                                  await MoveToOtherScreen().initializeGASetting(
+                                      context, 'MatchingScreen');
 
-                                await initMatchingScreen(context);
+                                  await initMatchingScreen(context);
+                                });
                               });
-                            });
-
-
+                            }
                           },
                         ),
                       ),
@@ -496,7 +534,8 @@ class _MatchingScreenState extends State<MatchingScreen>
                                       LaunchUrl().alertFunc(
                                           context, '알림', '필터 기능은 준비중입니다', '확인',
                                           () {
-                                        Navigator.of(context, rootNavigator: true)
+                                        Navigator.of(context,
+                                                rootNavigator: true)
                                             .pop();
                                       });
                                     },
@@ -522,70 +561,142 @@ class _MatchingScreenState extends State<MatchingScreen>
                               child: PageView.builder(
                                 controller: _imagePageController,
                                 itemCount: Provider.of<LoadingScreenViewModel>(
-                                        context,
-                                        listen: false)
-                                    .refStringListMatchingScreen
-                                    .length,
-                                itemBuilder: (context, index) {
-                                  return GestureDetector(
-                                    onTap: () async {
-                                      try {
-
-                                        await LaunchUrl().myLaunchUrl(
-                                            "${Provider.of<LoadingScreenViewModel>(context, listen: false).urlMapMatchingScreen[Provider.of<LoadingScreenViewModel>(context, listen: false).refStringListMatchingScreen['$index']]}");
-                                        await GoogleAnalytics().bannerClickEvent(
                                             context,
-                                            'matchingScreen',
-                                            index,
-                                            Provider.of<LoadingScreenViewModel>(
+                                            listen: false)
+                                        .refStringListMatchingScreen
+                                        .length +
+                                    (_inlineAdaptiveAd != null ? 1 : 0),
+                                itemBuilder: (context, index) {
+                                  if (_inlineAdaptiveAd != null) {
+                                    if (index !=
+                                        Provider.of<LoadingScreenViewModel>(
                                                 context,
                                                 listen: false)
-                                                .refStringListMatchingScreen[
-                                            '$index']!,
-                                            Provider.of<LoadingScreenViewModel>(
+                                            .refStringListMatchingScreen
+                                            .length) {
+                                      return GestureDetector(
+                                        onTap: () async {
+                                          try {
+                                            await LaunchUrl().myLaunchUrl(
+                                                "${Provider.of<LoadingScreenViewModel>(context, listen: false).urlMapMatchingScreen[Provider.of<LoadingScreenViewModel>(context, listen: false).refStringListMatchingScreen['$index']]}");
+                                            await GoogleAnalytics().bannerClickEvent(
                                                 context,
-                                                listen: false)
-                                                .urlMapMatchingScreen[Provider.of<
-                                                LoadingScreenViewModel>(
-                                                context,
-                                                listen: false)
-                                                .refStringListMatchingScreen[
-                                            '$index']]!);
-                                      } catch (e) {
-                                        debugPrint('matchingScreen banner click e: $e');
-                                      }
-
-                                    },
-                                    child: Container(
-                                      decoration: BoxDecoration(
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: Colors.grey.withOpacity(0.5),
-                                            //spreadRadius: 5,
-                                            blurRadius: 5,
-                                            offset: Offset(0, 0),
-                                          ),
-                                        ],
-                                        borderRadius: BorderRadius.all(
-                                            Radius.circular(10.0)),
-                                        image: DecorationImage(
-                                          image: MemoryImage(
-                                            Provider.of<LoadingScreenViewModel>(
+                                                'matchingScreen',
+                                                index,
+                                                Provider.of<LoadingScreenViewModel>(
                                                             context,
                                                             listen: false)
-                                                        .imageMapMatchingScreen[
-                                                    Provider.of<LoadingScreenViewModel>(
+                                                        .refStringListMatchingScreen[
+                                                    '$index']!,
+                                                Provider.of<LoadingScreenViewModel>(
+                                                        context,
+                                                        listen: false)
+                                                    .urlMapMatchingScreen[Provider
+                                                            .of<LoadingScreenViewModel>(
                                                                 context,
                                                                 listen: false)
-                                                            .refStringListMatchingScreen[
-                                                        '$index']] ??
-                                                Uint8List(0),
+                                                        .refStringListMatchingScreen[
+                                                    '$index']]!);
+                                          } catch (e) {
+                                            debugPrint(
+                                                'matchingScreen banner click e: $e');
+                                          }
+                                        },
+                                        child: Container(
+                                          decoration: BoxDecoration(
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: Colors.grey
+                                                    .withOpacity(0.5),
+                                                //spreadRadius: 5,
+                                                blurRadius: 5,
+                                                offset: Offset(0, 0),
+                                              ),
+                                            ],
+                                            borderRadius: BorderRadius.all(
+                                                Radius.circular(10.0)),
+                                            image: DecorationImage(
+                                              image: MemoryImage(
+                                                Provider.of<LoadingScreenViewModel>(
+                                                                context,
+                                                                listen: false)
+                                                            .imageMapMatchingScreen[
+                                                        Provider.of<LoadingScreenViewModel>(
+                                                                    context,
+                                                                    listen: false)
+                                                                .refStringListMatchingScreen[
+                                                            '$index']] ??
+                                                    Uint8List(0),
+                                              ),
+                                              fit: BoxFit.cover,
+                                            ),
                                           ),
-                                          fit: BoxFit.cover,
+                                        ),
+                                      );
+                                    } else {
+                                      return _getAdWidget();
+                                    }
+                                  } else {
+                                    return GestureDetector(
+                                      onTap: () async {
+                                        try {
+                                          await LaunchUrl().myLaunchUrl(
+                                              "${Provider.of<LoadingScreenViewModel>(context, listen: false).urlMapMatchingScreen[Provider.of<LoadingScreenViewModel>(context, listen: false).refStringListMatchingScreen['$index']]}");
+                                          await GoogleAnalytics().bannerClickEvent(
+                                              context,
+                                              'matchingScreen',
+                                              index,
+                                              Provider.of<LoadingScreenViewModel>(
+                                                          context,
+                                                          listen: false)
+                                                      .refStringListMatchingScreen[
+                                                  '$index']!,
+                                              Provider.of<LoadingScreenViewModel>(
+                                                      context,
+                                                      listen: false)
+                                                  .urlMapMatchingScreen[Provider
+                                                          .of<LoadingScreenViewModel>(
+                                                              context,
+                                                              listen: false)
+                                                      .refStringListMatchingScreen[
+                                                  '$index']]!);
+                                        } catch (e) {
+                                          debugPrint(
+                                              'matchingScreen banner click e: $e');
+                                        }
+                                      },
+                                      child: Container(
+                                        decoration: BoxDecoration(
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color:
+                                                  Colors.grey.withOpacity(0.5),
+                                              //spreadRadius: 5,
+                                              blurRadius: 5,
+                                              offset: Offset(0, 0),
+                                            ),
+                                          ],
+                                          borderRadius: BorderRadius.all(
+                                              Radius.circular(10.0)),
+                                          image: DecorationImage(
+                                            image: MemoryImage(
+                                              Provider.of<LoadingScreenViewModel>(
+                                                              context,
+                                                              listen: false)
+                                                          .imageMapMatchingScreen[
+                                                      Provider.of<LoadingScreenViewModel>(
+                                                                  context,
+                                                                  listen: false)
+                                                              .refStringListMatchingScreen[
+                                                          '$index']] ??
+                                                  Uint8List(0),
+                                            ),
+                                            fit: BoxFit.cover,
+                                          ),
                                         ),
                                       ),
-                                    ),
-                                  );
+                                    );
+                                  }
                                 },
                               ),
                             ),
@@ -1042,15 +1153,32 @@ class _MatchingScreenState extends State<MatchingScreen>
                                                                   leading: user[
                                                                               'photoUrl']
                                                                           .isNotEmpty
-                                                                      ? SizedBox(
-                                                                          height:
-                                                                              50,
-                                                                          width:
-                                                                              50,
+                                                                      ? GestureDetector(
+                                                                          onTap:
+                                                                              () async {
+                                                                            print('아이콘 눌림');
+
+                                                                            final bool isOkToChat = await viewModel.calculateRemainingDays(reportedCount, limitDays);
+
+                                                                            if (!isOkToChat){
+                                                                              viewModel.showLimitDays(reportedCount, limitDays);
+                                                                            } else {
+                                                                              LaunchUrl()
+                                                                                  .openBottomSheetMoveToChat(
+                                                                                  context,
+                                                                                  user);
+                                                                            }
+                                                                          },
                                                                           child:
-                                                                              CircleAvatar(
-                                                                            backgroundImage:
-                                                                                NetworkImage(user['photoUrl']),
+                                                                              SizedBox(
+                                                                            height:
+                                                                                50,
+                                                                            width:
+                                                                                50,
+                                                                            child:
+                                                                                CircleAvatar(
+                                                                              backgroundImage: NetworkImage(user['photoUrl']),
+                                                                            ),
                                                                           ),
                                                                         )
                                                                       : Icon(Icons
@@ -1236,16 +1364,25 @@ class _MatchingScreenState extends State<MatchingScreen>
                                                                               number: 2, // 0은 currentuser, 1은 탁구장별 데이터, 2은 다른 유저의 데이터
                                                                             ),
                                                                             Positioned(
-                                                                              top: 13.0,
+                                                                              top: 14.0,
                                                                               right: 5.0,
                                                                               child: IconButton(
                                                                                 icon: Icon(
                                                                                   Icons.account_circle_rounded,
-                                                                                  size: 20,
+                                                                                  size: 23,
                                                                                   color: Colors.white,
                                                                                 ),
-                                                                                onPressed: () {
-                                                                                  LaunchUrl().openBottomSheetMoveToChat(context, thirdOpponentUser);
+                                                                                onPressed: () async {
+                                                                                  final bool isOkToChat = await viewModel.calculateRemainingDays(reportedCount, limitDays);
+
+                                                                                  if (!isOkToChat){
+                                                                                    viewModel.showLimitDays(reportedCount, limitDays);
+                                                                                  } else {
+                                                                                    LaunchUrl()
+                                                                                        .openBottomSheetMoveToChat(
+                                                                                        context,
+                                                                                        thirdOpponentUser);
+                                                                                  }
                                                                                 },
                                                                               ),
                                                                             ),
@@ -1764,11 +1901,25 @@ class _MatchingScreenState extends State<MatchingScreen>
                                                                               .center,
                                                                       children: [
                                                                         user['photoUrl'].isNotEmpty
-                                                                            ? SizedBox(
-                                                                                width: 50,
-                                                                                height: 50,
-                                                                                child: CircleAvatar(
-                                                                                  backgroundImage: NetworkImage(user['photoUrl']),
+                                                                            ? GestureDetector(
+                                                                                onTap: () async {
+                                                                                  final bool isOkToChat = await viewModel.calculateRemainingDays(reportedCount, limitDays);
+
+                                                                                  if (!isOkToChat){
+                                                                                    viewModel.showLimitDays(reportedCount, limitDays);
+                                                                                  } else {
+                                                                                    LaunchUrl()
+                                                                                        .openBottomSheetMoveToChat(
+                                                                                        context,
+                                                                                        user);
+                                                                                  }
+                                                                                },
+                                                                                child: SizedBox(
+                                                                                  width: 50,
+                                                                                  height: 50,
+                                                                                  child: CircleAvatar(
+                                                                                    backgroundImage: NetworkImage(user['photoUrl']),
+                                                                                  ),
                                                                                 ),
                                                                               )
                                                                             : Icon(
@@ -1903,20 +2054,26 @@ class _MatchingScreenState extends State<MatchingScreen>
                                                               2 // 0은 currentuser, 1은 탁구장별 데이터, 2은 다른 유저의 데이터
                                                           ),
                                                       Positioned(
-                                                        top: 13.0,
+                                                        top: 14.0,
                                                         right: 5.0,
                                                         child: IconButton(
                                                           icon: Icon(
                                                             Icons
                                                                 .account_circle_rounded,
-                                                            size: 20,
+                                                            size: 23,
                                                             color: Colors.white,
                                                           ),
-                                                          onPressed: () {
-                                                            LaunchUrl()
-                                                                .openBottomSheetMoveToChat(
-                                                                    context,
-                                                                    firstOpponentUser);
+                                                          onPressed: () async {
+                                                            final bool isOkToChat = await viewModel.calculateRemainingDays(reportedCount, limitDays);
+
+                                                            if (!isOkToChat){
+                                                              viewModel.showLimitDays(reportedCount, limitDays);
+                                                            } else {
+                                                              LaunchUrl()
+                                                                  .openBottomSheetMoveToChat(
+                                                                  context,
+                                                                  firstOpponentUser);
+                                                            }
                                                           },
                                                         ),
                                                       ),
@@ -2200,11 +2357,25 @@ class _MatchingScreenState extends State<MatchingScreen>
                                                                               MainAxisAlignment.center,
                                                                           children: [
                                                                             user['photoUrl'].isNotEmpty
-                                                                                ? SizedBox(
-                                                                                    height: 50,
-                                                                                    width: 50,
-                                                                                    child: CircleAvatar(
-                                                                                      backgroundImage: NetworkImage(user['photoUrl']),
+                                                                                ? GestureDetector(
+                                                                                    onTap: () async {
+                                                                                      final bool isOkToChat = await viewModel.calculateRemainingDays(reportedCount, limitDays);
+
+                                                                                      if (isOkToChat){
+                                                                                        viewModel.showLimitDays(reportedCount, limitDays);
+                                                                                      } else {
+                                                                                        LaunchUrl()
+                                                                                            .openBottomSheetMoveToChat(
+                                                                                            context,
+                                                                                            user);
+                                                                                      }
+                                                                                    },
+                                                                                    child: SizedBox(
+                                                                                      height: 50,
+                                                                                      width: 50,
+                                                                                      child: CircleAvatar(
+                                                                                        backgroundImage: NetworkImage(user['photoUrl']),
+                                                                                      ),
                                                                                     ),
                                                                                   )
                                                                                 : Icon(Icons.person),
@@ -2324,20 +2495,28 @@ class _MatchingScreenState extends State<MatchingScreen>
                                                               2 // 0은 currentuser, 1은 탁구장별 데이터, 2은 다른 유저의 데이터
                                                           ),
                                                       Positioned(
-                                                        top: 13.0,
+                                                        top: 14.0,
                                                         right: 5.0,
                                                         child: IconButton(
                                                           icon: Icon(
                                                             Icons
                                                                 .account_circle_rounded,
-                                                            size: 20,
+                                                            size: 23,
                                                             color: Colors.white,
                                                           ),
-                                                          onPressed: () {
-                                                            LaunchUrl()
-                                                                .openBottomSheetMoveToChat(
-                                                                    context,
-                                                                    secondOpponentUser);
+                                                          onPressed: () async {
+
+                                                            final bool isOkToChat = await viewModel.calculateRemainingDays(reportedCount, limitDays);
+
+                                                            if (!isOkToChat){
+                                                              viewModel.showLimitDays(reportedCount, limitDays);
+                                                            } else {
+                                                              LaunchUrl()
+                                                                  .openBottomSheetMoveToChat(
+                                                                  context,
+                                                                  secondOpponentUser);
+                                                            }
+
                                                           },
                                                         ),
                                                       ),
@@ -2659,7 +2838,11 @@ class _MatchingScreenState extends State<MatchingScreen>
 
                                     if (returnResult == null) {
                                       // 로그인 마치고 돌아오면 setState 되게끔 설정
-                                      setState(() {});
+
+                                      if (mounted) {
+                                        await viewModel.initializeListeners();
+                                        setState(() {});
+                                      }
                                     }
                                   },
                                   child: Text(
@@ -2681,5 +2864,101 @@ class _MatchingScreenState extends State<MatchingScreen>
         );
       });
     });
+  }
+
+  static const _insets = 8.0;
+  BannerAd? _inlineAdaptiveAd;
+  bool _isLoaded = false;
+  AdSize? _adSize;
+  late Orientation _currentOrientation;
+
+  double get _adWidth => MediaQuery.of(context).size.width - (2 * _insets);
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _currentOrientation = MediaQuery.of(context).orientation;
+    _loadAd();
+  }
+
+  void _loadAd() async {
+    await _inlineAdaptiveAd?.dispose();
+    //setState(() {
+    _inlineAdaptiveAd = null;
+    _isLoaded = false;
+    //});
+
+    // Get an inline adaptive size for the current orientation.
+    AdSize size = AdSize.getCurrentOrientationInlineAdaptiveBannerAdSize(
+        _adWidth.truncate());
+
+    _inlineAdaptiveAd = BannerAd(
+      // TODO: replace this test ad unit with your own ad unit.
+      adUnitId: AdHelper.matchingMatchingAdUnitId,//'ca-app-pub-3940256099942544/9214589741',
+      size: size,
+      request: AdRequest(),
+      listener: BannerAdListener(
+        onAdLoaded: (Ad ad) async {
+          print('Inline adaptive banner loaded: ${ad.responseInfo}');
+
+          // After the ad is loaded, get the platform ad size and use it to
+          // update the height of the container. This is necessary because the
+          // height can change after the ad is loaded.
+          BannerAd bannerAd = (ad as BannerAd);
+          final AdSize? size = await bannerAd.getPlatformAdSize();
+          if (size == null) {
+            print('Error: getPlatformAdSize() returned null for $bannerAd');
+            return;
+          }
+
+          //setState(() {
+          _inlineAdaptiveAd = bannerAd;
+          _isLoaded = true;
+          _adSize = size;
+          //});
+        },
+        onAdFailedToLoad: (Ad ad, LoadAdError error) {
+          print('Inline adaptive banner failedToLoad: $error');
+          ad.dispose();
+        },
+      ),
+    );
+    await _inlineAdaptiveAd!.load();
+  }
+
+  Widget _getAdWidget() {
+    return OrientationBuilder(
+      builder: (context, orientation) {
+        if (
+            //_currentOrientation == orientation &&
+            _inlineAdaptiveAd != null && _isLoaded && _adSize != null) {
+          return Align(
+              child: Container(
+            width: _adWidth,
+            height: _adSize!.height.toDouble(),
+            child: AdWidget(
+              ad: _inlineAdaptiveAd!,
+            ),
+          ));
+        }
+        if (_currentOrientation != orientation) {
+          _currentOrientation = orientation;
+          _loadAd();
+        }
+        return Container(
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey.withOpacity(0.7)),
+            // 테두리 색상 설정
+            borderRadius: BorderRadius.circular(15), // 모서리 반경 설정
+          ),
+          child: Center(
+            child: Text(
+              '배너를 불러오는 중입니다',
+              style: TextStyle(color: Colors.grey),
+            ),
+          ),
+        );
+      },
+    );
   }
 }

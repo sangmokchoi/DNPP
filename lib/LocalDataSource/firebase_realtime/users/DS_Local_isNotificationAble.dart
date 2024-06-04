@@ -34,11 +34,41 @@ class LocalDSIsNotificationAble {
       final userNotification = refOnce.snapshot.value; //bool
       debugPrint('userNotification: ${userNotification}');
 
+      if (userNotification == null) {
+        ref.set(true);
+        userNotification == true;
+      }
+
       yield userNotification as bool;
 
     } catch (e) {
       debugPrint('checkUserNotification e: $e');
       yield false;
+
+    }
+  }
+
+  Future<bool> checkUserNotificationFunction(String value) async {
+
+    try {
+
+      DatabaseReference ref =
+      FirebaseDatabase.instance.ref("users/${value}/isNotificationAble");
+
+      final refOnce = await ref.once();
+      final userNotification = refOnce.snapshot.value; //bool
+      debugPrint('userNotification: ${userNotification}');
+
+      if (userNotification == null) {
+        ref.set(true);
+        userNotification == true;
+      }
+
+      return userNotification as bool;
+
+    } catch (e) {
+      debugPrint('checkUserNotificationFunction e: $e');
+      return false;
 
     }
   }

@@ -4,6 +4,7 @@ import 'package:dnpp/repository/firebase_firestore_userData.dart';
 import 'package:dnpp/view/profile_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:persistent_bottom_nav_bar/persistent_tab_view.dart';
@@ -309,16 +310,16 @@ class LoginButton extends StatelessWidget {
       builder: (BuildContext context) {
         return Consumer<LoginStatusUpdate>(
             builder: (context, loginStatus, child) {
-              debugPrint('이용약관 및 개인정보 처리방침 동의 나타남');
+              debugPrint('이용약관 및 개인정보처리방침 동의 나타남');
               return AlertDialog(
                 insetPadding: EdgeInsets.only(left: 15.0, right: 15.0),
                 shape: kRoundedRectangleBorder,
-                title: Text('이용약관 및 개인정보 처리방침 동의'),
+                title: Text('이용약관 및 개인정보처리방침 동의'),
                 content: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      '핑퐁플러스 이용을 위해서는 이용약관 및 개인정보 처리방침 동의가 필요합니다.\n\n아래 설명에서 파란 부분을 클릭하면 이용약관과 개인정보 처리방침을 살펴볼 수 있습니다',
+                      '핑퐁플러스 이용을 위해서는 이용약관 및 개인정보처리방침 동의가 필요합니다.\n\n아래 설명에서 파란 부분을 클릭하면 이용약관과 개인정보 처리방침을 살펴볼 수 있습니다',
                     ),
                     SizedBox(
                       height: 15.0,
@@ -367,6 +368,11 @@ class LoginButton extends StatelessWidget {
                               children: <TextSpan>[
                                 TextSpan(
                                   text: '이용약관',
+                                  recognizer: TapGestureRecognizer()
+                                    ..onTap = () async {
+                                      await LaunchUrl().myLaunchUrl(
+                                          'https://sites.google.com/view/pingponplus-intermsofuse/%ED%99%88');
+                                    },
                                   style: TextStyle(
                                     color: kMainColor,
                                     decoration: TextDecoration.underline,
@@ -374,7 +380,12 @@ class LoginButton extends StatelessWidget {
                                 ),
                                 TextSpan(text: ' 및 '),
                                 TextSpan(
-                                  text: '개인정보 처리방침',
+                                  text: '개인정보처리방침',
+                                  recognizer: TapGestureRecognizer()
+                                    ..onTap = () async {
+                                      await LaunchUrl().myLaunchUrl(
+                                          'https://sites.google.com/view/pingponplus-privacy/%ED%99%88');
+                                    },
                                   style: TextStyle(
                                     color: kMainColor,
                                     decoration: TextDecoration.underline,

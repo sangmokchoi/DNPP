@@ -348,6 +348,14 @@ class FlutterLocalNotification {
             status == PermissionStatus.restricted) {
           // 권한 재요청 또는 설정으로 보내야 함
           // await Permission.notification.request();
+          LaunchUrl().alertFunc(
+              navigatorKey.currentContext!,
+              '알림 권한',
+              '현재 디바이스에서 핑퐁플러스 알림이 꺼진 상태입니다.\n원활한 수신을 위해서는 "설정"에서 핑퐁플러스 알림 권한을 활성화해주세요.',
+              '확인', () {
+            Navigator.pop(navigatorKey.currentContext!);
+            AppSettings.openAppSettings(type: AppSettingsType.notification);
+          });
 
         } else {
 
@@ -381,7 +389,7 @@ class FlutterLocalNotification {
           LaunchUrl().alertFunc(
               navigatorKey.currentContext!,
               '알림 권한',
-              '현재 디바이스에서 핑퐁플러스 알림이 꺼진 상태입니다\n원활한 수신을 위해서는 "설정"에서 핑퐁플러스 알림을 켜주세요',
+              '현재 디바이스에서 핑퐁플러스 알림이 꺼진 상태입니다.\n원활한 수신을 위해서는 "설정"에서 핑퐁플러스 알림 권한을 활성화해주세요.',
               '확인', () {
             Navigator.pop(navigatorKey.currentContext!);
             //AppSettings.openAppSettings(type: AppSettingsType.notification);
@@ -409,12 +417,28 @@ class FlutterLocalNotification {
       switch (notificationCenter){
         case AppleNotificationSetting.disabled:
           debugPrint('notificationCenter: $notificationCenter');
+          LaunchUrl().alertFunc(
+              navigatorKey.currentContext!,
+              '알림 권한',
+              '현재 디바이스에서 핑퐁플러스 알림이 꺼진 상태입니다.\n원활한 수신을 위해서는 "설정"에서 핑퐁플러스 알림 권한을 활성화해주세요.',
+              '확인', () {
+            Navigator.pop(navigatorKey.currentContext!);
+            //AppSettings.openAppSettings(type: AppSettingsType.notification);
+          });
           return PermissionStatus.denied;
         case AppleNotificationSetting.enabled:
           debugPrint('notificationCenter: $notificationCenter');
           return PermissionStatus.granted;
         default:
           debugPrint('notificationCenter: $notificationCenter');
+          LaunchUrl().alertFunc(
+              navigatorKey.currentContext!,
+              '알림 권한',
+              '현재 디바이스에서 핑퐁플러스 알림이 꺼진 상태입니다.\n원활한 수신을 위해서는 "설정"에서 핑퐁플러스 알림 권한을 활성화해주세요.',
+              '확인', () {
+            Navigator.pop(navigatorKey.currentContext!);
+            //AppSettings.openAppSettings(type: AppSettingsType.notification);
+          });
           return PermissionStatus.denied;
       }
 

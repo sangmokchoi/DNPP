@@ -1,6 +1,7 @@
 import UIKit
 import Flutter
 //import NaverThirdPartyLogin
+import google_mobile_ads
 import Firebase
 
 @UIApplicationMain
@@ -14,7 +15,9 @@ import Firebase
         UNUserNotificationCenter.current().delegate = self as? UNUserNotificationCenterDelegate
       }
       FirebaseApp.configure()
+      
     GeneratedPluginRegistrant.register(with: self)
+      
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
     

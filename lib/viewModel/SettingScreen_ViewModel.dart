@@ -43,7 +43,7 @@ class SettingScreenViewModel extends ChangeNotifier {
     '프로필 수정',
     '오픈소스 라이센스',
     '이용약관',
-    '개인정보 처리방침',
+    '개인정보처리방침',
     '운영정책',
     '스토어 평점 남기기',
     '문의',
@@ -55,7 +55,7 @@ class SettingScreenViewModel extends ChangeNotifier {
     '로그인',
     '오픈소스 라이센스',
     '이용약관',
-    '개인정보 처리방침',
+    '개인정보처리방침',
     '운영정책',
     '문의',
   ];
@@ -206,16 +206,15 @@ class SettingScreenViewModel extends ChangeNotifier {
                         },
                       );
 
-                      await signOut(context).then((value) {
+                      await signOut(context).then((value) async {
                         Navigator.of(context, rootNavigator: true).pop();
-                        ShowToast().showToast("로그아웃이 완료되었습니다");
+                        // ShowToast().showToast("로그아웃이 완료되었습니다");
 
-                        // LaunchUrl().alertFunc(
-                        //     context, '알림', '로그아웃이 완료되었습니다', '확인', () {
-                        //   Navigator.of(context, rootNavigator: true).pop();
-                        //   Navigator.of(context, rootNavigator: true).pop();
-                        //   //Navigator.pop(context);
-                        // });
+                        LaunchUrl().alertFuncFalseBarrierDismissible(
+                            context, '알림', '로그아웃이 완료되었습니다.\n앱을 종료 후 다시 시작해주세요.', '종료', () {
+                              exit(0);
+                        });
+
                       });
                     },
                   ),
@@ -369,11 +368,12 @@ class SettingScreenViewModel extends ChangeNotifier {
                       );
 
                       await removeData(context).then((value) {
-                        LaunchUrl().alertFunc(
-                            context, '알림', '회원탈퇴가 완료되었습니다', '확인', () {
-                          Navigator.of(context, rootNavigator: true).pop();
-                          Navigator.pop(context);
-                          //Navigator.of(context, rootNavigator: true).pop();
+
+                        Navigator.pop(context);
+
+                        LaunchUrl().alertFuncFalseBarrierDismissible(
+                            context, '알림', '회원탈퇴가 완료되었습니다.\n앱을 종료 후 다시 시작해주세요.\n(서드파티 앱 액세스 권한에 대해서는 별도로 권한을 관리해주세요)', '종료', () {
+                          exit(0);
                         });
                       });
                     },

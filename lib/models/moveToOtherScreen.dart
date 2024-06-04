@@ -1,6 +1,7 @@
 
 import 'dart:ffi';
 
+import 'package:dnpp/main.dart';
 import 'package:dnpp/models/userProfile.dart';
 import 'package:dnpp/LocalDataSource/firebase_fireStore/DS_Local_userData.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -60,7 +61,6 @@ class MoveToOtherScreen {
       context,
       screen: screen,
       withNavBar: withNavBar,    // OPTIONAL VALUE. True by default.
-
       pageTransitionAnimation: animation,
     );
   }
@@ -275,14 +275,32 @@ class MoveToOtherScreen {
   }
 
   Future<void> initializeGASetting(BuildContext defaultContext, String screenName) async {
-    final previousScreen = Provider.of<CurrentPageProvider>(defaultContext, listen: false).currentPage;
-    debugPrint('previousScreen: $previousScreen');
-    await Provider.of<GoogleAnalyticsNotifier>(defaultContext, listen: false)
-        .startTimer(previousScreen);
 
-    await GoogleAnalytics().trackScreen(defaultContext, screenName);
-    await Provider.of<CurrentPageProvider>(defaultContext, listen: false)
-        .setCurrentPage(screenName);
+    try {
+
+      final previousScreen = Provider.of<CurrentPageProvider>(defaultContext, listen: false).currentPage;
+      debugPrint('previousScreen: $previousScreen');
+      await Provider.of<GoogleAnalyticsNotifier>(defaultContext, listen: false)
+          .startTimer(previousScreen);
+
+      await GoogleAnalytics().trackScreen(defaultContext, screenName);
+      await Provider.of<CurrentPageProvider>(defaultContext, listen: false)
+          .setCurrentPage(screenName);
+
+    } catch (e) {
+      debugPrint('initializeGASetting e: $e');
+      final previousScreen = Provider.of<CurrentPageProvider>(navigatorKey.currentContext!, listen: false).currentPage;
+      debugPrint('previousScreen: $previousScreen');
+      await Provider.of<GoogleAnalyticsNotifier>(navigatorKey.currentContext!, listen: false)
+          .startTimer(previousScreen);
+
+      await GoogleAnalytics().trackScreen(navigatorKey.currentContext!, screenName);
+      await Provider.of<CurrentPageProvider>(navigatorKey.currentContext!, listen: false)
+          .setCurrentPage(screenName);
+    }
+
+
+
   }
 
 }

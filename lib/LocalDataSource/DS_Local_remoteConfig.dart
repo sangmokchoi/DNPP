@@ -248,5 +248,21 @@ class LocalDSRemoteConfig {
 
     return kakaoSdk;
   }
+  Future<String> downloadPolicyInChatList() async {
+
+    // await _remoteConfigFetchAndActivate();
+
+    String policyInChatList = '';
+
+    try {
+      policyInChatList = _firebaseRemoteConfig.getString("policyInChatList");
+      policyInChatList = policyInChatList.replaceAll(r'\n', '\n');
+
+    } catch (e) {
+      debugPrint('downloadPolicyInChatList e: $e');
+    }
+
+    return policyInChatList;
+  }
 
 }

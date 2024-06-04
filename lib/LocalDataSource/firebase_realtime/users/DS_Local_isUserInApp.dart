@@ -9,7 +9,7 @@ class LocalDSIsUserInApp {
 
   Future<void> setIsCurrentUserInApp() async { // 앱에 현재 유저가 들어와 있음을 알려주는 bool 함수
 
-    // try {//
+    try {
 
     debugPrint('setIsCurrentUserInApp 진입');
     DatabaseReference ref =
@@ -26,11 +26,11 @@ class LocalDSIsUserInApp {
       }
     });
 
-    // } catch (e) {
-    //   debugPrint('setIsCurrentUserInChat e: $e');
-    //
-    //
-    // }
+    } catch (e) {
+      debugPrint('setIsCurrentUserInChat e: $e');
+
+
+    }
   }
 
   Future<void> disconnectIsCurrentUserInApp() async { // 앱에서 현재 유저가 나갔음을 표시하는 함수

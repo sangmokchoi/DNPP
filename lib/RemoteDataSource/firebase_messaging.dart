@@ -19,10 +19,28 @@ class FirebaseMessagingRemoteDataSource {
     debugPrint('sendMessageData response: ${response.statusCode}');
 
     if (response.statusCode == 200) {
-      debugPrint('정상 작동됨');
+      debugPrint('sendMessageData 정상 작동됨');
     } else {
-      //await FirebaseMessaging.instance.deleteToken();
-      //debugPrint('deleteToken됨');
+      debugPrint('sendMessageData 정상 작동 안됨');
+    }
+
+  }
+
+  Future<void> sendPrivateReportWarning(String opponentUid, String nickName, int reportCount, int limitedDays) async {
+
+    debugPrint('sendPrivateReportWarning 시작');
+    String baseUrl = 'https://sendprivatemailreport-dto7nx7sua-uc.a.run.app';
+    String cloudUrl = '$baseUrl?opponentUid=$opponentUid&nickName=$nickName&reportCount=$reportCount&limitedDays=$limitedDays';
+
+    final response = await http.get(Uri.parse(cloudUrl));
+    debugPrint('sendPrivateReportWarning response: ${response.headers}');
+    debugPrint('sendPrivateReportWarning response: ${response.body}');
+    debugPrint('sendPrivateReportWarning response: ${response.statusCode}');
+
+    if (response.statusCode == 200) {
+      debugPrint('sendPrivateReportWarning 정상 작동됨');
+    } else {
+      debugPrint('sendPrivateReportWarning 정상 작동 안됨');
     }
 
   }

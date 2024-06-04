@@ -27,7 +27,8 @@ class LocalDSAnnouncement {
 
   }
 
-  Future<DateTime?> downloadAnnouncementVisibleTime() async {
+
+    Future<DateTime?> downloadAnnouncementVisibleTime() async {
 
     DatabaseReference adBannerVisibleConfirmTimeRef =
     FirebaseDatabase.instance.ref("users/${currentUser?.uid}/adBannerVisibleConfirmTime");
