@@ -200,19 +200,27 @@ class ChatScreenViewModel extends ChangeNotifier {
               await RepositoryRealtimeUsers().getFlagOpponentLimitDays(
                   id); // 시간만 설정
               limitedDays = 7;
+
+              await RepositoryRealtimeMessages().getSendPrivateReportWarning(
+                  id, nickName, reportCount, limitedDays);
+
             } else if (reportCount == 10) {
               debugPrint('채팅 기능 14일 이용 정지');
               await RepositoryRealtimeUsers().getFlagOpponentLimitDays(
                   id); // 시간만 설정
               limitedDays = 14;
+
+              await RepositoryRealtimeMessages().getSendPrivateReportWarning(
+                  id, nickName, reportCount, limitedDays);
+
             } else if (reportCount == 15) {
               debugPrint('채팅 이용 영구 정지');
               await RepositoryRealtimeUsers().getFlagOpponentLimitDays(
                   id); // 시간만 설정
-            }
 
-            await RepositoryRealtimeMessages().getSendPrivateReportWarning(
-                id, nickName, reportCount, limitedDays);
+              await RepositoryRealtimeMessages().getSendPrivateReportWarning(
+                  id, nickName, reportCount, limitedDays);
+            }
 
             return true;
           }
