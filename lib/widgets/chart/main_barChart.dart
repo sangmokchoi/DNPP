@@ -48,8 +48,8 @@ class MainBarChart extends StatelessWidget {
           Provider.of<PersonalAppointmentUpdate>(buildcontext, listen: false);
     }
 
-    // print('bar number: $number');
-    // print('bar basicData.daywiseDurations: ${basicData.daywiseDurations}');
+    // debugPrint('bar number: $number');
+    // debugPrint('bar basicData.daywiseDurations: ${basicData.daywiseDurations}');
 
     return Container(
       height: 250,
@@ -83,7 +83,7 @@ class MainBarChart extends StatelessWidget {
     return BarChartData(
       barTouchData: BarTouchData(
         touchTooltipData: BarTouchTooltipData(
-          tooltipBgColor: Colors.blueGrey,
+          //tooltipBgColor: Colors.blueGrey,
           tooltipHorizontalAlignment: FLHorizontalAlignment.right,
           tooltipMargin: -10,
           getTooltipItem: (group, groupIndex, rod, rodIndex) {
@@ -147,11 +147,11 @@ class MainBarChart extends StatelessWidget {
           //         barTouchResponse == null ||
           //         barTouchResponse.spot == null) {
           //       touchedIndex = -1;
-          //       print('if touchedIndex: $touchedIndex');
+          //       debugPrint('if touchedIndex: $touchedIndex');
           //       return;
           //     }
           //     touchedIndex = barTouchResponse.spot!.touchedBarGroupIndex;
-          //     print('touchedIndex: $touchedIndex');
+          //     debugPrint('touchedIndex: $touchedIndex');
           //
           //     //buildLineChart(widget.meetings);
           //   });
@@ -229,7 +229,7 @@ class MainBarChart extends StatelessWidget {
             onPressed: () async {
               //isSelected = !isSelected;
               // 해당 버튼을 클릭하면 다른 버튼들의 선택을 해제하고 현재 버튼을 선택
-              print('basicData.selectedList[value.toInt()]: ${basicData.selectedList[value.toInt()]}');
+              debugPrint('basicData.selectedList[value.toInt()]: ${basicData.selectedList[value.toInt()]}');
 
               if (basicData.selectedList[value.toInt()] != true) {
                 // 클릭되지 않은 요일 클릭
@@ -238,7 +238,7 @@ class MainBarChart extends StatelessWidget {
                 basicData.selectedList[value.toInt()] =
                     !basicData.selectedList[value.toInt()];
                 pressedInt = value.toInt();
-                print('basicData.recentDays: ${basicData.recentDays}');
+                debugPrint('basicData.recentDays: ${basicData.recentDays}');
 
                 if (basicData.recentDays == 0) {
                   // 최근 7일 클릭시 recentDays
@@ -256,7 +256,7 @@ class MainBarChart extends StatelessWidget {
                 basicData.selectedList[value.toInt()] =
                     !basicData.selectedList[value.toInt()];
                 int indexOfTrue = basicData.isSelected.indexOf(true);
-                print('indexOfTrue: $indexOfTrue');
+                debugPrint('indexOfTrue: $indexOfTrue');
 
                 // 요일 해제 시, 전체의 시간대로 보이게끔 초기화
                 if (indexOfTrue == 0) {

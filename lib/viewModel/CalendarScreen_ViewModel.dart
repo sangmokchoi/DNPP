@@ -55,7 +55,7 @@ class CalendarScreenViewModel extends ChangeNotifier {
           segmentedButtonTitle
         }, //<String>{_selected},
         onSelectionChanged: (newSelection) async {
-          print(newSelection);
+          debugPrint("$newSelection");
 
           await updateSegmentedButtonTitle(newSelection.first);
           await updateCalendarView(newSelection.first);
@@ -96,35 +96,35 @@ class CalendarScreenViewModel extends ChangeNotifier {
   Future<void> updateSegmentedButtonTitle(String title) async {
     segmentedButtonTitle = title;
     notifyListeners();
-    print('segmentedButtonTitle: $segmentedButtonTitle');
+    debugPrint('segmentedButtonTitle: $segmentedButtonTitle');
   }
 
   Future<void> updateCalendarView(String calendarTitle) async {
     if (calendarTitle == '월') {
       calendarController.view = CalendarView.month;
       segmentedButtonTitle = calendarTitle;
-      print(calendarTitle);
+      debugPrint(calendarTitle);
     } else if (calendarTitle == '주') {
       calendarController.view = CalendarView.week;
       segmentedButtonTitle = calendarTitle;
-      print(calendarTitle);
+      debugPrint(calendarTitle);
     } else if (calendarTitle == '일') {
       calendarController.view = CalendarView.day;
       segmentedButtonTitle = calendarTitle;
-      print(calendarTitle);
+      debugPrint(calendarTitle);
     } else if ((calendarTitle == '전체')) {
       calendarController.view = CalendarView.schedule;
       segmentedButtonTitle = calendarTitle;
-      print(calendarTitle);
+      debugPrint(calendarTitle);
     } else {
-      print('calendarController.view else');
+      debugPrint('calendarController.view else');
     }
     notifyListeners();
   }
 
   Future<void> notify() async {
     notifyListeners();
-    print('notify');
+    debugPrint('notify');
   }
 
   Future<void> resetAppointments() async {
@@ -134,7 +134,7 @@ class CalendarScreenViewModel extends ChangeNotifier {
 
   Stream<List<Appointment>> calendarListener(BuildContext context) {
 
-    print('calendarListener 진입');
+    debugPrint('calendarListener 진입');
 
     final currentUser = auth.currentUser;
 

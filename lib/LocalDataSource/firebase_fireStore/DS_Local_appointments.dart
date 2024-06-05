@@ -33,10 +33,10 @@ class LocalDSAppointments {
           .doc();
 
       await docRef.set(newCustomAppointment);
-      print('docRef.set done');
+      debugPrint('docRef.set done');
 
     } catch (e) {
-      print(e);
+      debugPrint("$e");
     }
 
   }
@@ -56,10 +56,10 @@ class LocalDSAppointments {
           .doc(value);
 
       await docRef.set(newCustomAppointment);
-      print('docRef.set done');
+      debugPrint('docRef.set done');
 
     } catch (e) {
-      print(e);
+      debugPrint("$e");
     }
 
   }
@@ -83,10 +83,10 @@ class LocalDSAppointments {
       newCustomAppointment.toFirestore();
 
       await docRef.update(newAppointmentData);
-      print('updateAppointment 완료');
+      debugPrint('updateAppointment 완료');
 
     } catch (e) {
-      print(e);
+      debugPrint("$e");
     }
 
   }
@@ -100,13 +100,13 @@ class LocalDSAppointments {
           .delete()
           .then(
             (doc) =>
-            print("Document deleted"),
+            debugPrint("Document deleted"),
         onError: (e) =>
-            print(
+            debugPrint(
                 "Error updating document $e"),
       );
     } catch (e) {
-      print(e);
+      debugPrint("$e");
     }
 
   }
@@ -124,20 +124,20 @@ class LocalDSAppointments {
           await doc.reference.delete();
         }
         // 문서 삭제 성공
-        print("해당 userUid를 가진 문서를 삭제했습니다.");
+        debugPrint("해당 userUid를 가진 문서를 삭제했습니다.");
       } else {
         // 해당 userUid를 가진 문서가 없음
-        print("해당 userUid를 가진 문서가 없습니다.");
+        debugPrint("해당 userUid를 가진 문서가 없습니다.");
       }
     } catch (e) {
-      print('deleteUserAppointment e: $e');
+      debugPrint('deleteUserAppointment e: $e');
       //LaunchUrl().alertFunc(context, '알림', '유저 정보 삭제 중 에러가 발생했습니다', '확인', () { });
     }
   }
 
   // currnet 유저 일정 불러오기
   Future<void> fetchCurrentUserAppointmentData(BuildContext context, User currentUser) async {
-    print('fetchCurrentUserAppointmentData 시작');
+    debugPrint('fetchCurrentUserAppointmentData 시작');
 
     PersonalAppointmentUpdate personalAppointmentUpdate = Provider.of<PersonalAppointmentUpdate>(context, listen: false);
 
@@ -149,11 +149,11 @@ class LocalDSAppointments {
           .get()
           .then(
             (querySnapshot) async {
-          print("Successfully completed");
+          debugPrint("Successfully completed");
 
           for (var docSnapshot in querySnapshot.docs) {
             //final data = docSnapshot.data();
-            //print("Document ID: ${docSnapshot.id}");
+            //debugPrint("Document ID: ${docSnapshot.id}");
             final data = docSnapshot.data() as Map<String, dynamic>;
 
             List<Appointment>? _appointment;
@@ -164,10 +164,10 @@ class LocalDSAppointments {
               List<Timestamp>? recurrenceExceptionDatesRaw =
               (item['recurrenceExceptionDates'] as List<dynamic>?)
                   ?.cast<Timestamp>();
-              //print('fetchCurrentUserAppointmentData recurrenceExceptionDatesRaw: $recurrenceExceptionDatesRaw');
+              //debugPrint('fetchCurrentUserAppointmentData recurrenceExceptionDatesRaw: $recurrenceExceptionDatesRaw');
               List<DateTime>? recurrenceExceptionDates =
               recurrenceExceptionDatesRaw?.map((timestamp) => timestamp.toDate()).toList() ?? [];
-              //print('recurrenceExceptionDates: $recurrenceExceptionDates');
+              //debugPrint('recurrenceExceptionDates: $recurrenceExceptionDates');
 
               final recurrenceId = item['recurrenceId'] as String? ?? '';
               final recurrenceRule = item['recurrenceRule'] as String? ?? '';
@@ -204,7 +204,7 @@ class LocalDSAppointments {
                     // COUNT= 뒤의 숫자를 추출합니다.
                     String countString = recurrenceRule.substring(countIndex + 'COUNT='.length);
                     int count = int.tryParse(countString) ?? 0; // 숫자로 변환합니다.
-                    print('DAILY COUNT 값: $count');
+                    debugPrint('DAILY COUNT 값: $count');
 
                     // 시작 일자
                     DateTime startDate = (item['startTime'] as Timestamp).toDate();
@@ -234,7 +234,7 @@ class LocalDSAppointments {
                     }
 
                   } else {
-                    print('COUNT 값이 없습니다.');
+                    debugPrint('COUNT 값이 없습니다.');
                   }
 
                 } else if (recurrenceRule.contains('WEEKLY')) {
@@ -244,7 +244,7 @@ class LocalDSAppointments {
                     // COUNT= 뒤의 숫자를 추출합니다.
                     String countString = recurrenceRule.substring(countIndex + 'COUNT='.length);
                     int count = int.tryParse(countString) ?? 0; // 숫자로 변환합니다.
-                    print('WEEKLY COUNT 값: $count');
+                    debugPrint('WEEKLY COUNT 값: $count');
 
                     // 시작 일자
                     DateTime startDate = (item['startTime'] as Timestamp).toDate();
@@ -272,7 +272,7 @@ class LocalDSAppointments {
                     }
 
                   } else {
-                    print('COUNT 값이 없습니다.');
+                    debugPrint('COUNT 값이 없습니다.');
                   }
                 } else if (recurrenceRule.contains('MONTHLY')) {
                   int countIndex = recurrenceRule.indexOf('COUNT=');
@@ -281,7 +281,7 @@ class LocalDSAppointments {
                     // COUNT= 뒤의 숫자를 추출합니다.
                     String countString = recurrenceRule.substring(countIndex + 'COUNT='.length);
                     int count = int.tryParse(countString) ?? 0; // 숫자로 변환합니다.
-                    print('MONTHLY COUNT 값: $count');
+                    debugPrint('MONTHLY COUNT 값: $count');
 
                     // 시작 일자
                     DateTime startDate = (item['startTime'] as Timestamp).toDate();
@@ -309,7 +309,7 @@ class LocalDSAppointments {
                     }
 
                   } else {
-                    print('COUNT 값이 없습니다.');
+                    debugPrint('COUNT 값이 없습니다.');
                   }
 
                 } else if (recurrenceRule.contains('YEARLY')){
@@ -319,7 +319,7 @@ class LocalDSAppointments {
                     // COUNT= 뒤의 숫자를 추출합니다.
                     String countString = recurrenceRule.substring(countIndex + 'COUNT='.length);
                     int count = int.tryParse(countString) ?? 0; // 숫자로 변환합니다.
-                    print('YEARLY COUNT 값: $count');
+                    debugPrint('YEARLY COUNT 값: $count');
 
                     // 시작 일자
                     DateTime startDate = (item['startTime'] as Timestamp).toDate();
@@ -347,7 +347,7 @@ class LocalDSAppointments {
                     }
 
                   } else {
-                    print('COUNT 값이 없습니다.');
+                    debugPrint('COUNT 값이 없습니다.');
                   }
 
                 }
@@ -409,7 +409,7 @@ class LocalDSAppointments {
             );
             _customAppointment.id = docSnapshot.id;
 
-            //print('_customAppointment: ${_customAppointment}');
+            //debugPrint('_customAppointment: ${_customAppointment}');
             // //Provider.of<AppointmentUpdate>(context, listen: false).meetings.add(_appointment?.first);
 
             if (_appointment != null || _appointment.isNotEmpty) {
@@ -429,16 +429,16 @@ class LocalDSAppointments {
 
         },
         onError: (e) =>
-            print("fetchCurrentUserAppointmentData Error completing: $e"),
+            debugPrint("fetchCurrentUserAppointmentData Error completing: $e"),
       );
     } catch (e) {
-      print(e);
+      debugPrint("$e");
     }
 
   }
   // 다른 유저 일정 불러오기
   Future<void> fetchOtherUsersAppointmentData(BuildContext context, User currentUser) async {
-    print('fetchOtherUsersAppointmentData 시작');
+    debugPrint('fetchOtherUsersAppointmentData 시작');
 
     OthersPersonalAppointmentUpdate othersPersonalAppointmentUpdate = Provider.of<OthersPersonalAppointmentUpdate>(context, listen: false);
 
@@ -450,11 +450,11 @@ class LocalDSAppointments {
           .get()
           .then(
             (querySnapshot) async {
-          print("Successfully completed");
+          debugPrint("Successfully completed");
 
           for (var docSnapshot in querySnapshot.docs) {
             //final data = docSnapshot.data();
-            //print("Document ID: ${docSnapshot.id}");
+            //debugPrint("Document ID: ${docSnapshot.id}");
             final data = docSnapshot.data() as Map<String, dynamic>;
 
             List<Appointment>? _appointment;
@@ -465,10 +465,10 @@ class LocalDSAppointments {
               List<Timestamp>? recurrenceExceptionDatesRaw =
               (item['recurrenceExceptionDates'] as List<dynamic>?)
                   ?.cast<Timestamp>();
-              //print('fetchCurrentUserAppointmentData recurrenceExceptionDatesRaw: $recurrenceExceptionDatesRaw');
+              //debugPrint('fetchCurrentUserAppointmentData recurrenceExceptionDatesRaw: $recurrenceExceptionDatesRaw');
               List<DateTime>? recurrenceExceptionDates =
                   recurrenceExceptionDatesRaw?.map((timestamp) => timestamp.toDate()).toList() ?? [];
-              //print('recurrenceExceptionDates: $recurrenceExceptionDates');
+              //debugPrint('recurrenceExceptionDates: $recurrenceExceptionDates');
 
               final recurrenceId = item['recurrenceId'] as String? ?? '';
               final recurrenceRule = item['recurrenceRule'] as String? ?? '';
@@ -505,7 +505,7 @@ class LocalDSAppointments {
                     // COUNT= 뒤의 숫자를 추출합니다.
                     String countString = recurrenceRule.substring(countIndex + 'COUNT='.length);
                     int count = int.tryParse(countString) ?? 0; // 숫자로 변환합니다.
-                    print('DAILY COUNT 값: $count');
+                    debugPrint('DAILY COUNT 값: $count');
 
                     // 시작 일자
                     DateTime startDate = (item['startTime'] as Timestamp).toDate();
@@ -535,7 +535,7 @@ class LocalDSAppointments {
                     }
 
                   } else {
-                    print('COUNT 값이 없습니다.');
+                    debugPrint('COUNT 값이 없습니다.');
                   }
 
                 } else if (recurrenceRule.contains('WEEKLY')) {
@@ -545,7 +545,7 @@ class LocalDSAppointments {
                     // COUNT= 뒤의 숫자를 추출합니다.
                     String countString = recurrenceRule.substring(countIndex + 'COUNT='.length);
                     int count = int.tryParse(countString) ?? 0; // 숫자로 변환합니다.
-                    print('WEEKLY COUNT 값: $count');
+                    debugPrint('WEEKLY COUNT 값: $count');
 
                     // 시작 일자
                     DateTime startDate = (item['startTime'] as Timestamp).toDate();
@@ -573,7 +573,7 @@ class LocalDSAppointments {
                     }
 
                   } else {
-                    print('COUNT 값이 없습니다.');
+                    debugPrint('COUNT 값이 없습니다.');
                   }
                 } else if (recurrenceRule.contains('MONTHLY')) {
                   int countIndex = recurrenceRule.indexOf('COUNT=');
@@ -582,7 +582,7 @@ class LocalDSAppointments {
                     // COUNT= 뒤의 숫자를 추출합니다.
                     String countString = recurrenceRule.substring(countIndex + 'COUNT='.length);
                     int count = int.tryParse(countString) ?? 0; // 숫자로 변환합니다.
-                    print('MONTHLY COUNT 값: $count');
+                    debugPrint('MONTHLY COUNT 값: $count');
 
                     // 시작 일자
                     DateTime startDate = (item['startTime'] as Timestamp).toDate();
@@ -610,7 +610,7 @@ class LocalDSAppointments {
                     }
 
                   } else {
-                    print('COUNT 값이 없습니다.');
+                    debugPrint('COUNT 값이 없습니다.');
                   }
 
                 } else if (recurrenceRule.contains('YEARLY')){
@@ -620,7 +620,7 @@ class LocalDSAppointments {
                     // COUNT= 뒤의 숫자를 추출합니다.
                     String countString = recurrenceRule.substring(countIndex + 'COUNT='.length);
                     int count = int.tryParse(countString) ?? 0; // 숫자로 변환합니다.
-                    print('YEARLY COUNT 값: $count');
+                    debugPrint('YEARLY COUNT 값: $count');
 
                     // 시작 일자
                     DateTime startDate = (item['startTime'] as Timestamp).toDate();
@@ -648,7 +648,7 @@ class LocalDSAppointments {
                     }
 
                   } else {
-                    print('COUNT 값이 없습니다.');
+                    debugPrint('COUNT 값이 없습니다.');
                   }
 
                 }
@@ -710,15 +710,15 @@ class LocalDSAppointments {
             );
             _customAppointment.id = docSnapshot.id;
 
-            //print('fetchOtherUsersAppointmentData _customAppointment: ${_customAppointment.userUid}');
+            //debugPrint('fetchOtherUsersAppointmentData _customAppointment: ${_customAppointment.userUid}');
             // // //Provider.of<AppointmentUpdate>(context, listen: false).meetings.add(_appointment?.first);
-            //print('_appointment: ${_appointment}');
-            //print('_appointment.isempty: ${_appointment.isEmpty}');
-            //print('_appointment.length: ${_appointment.length}');
+            //debugPrint('_appointment: ${_appointment}');
+            //debugPrint('_appointment.isempty: ${_appointment.isEmpty}');
+            //debugPrint('_appointment.length: ${_appointment.length}');
 
             if (_appointment != null || _appointment.isNotEmpty) {
               othersPersonalAppointmentUpdate.addCustomMeeting(_customAppointment);
-              //print('_customAppointment add 함');
+              //debugPrint('_customAppointment add 함');
               for (int i = 0; i < _appointment.length; i++) {
                 othersPersonalAppointmentUpdate.addMeeting(_appointment[i]);
               }
@@ -734,10 +734,10 @@ class LocalDSAppointments {
 
         },
         onError: (e) =>
-            print("fetchOtherUsersAppointmentData Error completing: $e"),
+            debugPrint("fetchOtherUsersAppointmentData Error completing: $e"),
       );
     } catch (e) {
-      print(e);
+      debugPrint("$e");
     }
 
   }
@@ -745,7 +745,7 @@ class LocalDSAppointments {
   Future<void> fetchAppointmentDataForCalculatingByCourt(
       BuildContext context) async {
 
-    print('fetchAppointmentDataForCalculatingByCourt 시작');
+    debugPrint('fetchAppointmentDataForCalculatingByCourt 시작');
 
     CourtAppointmentUpdate courtAppointmentUpdate = Provider.of<CourtAppointmentUpdate>(context, listen: false);
     OthersPersonalAppointmentUpdate othersPersonalAppointmentUpdate = Provider.of<OthersPersonalAppointmentUpdate>(context, listen: false);
@@ -754,25 +754,25 @@ class LocalDSAppointments {
         .userProfile
         .pingpongCourt;
 
-    print('fetchAppointmentData pingpongCourt: ${pingpongCourt}');
+    debugPrint('fetchAppointmentData pingpongCourt: ${pingpongCourt}');
 
     if (pingpongCourt != null) {
 
       try {
 
         await Future.forEach(pingpongCourt, (PingpongList pingpong) async {
-          print('forEach pingpongCourtAddress: ${pingpong.roadAddress}');
+          debugPrint('forEach pingpongCourtAddress: ${pingpong.roadAddress}');
 
           final querySnapshot = await db
               .collection("Appointments")
               .where("pingpongCourtAddress", isEqualTo: pingpong.roadAddress)
               .get();
 
-          print("fetchAppointmentData Successfully completed");
+          debugPrint("fetchAppointmentData Successfully completed");
 
           for (var docSnapshot in querySnapshot.docs) {
             final data = docSnapshot.data() as Map<String, dynamic>;
-            //print('fetchAppointmentData data:\n $data');
+            //debugPrint('fetchAppointmentData data:\n $data');
 
             final String pingpongCourtName = data['pingpongCourtName'];
             final String pingpongCourtAddress = data['pingpongCourtAddress'];
@@ -788,10 +788,10 @@ class LocalDSAppointments {
               List<Timestamp>? recurrenceExceptionDatesRaw =
               (item['recurrenceExceptionDates'] as List<dynamic>?)
                   ?.cast<Timestamp>();
-              //print('fetchCurrentUserAppointmentData recurrenceExceptionDatesRaw: $recurrenceExceptionDatesRaw');
+              //debugPrint('fetchCurrentUserAppointmentData recurrenceExceptionDatesRaw: $recurrenceExceptionDatesRaw');
               List<DateTime>? recurrenceExceptionDates =
                   recurrenceExceptionDatesRaw?.map((timestamp) => timestamp.toDate()).toList() ?? [];
-              //print('recurrenceExceptionDates: $recurrenceExceptionDates');
+              //debugPrint('recurrenceExceptionDates: $recurrenceExceptionDates');
 
               final recurrenceId = item['recurrenceId'] as String? ?? '';
               final recurrenceRule = item['recurrenceRule'] as String? ?? '';
@@ -828,7 +828,7 @@ class LocalDSAppointments {
                     // COUNT= 뒤의 숫자를 추출합니다.
                     String countString = recurrenceRule.substring(countIndex + 'COUNT='.length);
                     int count = int.tryParse(countString) ?? 0; // 숫자로 변환합니다.
-                    print('DAILY COUNT 값: $count');
+                    debugPrint('DAILY COUNT 값: $count');
 
                     // 시작 일자
                     DateTime startDate = (item['startTime'] as Timestamp).toDate();
@@ -858,7 +858,7 @@ class LocalDSAppointments {
                     }
 
                   } else {
-                    print('COUNT 값이 없습니다.');
+                    debugPrint('COUNT 값이 없습니다.');
                   }
 
                 } else if (recurrenceRule.contains('WEEKLY')) {
@@ -868,7 +868,7 @@ class LocalDSAppointments {
                     // COUNT= 뒤의 숫자를 추출합니다.
                     String countString = recurrenceRule.substring(countIndex + 'COUNT='.length);
                     int count = int.tryParse(countString) ?? 0; // 숫자로 변환합니다.
-                    print('WEEKLY COUNT 값: $count');
+                    debugPrint('WEEKLY COUNT 값: $count');
 
                     // 시작 일자
                     DateTime startDate = (item['startTime'] as Timestamp).toDate();
@@ -896,7 +896,7 @@ class LocalDSAppointments {
                     }
 
                   } else {
-                    print('COUNT 값이 없습니다.');
+                    debugPrint('COUNT 값이 없습니다.');
                   }
                 } else if (recurrenceRule.contains('MONTHLY')) {
                   int countIndex = recurrenceRule.indexOf('COUNT=');
@@ -905,7 +905,7 @@ class LocalDSAppointments {
                     // COUNT= 뒤의 숫자를 추출합니다.
                     String countString = recurrenceRule.substring(countIndex + 'COUNT='.length);
                     int count = int.tryParse(countString) ?? 0; // 숫자로 변환합니다.
-                    print('MONTHLY COUNT 값: $count');
+                    debugPrint('MONTHLY COUNT 값: $count');
 
                     // 시작 일자
                     DateTime startDate = (item['startTime'] as Timestamp).toDate();
@@ -933,7 +933,7 @@ class LocalDSAppointments {
                     }
 
                   } else {
-                    print('COUNT 값이 없습니다.');
+                    debugPrint('COUNT 값이 없습니다.');
                   }
 
                 } else if (recurrenceRule.contains('YEARLY')){
@@ -943,7 +943,7 @@ class LocalDSAppointments {
                     // COUNT= 뒤의 숫자를 추출합니다.
                     String countString = recurrenceRule.substring(countIndex + 'COUNT='.length);
                     int count = int.tryParse(countString) ?? 0; // 숫자로 변환합니다.
-                    print('YEARLY COUNT 값: $count');
+                    debugPrint('YEARLY COUNT 값: $count');
 
                     // 시작 일자
                     DateTime startDate = (item['startTime'] as Timestamp).toDate();
@@ -971,7 +971,7 @@ class LocalDSAppointments {
                     }
 
                   } else {
-                    print('COUNT 값이 없습니다.');
+                    debugPrint('COUNT 값이 없습니다.');
                   }
 
                 }
@@ -1065,14 +1065,14 @@ class LocalDSAppointments {
         // 여기서 탁구장별 유저 본인과 비슷한 시간대 찾음
 
       } catch (e) {
-        print("fetchAppointmentData Error completing: $e");
+        debugPrint("fetchAppointmentData Error completing: $e");
       }
     }
   }
 
   Stream<QuerySnapshot<Map<String, dynamic>>> allAppointments() {
 
-    print('allAppointments 시작됨');
+    debugPrint('allAppointments 시작됨');
 
     final today = DateTime.now();
     final limitDate = today.add(Duration(days: -100));
@@ -1099,7 +1099,7 @@ class LocalDSAppointments {
   //     for (var doc in event.docs) {
   //       list.add(doc.data()["name"]);
   //     }
-  //     print("list : ${list.join(", ")}");
+  //     debugPrint("list : ${list.join(", ")}");
   //   });
   //
   //   return list;

@@ -16,9 +16,9 @@ class SharedPreference extends ChangeNotifier {
 
     if (isUserTried != null) {
       isUserTried = _isUserTried!;
-      print('isUserTried: $isUserTried');
+      debugPrint('isUserTried: $isUserTried');
     }
-    print('initializeSharedPreferences 끝');
+    debugPrint('initializeSharedPreferences 끝');
     notifyListeners();
   }
 

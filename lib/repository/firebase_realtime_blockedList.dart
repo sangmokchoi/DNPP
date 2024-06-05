@@ -5,11 +5,14 @@ class RepositoryRealtimeBlockedList {
   final _localDSBlockedList = LocalDSBlockedList();
 
   // _localDSBlockedList
-  Future<void> getAddToBlockList(String currentUserProfileUid, dynamic element) async {
-    return await _localDSBlockedList.addToBlockList(currentUserProfileUid, element);
+  Future<void> getAddToBlockList(String currentUserProfileUid, dynamic element, bool reported) async {
+    return await _localDSBlockedList.addToBlockList(currentUserProfileUid, element, reported);
   }
   Future<bool> getCheckIsOpponentBlockedMe(String opponentUid) async {
     return await _localDSBlockedList.checkIsOpponentBlockedMe(opponentUid);
+  }
+  Future<bool> getCheckIsOpponentBlocked(String opponentUid) async {
+    return await _localDSBlockedList.checkIsOpponentBlocked(opponentUid);
   }
 
 }
