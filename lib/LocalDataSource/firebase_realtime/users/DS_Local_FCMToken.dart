@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter/cupertino.dart';
 
 class LocalDSFCMToken {
 
@@ -13,12 +14,12 @@ class LocalDSFCMToken {
       FirebaseDatabase.instance.ref("users/${currentUser?.uid}/fcmToken");
 
       await ref.set(token);
-      print('토큰 token: $token');
-      print('토큰 업로드 완료');
+      debugPrint('토큰 token: $token');
+      debugPrint('토큰 업로드 완료');
       return;
 
     } catch (e) {
-      print('checkFcmToken e: $e');
+      debugPrint('checkFcmToken e: $e');
       return;
     }
 
@@ -36,30 +37,30 @@ class LocalDSFCMToken {
       final result = await ref.once();
 
       if (result.snapshot.value != null) {
-        print('토큰이 이미 존재');
-        print('result.snapshot.value: ${result.snapshot.value}');
+        debugPrint('토큰이 이미 존재');
+        debugPrint('result.snapshot.value: ${result.snapshot.value}');
         final token = result.snapshot.value as String;
         return token;
 
       } else {
         //await FirebaseMessaging.instance.deleteToken();
         // var token = await FirebaseMessaging.instance.getToken();
-        //print('getToken: $token'); // 토큰 길이가 길어서 잘 안보이지만, 매번 다른 토큰 생성됨
+        //debugPrint('getToken: $token'); // 토큰 길이가 길어서 잘 안보이지만, 매번 다른 토큰 생성됨
         //await ref.set(token);
-        print('등록된 토큰 없음');
+        debugPrint('등록된 토큰 없음');
 
         return "token";
       }
 
       //var token = await FirebaseMessaging.instance.getToken();
-      //print('getToken: $token'); // 토큰 길이가 길어서 잘 안보이지만, 매번 다른 토큰 생성됨
+      //debugPrint('getToken: $token'); // 토큰 길이가 길어서 잘 안보이지만, 매번 다른 토큰 생성됨
       // await ref.set(token);
-      // print('토큰 업로드 완');
+      // debugPrint('토큰 업로드 완');
 
       //return token!;
 
     } catch (e) {
-      print('checkFcmToken e: $e');
+      debugPrint('checkFcmToken e: $e');
       return e.toString();
     }
   }

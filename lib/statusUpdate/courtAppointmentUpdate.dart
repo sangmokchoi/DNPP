@@ -233,21 +233,21 @@ class CourtAppointmentUpdate extends ChangeNotifier {
 
       notifyListeners();
     }
-    //print('add pingpongCourtAddressList: $pingpongCourtAddressList');
+    //debugPrint('add pingpongCourtAddressList: $pingpongCourtAddressList');
   }
 
   Future<void> extractPingpongCourtAddressList() async {
 
-    //print('court extractPingpongCourtAddressList 시작');
-    //print('court extract customAppointmentMeetings: ${customAppointmentMeetings}');
-    //print('court extract pingpongCourtAddressList: $pingpongCourtAddressList');
+    //debugPrint('court extractPingpongCourtAddressList 시작');
+    //debugPrint('court extract customAppointmentMeetings: ${customAppointmentMeetings}');
+    //debugPrint('court extract pingpongCourtAddressList: $pingpongCourtAddressList');
 
     final extractedResult = customAppointmentMeetings.where((element) {
       return pingpongCourtAddressList.contains(element.pingpongCourtAddress);
     });
 
     customAppointmentMeetingsByCourt = extractedResult.toList();
-    print('court customAppointmentMeetingsByCourt: $customAppointmentMeetingsByCourt');
+    debugPrint('court customAppointmentMeetingsByCourt: $customAppointmentMeetingsByCourt');
 
     //customAppointmentMeetings = customAppointmentMeetingsByCourt;
 
@@ -263,13 +263,13 @@ class CourtAppointmentUpdate extends ChangeNotifier {
     DateTime(fromDate.year, fromDate.month, fromDate.day);
 
     if (existingAppointment != null) {
-      print(11111);
+      debugPrint("11111");
       if (newMeeting.recurrenceRule != '') {
         // 반복되는 일정으로 변경하고자 함
-        print(22222);
+        debugPrint("22222");
         if (onlyThisAppointment != true) {
           // 전체 반복일정을 변경하는 경우
-          print(33333);
+          debugPrint("33333");
           existingAppointment.startTime = DateTime(
             newMeeting.startTime.year,
             newMeeting.startTime.month,
@@ -295,7 +295,7 @@ class CourtAppointmentUpdate extends ChangeNotifier {
           // meetings.add(newMeeting);
         } else {
           // 해당 반복일정만 변경하는 경우 // onlyThisAppointment == true
-          print(44444);
+          debugPrint("44444");
           if (existingAppointment.recurrenceExceptionDates == null) {
             // recurrenceExceptionDates가 이전에 설정된 적 없음
             existingAppointment.recurrenceExceptionDates = [exceptionDate];
@@ -317,7 +317,7 @@ class CourtAppointmentUpdate extends ChangeNotifier {
         }
       } else {
         // 반복되지 않는 일정으로 저장
-        print(55555);
+        debugPrint("55555");
         existingAppointment.startTime = DateTime(
           newMeeting.startTime.year,
           newMeeting.startTime.month,
@@ -397,35 +397,35 @@ class CourtAppointmentUpdate extends ChangeNotifier {
 
   Future<void> updateLast7DaysHourlyCounts() async {
     hourlyCounts = last7DaysHourlyCounts;
-    //print('last7DaysHourlyCounts hourlyCounts: $hourlyCounts');
+    //debugPrint('last7DaysHourlyCounts hourlyCounts: $hourlyCounts');
     notifyListeners();
   }
 
   Future<void> updateLast28DaysHourlyCounts() async {
     hourlyCounts = last28DaysHourlyCounts;
-    //print('last28DaysHourlyCounts hourlyCounts: $hourlyCounts');
+    //debugPrint('last28DaysHourlyCounts hourlyCounts: $hourlyCounts');
     notifyListeners();
   }
 
   Future<void> updateLast3MonthsHourlyCounts() async {
     hourlyCounts = last3MonthsHourlyCounts;
-    //print('last3MonthsHourlyCounts hourlyCounts: $hourlyCounts');
+    //debugPrint('last3MonthsHourlyCounts hourlyCounts: $hourlyCounts');
     notifyListeners();
   }
 
   Future<void> updateNext28daysHourlyCounts() async {
     hourlyCounts = next28daysHourlyCounts;
-    //print('next28daysHourlyCounts hourlyCounts: $hourlyCounts');
+    //debugPrint('next28daysHourlyCounts hourlyCounts: $hourlyCounts');
     notifyListeners();
   }
 
   Future<void> updateLast7DaysHourlyCountsByDaysOfWeek(int value) async {
     int newValue = value + 1;
-    print('탁구장 newValue: ${newValue}');
-    print(
+    debugPrint('탁구장 newValue: ${newValue}');
+    debugPrint(
         '탁구장 last7DaysHourlyCountsByDaysOfWeek: $last7DaysHourlyCountsByDaysOfWeek');
     hourlyCounts = last7DaysHourlyCountsByDaysOfWeek[newValue] ?? {};
-    //print(
+    //debugPrint(
     //    'updateLast7DaysHourlyCountsByDaysOfWeek hourlyCounts: $hourlyCounts');
     notifyListeners();
   }
@@ -433,7 +433,7 @@ class CourtAppointmentUpdate extends ChangeNotifier {
   Future<void> updateLast28DaysHourlyCountsByDaysOfWeek(int value) async {
     int newValue = value + 1;
     hourlyCounts = last28DaysHourlyCountsByDaysOfWeek[newValue] ?? {};
-    print(
+    debugPrint(
          '탁구장 updateLast28DaysHourlyCountsByDaysOfWeek hourlyCounts: $hourlyCounts');
     notifyListeners();
   }
@@ -441,7 +441,7 @@ class CourtAppointmentUpdate extends ChangeNotifier {
   Future<void> updateLast3MonthsHourlyCountsByDaysOfWeek(int value) async {
     int newValue = value + 1;
     hourlyCounts = last3MonthsHourlyCountsByDaysOfWeek[newValue] ?? {};
-     print(
+     debugPrint(
          '현재 유저 updateLast3MonthsHourlyCountsByDaysOfWeek hourlyCounts: $hourlyCounts');
     notifyListeners();
   }
@@ -449,7 +449,7 @@ class CourtAppointmentUpdate extends ChangeNotifier {
   Future<void> updateNext28daysHourlyCountsByDaysOfWeek(int value) async {
     int newValue = value + 1;
     hourlyCounts = next28daysHourlyCountsByDaysOfWeek[newValue] ?? {};
-    // print(
+    // debugPrint(
     //     'updateNext28daysHourlyCountsByDaysOfWeek hourlyCounts: $hourlyCounts');
     notifyListeners();
   }
@@ -462,7 +462,7 @@ class CourtAppointmentUpdate extends ChangeNotifier {
     double sum = 0.0;
     double max = 0.0;
 
-    //print('calculateAverageY hourlyCounts: $hourlyCounts');
+    //debugPrint('calculateAverageY hourlyCounts: $hourlyCounts');
 
     hourlyCounts.forEach((hour, counts) {
       sum += counts;
@@ -579,23 +579,23 @@ class CourtAppointmentUpdate extends ChangeNotifier {
 
     if (isMyTime != true) {
 
-      //print('court customAppointmentMeetings: $customAppointmentMeetings');
+      //debugPrint('court customAppointmentMeetings: $customAppointmentMeetings');
 
       List<Appointment> extractedAppointments = extractAppointmentsByCourt(
           customAppointmentMeetings, title, roadAddress);
 
       newMeetings = extractedAppointments;
-      //print('court DaywiseDurationsCalculate isMyTime false');
-      //print('court extractedAppointments: $extractedAppointments');
+      //debugPrint('court DaywiseDurationsCalculate isMyTime false');
+      //debugPrint('court extractedAppointments: $extractedAppointments');
 
     } else {
       // isMyTime == true 이면, 첫번째 바 차트
       newMeetings = defaultMeetings;
-      //print('court DaywiseDurationsCalculate isMyTime true');
-      //print('court newMeetings: $newMeetings');
+      //debugPrint('court DaywiseDurationsCalculate isMyTime true');
+      //debugPrint('court newMeetings: $newMeetings');
 
     }
-    //print('court daywiseDurationsCalculate 이제 시작');
+    //debugPrint('court daywiseDurationsCalculate 이제 시작');
 
     resetDaywiseDurations();
 
@@ -728,7 +728,7 @@ class CourtAppointmentUpdate extends ChangeNotifier {
 
   Future<void> courtCountHours(bool isInitial, bool isMyTime, String title, String roadAddress) async {
 
-    print('court countHours 시작');
+    debugPrint('court countHours 시작');
     if (isMyTime != true) {
       // isMyTime == true 이면, 첫번째 바 차트
       List<Appointment> extractedAppointments = extractAppointmentsByCourt(
@@ -736,13 +736,13 @@ class CourtAppointmentUpdate extends ChangeNotifier {
 
       newMeetings = extractedAppointments;
 
-      print('court countHours isMyTime false');
-      print('court countHours newMeetings length: ${newMeetings.length}');
+      debugPrint('court countHours isMyTime false');
+      debugPrint('court countHours newMeetings length: ${newMeetings.length}');
 
     } else {
-      print('court countHours isMyTime true');
+      debugPrint('court countHours isMyTime true');
       newMeetings = defaultMeetings;
-      //print('court countHours newMeetings: $newMeetings');
+      //debugPrint('court countHours newMeetings: $newMeetings');
     }
 
     resetHourlyCounts();
@@ -774,8 +774,8 @@ class CourtAppointmentUpdate extends ChangeNotifier {
                   (value) => value + 1,
               ifAbsent: () => 1.0, // 여기를 1로 해서 double 타입으로 변경
             );
-          //print('dayOfWeek: ${dayOfWeek}');
-          //print('last7DaysHourlyCountsByDaysOfWeek[dayOfWeek]: ${last7DaysHourlyCountsByDaysOfWeek[dayOfWeek]}');
+          //debugPrint('dayOfWeek: ${dayOfWeek}');
+          //debugPrint('last7DaysHourlyCountsByDaysOfWeek[dayOfWeek]: ${last7DaysHourlyCountsByDaysOfWeek[dayOfWeek]}');
           hourlyCounts = last7DaysHourlyCounts;
 
           startTime = startTime.add(Duration(hours: 1));
@@ -809,7 +809,7 @@ class CourtAppointmentUpdate extends ChangeNotifier {
                   (value) => value + 1,
               ifAbsent: () => 1.0, // 여기를 1로 해서 double 타입으로 변경
             );
-          //print('last28DaysHourlyCountsByDaysOfWeek[dayOfWeek]: ${last28DaysHourlyCountsByDaysOfWeek[dayOfWeek]}');
+          //debugPrint('last28DaysHourlyCountsByDaysOfWeek[dayOfWeek]: ${last28DaysHourlyCountsByDaysOfWeek[dayOfWeek]}');
 
           hourlyCounts = last28DaysHourlyCounts;
           startTime = startTime.add(Duration(hours: 1));
@@ -843,7 +843,7 @@ class CourtAppointmentUpdate extends ChangeNotifier {
                   (value) => value + 1,
               ifAbsent: () => 1.0, // 여기를 1로 해서 double 타입으로 변경
             );
-          //print('last3MonthsHourlyCountsByDaysOfWeek[dayOfWeek]: ${last3MonthsHourlyCountsByDaysOfWeek[dayOfWeek]}');
+          //debugPrint('last3MonthsHourlyCountsByDaysOfWeek[dayOfWeek]: ${last3MonthsHourlyCountsByDaysOfWeek[dayOfWeek]}');
 
           hourlyCounts = last3MonthsHourlyCounts;
           startTime = startTime.add(Duration(hours: 1));
@@ -875,7 +875,7 @@ class CourtAppointmentUpdate extends ChangeNotifier {
                   (value) => value + 1,
               ifAbsent: () => 1.0, // 여기를 1로 해서 double 타입으로 변경
             );
-          //print('next28daysHourlyCountsByDaysOfWeek[dayOfWeek]: ${next28daysHourlyCountsByDaysOfWeek[dayOfWeek]}');
+          //debugPrint('next28daysHourlyCountsByDaysOfWeek[dayOfWeek]: ${next28daysHourlyCountsByDaysOfWeek[dayOfWeek]}');
 
           hourlyCounts = next28daysHourlyCounts;
           startTime = startTime.add(Duration(hours: 1));
@@ -905,7 +905,7 @@ class CourtAppointmentUpdate extends ChangeNotifier {
       return 0.0; // Return 0 if the map is empty to avoid division by zero.
     }
 
-    //print('court daywiseDurations: ${daywiseDurations}');
+    //debugPrint('court daywiseDurations: ${daywiseDurations}');
 
     double sum = 0.0;
     double max = 0.0;

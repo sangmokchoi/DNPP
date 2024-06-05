@@ -10,9 +10,9 @@ import '../constants.dart';
 import '../LocalDataSource/firebase_realtime/users/DS_Local_Announcement.dart';
 import '../models/launchUrl.dart';
 import '../statusUpdate/googleAnalytics.dart';
-import '../statusUpdate/loadingUpdate.dart';
 import '../statusUpdate/loginStatusUpdate.dart';
 import '../statusUpdate/profileUpdate.dart';
+import 'LoadingScreen_ViewModel.dart';
 
 class MainScreenViewModel extends ChangeNotifier {
   bool isAdBannerVisible = true;
@@ -22,6 +22,7 @@ class MainScreenViewModel extends ChangeNotifier {
   ScrollController _scrollControllerHowToUse = ScrollController();
 
   Future<void> updateIsAdBannerVisible() async {
+    isHowToUseVisible = false;
     isAdBannerVisible = !isAdBannerVisible;
     notifyListeners();
   }
@@ -37,6 +38,7 @@ class MainScreenViewModel extends ChangeNotifier {
   }
 
   Future<void> updateIsHowToUseVisible() async {
+    isAdBannerVisible = false;
     isHowToUseVisible = !isHowToUseVisible;
     notifyListeners();
   }
@@ -75,16 +77,16 @@ class MainScreenViewModel extends ChangeNotifier {
           Stack(
           children: [
             Container(
-              width: MediaQuery.of(context).size.width,
-              height: MediaQuery.of(context).size.height,
+              width: MediaQuery.sizeOf(context).width,
+              height: MediaQuery.sizeOf(context).height,
               color: Colors.black.withOpacity(0.5), // 투명도 조절
             ),
             Padding(
               padding: const EdgeInsets.only(top: 20.0),
               child: Center(
                 child: Container(
-                  width: MediaQuery.of(context).size.width - 60,
-                  height: MediaQuery.of(context).size.height * 0.72,
+                  width: MediaQuery.sizeOf(context).width - 60,
+                  height: MediaQuery.sizeOf(context).height * 0.72,
                   padding: EdgeInsets.only(left: 15.0, right: 15.0, top: 15.0, bottom: 15.0),
                   decoration: BoxDecoration(
                     color: kMainColor,
@@ -102,11 +104,15 @@ class MainScreenViewModel extends ChangeNotifier {
                   ),
                   child: Column(
                     children: [
+                      Text('공지사항', style: kMainScreen_AnnouncementTextStyle,),
+                      SizedBox(
+                        height: 5.0,
+                      ),
                       Expanded(
                         child: PageView.builder(
                             controller: _announcementController,
                             itemCount:
-                            Provider.of<LoadingUpdate>(context, listen: false)
+                            Provider.of<LoadingScreenViewModel>(context, listen: false)
                                 .announcementMapMain
                                 .length,
                             onPageChanged: (int) async {
@@ -128,18 +134,18 @@ class MainScreenViewModel extends ChangeNotifier {
                                               context,
                                               'announcement',
                                               index,
-                                              Provider.of<LoadingUpdate>(
+                                              Provider.of<LoadingScreenViewModel>(
                                                   context,
                                                   listen: false).announcementString['$index']!,
-                                              Provider.of<LoadingUpdate>(context, listen: false).urlMapAnnouncement[
-                                              Provider.of<LoadingUpdate>(
+                                              Provider.of<LoadingScreenViewModel>(context, listen: false).urlMapAnnouncement[
+                                              Provider.of<LoadingScreenViewModel>(
                                                   context,
                                                   listen: false).announcementString['$index']
                                               ]!);
 
                                           await LaunchUrl().myLaunchUrl(
-                                              "${Provider.of<LoadingUpdate>(context, listen: false).urlMapAnnouncement[
-                                              Provider.of<LoadingUpdate>(
+                                              "${Provider.of<LoadingScreenViewModel>(context, listen: false).urlMapAnnouncement[
+                                              Provider.of<LoadingScreenViewModel>(
                                                   context,
                                                   listen: false).announcementString['$index']
                                               ]}");
@@ -152,11 +158,11 @@ class MainScreenViewModel extends ChangeNotifier {
                                           decoration: BoxDecoration(
                                             borderRadius: BorderRadius.circular(10.0),
                                             image: DecorationImage(
-                                              image: MemoryImage(Provider.of<LoadingUpdate>(
+                                              image: MemoryImage(Provider.of<LoadingScreenViewModel>(
                                                           context,
                                                           listen: false)
                                                       .announcementMapMain[
-                                              Provider.of<LoadingUpdate>(
+                                              Provider.of<LoadingScreenViewModel>(
                                                   context,
                                                   listen: false).announcementString['$index']
                                               ] ??
@@ -178,9 +184,9 @@ class MainScreenViewModel extends ChangeNotifier {
                                       Padding(
                                         padding: const EdgeInsets.symmetric(vertical: 8.0),
                                         child: Text(
-                                          Provider.of<LoadingUpdate>(context, listen: false)
+                                          Provider.of<LoadingScreenViewModel>(context, listen: false)
                                                   .textMapAnnouncement[
-                                          Provider.of<LoadingUpdate>(
+                                          Provider.of<LoadingScreenViewModel>(
                                               context,
                                               listen: false).announcementString['$index']
                                           ] ??
@@ -207,7 +213,7 @@ class MainScreenViewModel extends ChangeNotifier {
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: [
                             Container(
-                              width: (MediaQuery.of(context).size.width - 60) / 2 -
+                              width: (MediaQuery.sizeOf(context).width - 60) / 2 -
                                   30, //140,
                               decoration: BoxDecoration(
                                 color: Colors.white.withOpacity(0.3), // 반투명한 흰색 배경
@@ -229,7 +235,7 @@ class MainScreenViewModel extends ChangeNotifier {
                               ),
                             ),
                             Container(
-                              width: (MediaQuery.of(context).size.width - 60) / 2 -
+                              width: (MediaQuery.sizeOf(context).width - 60) / 2 -
                                   30, //140,
                               decoration: BoxDecoration(
                                 color: Colors.white.withOpacity(0.3), // 반투명한 흰색 배경
@@ -270,12 +276,12 @@ class MainScreenViewModel extends ChangeNotifier {
                               );
                               await updateAnnouncementCurrentPage(announcementCurrentPage - 1);
                               }
-                              print('announcementCurrentPage: $announcementCurrentPage');
+                              debugPrint('announcementCurrentPage: $announcementCurrentPage');
 
                               },
                             child: Icon(Icons.arrow_left),
                           ),
-                          Text('${announcementCurrentPage + 1} / ${Provider.of<LoadingUpdate>(context, listen: false)
+                          Text('${announcementCurrentPage + 1} / ${Provider.of<LoadingScreenViewModel>(context, listen: false)
                               .announcementMapMain
                               .length}',
                             style: TextStyle(
@@ -285,7 +291,7 @@ class MainScreenViewModel extends ChangeNotifier {
                           GestureDetector(
                             onTap: () async {
 
-                              if (announcementCurrentPage + 1 < Provider.of<LoadingUpdate>(context, listen: false)
+                              if (announcementCurrentPage + 1 < Provider.of<LoadingScreenViewModel>(context, listen: false)
                                   .announcementMapMain
                                   .length) {
                                 _announcementController.nextPage(
@@ -294,7 +300,7 @@ class MainScreenViewModel extends ChangeNotifier {
                                 );
                                 await updateAnnouncementCurrentPage(announcementCurrentPage + 1);
                               }
-                              print('announcementCurrentPage: $announcementCurrentPage');
+                              debugPrint('announcementCurrentPage: $announcementCurrentPage');
 
                             },
                             child: Icon(Icons.arrow_right),
@@ -320,8 +326,8 @@ class MainScreenViewModel extends ChangeNotifier {
           Stack(
           children: [
             Container(
-              width: MediaQuery.of(context).size.width,
-              height: MediaQuery.of(context).size.height,
+              width: MediaQuery.sizeOf(context).width,
+              height: MediaQuery.sizeOf(context).height,
               color: Colors.black.withOpacity(0.5), // 투명도 조절
             ),
             Padding(
@@ -330,8 +336,8 @@ class MainScreenViewModel extends ChangeNotifier {
                 child: Stack(
                   children: [
                     Container(
-                      width: MediaQuery.of(context).size.width - 60,
-                      height: MediaQuery.of(context).size.height * 0.72,
+                      width: MediaQuery.sizeOf(context).width - 60,
+                      height: MediaQuery.sizeOf(context).height * 0.72,
                       padding: EdgeInsets.only(left: 15.0, right: 15.0, top: 15.0, bottom: 15.0),
                       decoration: BoxDecoration(
                         color: kMainColor,
@@ -349,14 +355,12 @@ class MainScreenViewModel extends ChangeNotifier {
                       ),
                       child: Column(
                         children: [
-                          SizedBox(
-                            height: 5.0,
-                          ),
+                          Text('이용안내', style: kMainScreen_HowToUseTextStyle,),
                           Expanded(
                             child: PageView.builder(
                                 controller: _howToUsePageController,
                                 itemCount:
-                                Provider.of<LoadingUpdate>(context, listen: false)
+                                Provider.of<LoadingScreenViewModel>(context, listen: false)
                                     .howToUseMapMain
                                     .length,
                                 onPageChanged: (int) async {
@@ -381,7 +385,7 @@ class MainScreenViewModel extends ChangeNotifier {
                                                 decoration: BoxDecoration(
                                                   borderRadius: BorderRadius.circular(10.0),
                                                   image: DecorationImage(
-                                                    image: MemoryImage(Provider.of<LoadingUpdate>(
+                                                    image: MemoryImage(Provider.of<LoadingScreenViewModel>(
                                                         context,
                                                         listen: false)
                                                         .howToUseMapMain['howToUse$index'] ??
@@ -397,7 +401,7 @@ class MainScreenViewModel extends ChangeNotifier {
                                               Padding(
                                                 padding: const EdgeInsets.symmetric(vertical: 8.0),
                                                 child: Text(
-                                                  Provider.of<LoadingUpdate>(context, listen: false)
+                                                  Provider.of<LoadingScreenViewModel>(context, listen: false)
                                                       .textMapHowToUse['howToUse$index'] ??
                                                       '',
                                                   maxLines: null,
@@ -432,13 +436,13 @@ class MainScreenViewModel extends ChangeNotifier {
                                     );
                                     await updateHowToUseCurrentPage(howToUseCurrentPage - 1);
                                   }
-                                  print('currentPage: $howToUseCurrentPage');
+                                  debugPrint('currentPage: $howToUseCurrentPage');
                                 },
                                 child: Icon(Icons.arrow_left,
                                   //size: 35,
                                 ),
                               ),
-                              Text('${howToUseCurrentPage + 1} / ${Provider.of<LoadingUpdate>(context, listen: false)
+                              Text('${howToUseCurrentPage + 1} / ${Provider.of<LoadingScreenViewModel>(context, listen: false)
                                   .howToUseMapMain
                                   .length}',
                               style: TextStyle(
@@ -447,7 +451,7 @@ class MainScreenViewModel extends ChangeNotifier {
                               ),),
                               GestureDetector(
                                 onTap: () async {
-                                  if (howToUseCurrentPage + 1 < Provider.of<LoadingUpdate>(context, listen: false)
+                                  if (howToUseCurrentPage + 1 < Provider.of<LoadingScreenViewModel>(context, listen: false)
                                       .howToUseMapMain
                                       .length) {
                                     _howToUsePageController.nextPage(
@@ -456,7 +460,7 @@ class MainScreenViewModel extends ChangeNotifier {
                                     );
                                     await updateHowToUseCurrentPage(howToUseCurrentPage + 1);
                                   }
-                                  print('currentPage: $howToUseCurrentPage');
+                                  debugPrint('currentPage: $howToUseCurrentPage');
                                 },
                                 child: Icon(Icons.arrow_right,
                                     //size: 35

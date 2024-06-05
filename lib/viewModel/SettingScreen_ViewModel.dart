@@ -35,8 +35,7 @@ import '../view/ossLicense_screen.dart';
 import '../view/profile_screen.dart';
 import '../view/signup_screen.dart';
 
-class SettingViewModel extends ChangeNotifier {
-
+class SettingScreenViewModel extends ChangeNotifier {
   FirebaseFirestore db = FirebaseFirestore.instance;
   final _fireAuth = FirebaseAuth.instance;
 
@@ -44,7 +43,7 @@ class SettingViewModel extends ChangeNotifier {
     '프로필 수정',
     '오픈소스 라이센스',
     '이용약관',
-    '개인정보 처리방침',
+    '개인정보처리방침',
     '운영정책',
     '스토어 평점 남기기',
     '문의',
@@ -56,7 +55,7 @@ class SettingViewModel extends ChangeNotifier {
     '로그인',
     '오픈소스 라이센스',
     '이용약관',
-    '개인정보 처리방침',
+    '개인정보처리방침',
     '운영정책',
     '문의',
   ];
@@ -73,6 +72,7 @@ class SettingViewModel extends ChangeNotifier {
         .then((value) async {
       notifyListeners();
     });
+    notifyListeners();
   }
 
   Future<void> settingScreenOss(BuildContext context) async {
@@ -86,7 +86,7 @@ class SettingViewModel extends ChangeNotifier {
         .persistentNavPushNewScreen(
             context, SignupScreen(3), false, PageTransitionAnimation.fade)
         .then((value) async {
-      print('로그인 완료 후 복귀 setState');
+      debugPrint('로그인 완료 후 복귀 setState');
 
       notifyListeners();
     });
@@ -117,17 +117,19 @@ class SettingViewModel extends ChangeNotifier {
   }
 
   Future<void> settingMoveToStore(BuildContext context) async {
-
     if (Platform.isAndroid || Platform.isIOS) {
-      final appId = Platform.isAndroid ? 'com.simonwork.dnpp.dnpp' : '6478840964';
-
+      final appId =
+          Platform.isAndroid ? 'com.simonwork.dnpp.dnpp' : '6478840964';
+      //final appId = Platform.isAndroid ? 'com.instagram.android' : '389801252';
       // final String url = Platform.isAndroid ?
       // "market://details?id=$appId" :
       // "https://apps.apple.com/app/id$appId";
 
       final url = Uri.parse(
         Platform.isAndroid
-            ? "market://details?id=$appId"
+            //? "market://details?id=$appId"
+            ? "https://play.google.com/store/apps/details?id=$appId"
+            //com.instagram.android
             : "https://apps.apple.com/app/id$appId",
         //: "https://apps.apple.com/app/id389801252", // 핑퐁플러스 app id : id6478840964
         //itms-apps://apps.apple.com/app/
@@ -140,8 +142,6 @@ class SettingViewModel extends ChangeNotifier {
         mode: LaunchMode.externalApplication,
       );
     }
-
-
   }
 
   Future<void> settingScreenLogout(BuildContext context) async {
@@ -206,16 +206,15 @@ class SettingViewModel extends ChangeNotifier {
                         },
                       );
 
-                      await signOut(context).then((value) {
+                      await signOut(context).then((value) async {
                         Navigator.of(context, rootNavigator: true).pop();
-                        ShowToast().showToast("로그아웃이 완료되었습니다");
+                        // ShowToast().showToast("로그아웃이 완료되었습니다");
 
-                        // LaunchUrl().alertFunc(
-                        //     context, '알림', '로그아웃이 완료되었습니다', '확인', () {
-                        //   Navigator.of(context, rootNavigator: true).pop();
-                        //   Navigator.of(context, rootNavigator: true).pop();
-                        //   //Navigator.pop(context);
-                        // });
+                        LaunchUrl().alertFuncFalseBarrierDismissible(
+                            context, '알림', '로그아웃이 완료되었습니다.\n앱을 종료 후 다시 시작해주세요.', '종료', () {
+                              exit(0);
+                        });
+
                       });
                     },
                   ),
@@ -227,7 +226,6 @@ class SettingViewModel extends ChangeNotifier {
   }
 
   Future<void> signOut(BuildContext context) async {
-
     await Future.delayed(Duration(seconds: 1));
 
     try {
@@ -250,13 +248,17 @@ class SettingViewModel extends ChangeNotifier {
             .resetSelectedList();
 
         try {
-          await Provider.of<OthersPersonalAppointmentUpdate>(context, listen: false)
+          await Provider.of<OthersPersonalAppointmentUpdate>(context,
+                  listen: false)
               .resetMeetings();
-          await Provider.of<OthersPersonalAppointmentUpdate>(context, listen: false)
+          await Provider.of<OthersPersonalAppointmentUpdate>(context,
+                  listen: false)
               .resetHourlyCounts();
-          await Provider.of<OthersPersonalAppointmentUpdate>(context, listen: false)
+          await Provider.of<OthersPersonalAppointmentUpdate>(context,
+                  listen: false)
               .resetDaywiseDurations();
-          await Provider.of<OthersPersonalAppointmentUpdate>(context, listen: false)
+          await Provider.of<OthersPersonalAppointmentUpdate>(context,
+                  listen: false)
               .resetSelectedList();
 
           try {
@@ -272,7 +274,6 @@ class SettingViewModel extends ChangeNotifier {
             await Provider.of<CalendarScreenViewModel>(context, listen: false)
                 .resetAppointments(); // 캘린더에 있는 appointment 리스트 초기화
 
-
             try {
               await Provider.of<MatchingScreenViewModel>(context, listen: false)
                   .initializeListeners()
@@ -283,20 +284,19 @@ class SettingViewModel extends ChangeNotifier {
                 notifyListeners();
               });
             } catch (e) {
-              print('initializeListeners 에러: $e');
+              debugPrint('initializeListeners 에러: $e');
             }
-
           } catch (e) {
-            print('CourtAppointmentUpdate signOut e: $e');
+            debugPrint('CourtAppointmentUpdate signOut e: $e');
           }
         } catch (e) {
-          print('OthersPersonalAppointmentUpdate signOut e: $e');
+          debugPrint('OthersPersonalAppointmentUpdate signOut e: $e');
         }
       } catch (e) {
-        print('PersonalAppointmentUpdate signOut e: $e');
+        debugPrint('PersonalAppointmentUpdate signOut e: $e');
       }
     } catch (e) {
-      print('ProfileUpdate signOut e: $e');
+      debugPrint('ProfileUpdate signOut e: $e');
       LaunchUrl().alertFunc(
           context, '오류', '로그아웃 중 에러가 발생했습니다\n이용에 불편을 드려 죄송합니다', '확인', () {
         Navigator.pop(context);
@@ -368,11 +368,12 @@ class SettingViewModel extends ChangeNotifier {
                       );
 
                       await removeData(context).then((value) {
-                        LaunchUrl().alertFunc(
-                            context, '알림', '회원탈퇴가 완료되었습니다', '확인', () {
-                          Navigator.of(context, rootNavigator: true).pop();
-                          Navigator.pop(context);
-                          //Navigator.of(context, rootNavigator: true).pop();
+
+                        Navigator.pop(context);
+
+                        LaunchUrl().alertFuncFalseBarrierDismissible(
+                            context, '알림', '회원탈퇴가 완료되었습니다.\n앱을 종료 후 다시 시작해주세요.\n(서드파티 앱 액세스 권한에 대해서는 별도로 권한을 관리해주세요)', '종료', () {
+                          exit(0);
                         });
                       });
                     },
@@ -385,21 +386,20 @@ class SettingViewModel extends ChangeNotifier {
   }
 
   Future<void> removeData(BuildContext context) async {
-
     await Future.delayed(Duration(seconds: 1));
 
+    debugPrint("_fireAuth.currentUser: ${_fireAuth.currentUser}");
+    debugPrint("_fireAuth.currentUser!.uid: ${_fireAuth.currentUser!.uid}");
+
+    final String _uid = _fireAuth.currentUser!.uid.toString();
+
     try {
+      await RepositoryRealtimeMessages().getDeleteUsersData(_uid);
+      await RepositoryRealtimeMessages().getDeleteChatData(_uid);
+      await RepositoryFirestoreAppointments().getDeleteUserAppointment(_uid);
+      await RepositoryFirestoreUserData().getDeleteUser(_uid);
+
       await RepositoryFirebaseAuth().deleteUserAccount().then((value) async {
-
-        await RepositoryFirestoreUserData()
-            .getDeleteUser(_fireAuth.currentUser!.uid.toString());
-        await RepositoryFirestoreAppointments()
-            .getDeleteUserAppointment(_fireAuth.currentUser!.uid.toString());
-        await RepositoryRealtimeMessages()
-            .getDeleteUsersData(_fireAuth.currentUser!.uid.toString());
-        await RepositoryRealtimeMessages()
-            .getDeleteChatData(_fireAuth.currentUser!.uid.toString());
-
         try {
           await Provider.of<ProfileUpdate>(context, listen: false)
               .updateUserProfileUpdated(false);
@@ -418,31 +418,38 @@ class SettingViewModel extends ChangeNotifier {
                 .resetSelectedList();
 
             try {
-              await Provider.of<OthersPersonalAppointmentUpdate>(context, listen: false)
+              await Provider.of<OthersPersonalAppointmentUpdate>(context,
+                      listen: false)
                   .resetMeetings();
-              await Provider.of<OthersPersonalAppointmentUpdate>(context, listen: false)
+              await Provider.of<OthersPersonalAppointmentUpdate>(context,
+                      listen: false)
                   .resetHourlyCounts();
-              await Provider.of<OthersPersonalAppointmentUpdate>(context, listen: false)
+              await Provider.of<OthersPersonalAppointmentUpdate>(context,
+                      listen: false)
                   .resetDaywiseDurations();
-              await Provider.of<OthersPersonalAppointmentUpdate>(context, listen: false)
+              await Provider.of<OthersPersonalAppointmentUpdate>(context,
+                      listen: false)
                   .resetSelectedList();
 
               try {
-                await Provider.of<CourtAppointmentUpdate>(context, listen: false)
+                await Provider.of<CourtAppointmentUpdate>(context,
+                        listen: false)
                     .resetMeetings();
-                await Provider.of<CourtAppointmentUpdate>(context, listen: false)
+                await Provider.of<CourtAppointmentUpdate>(context,
+                        listen: false)
                     .resetHourlyCounts();
-                await Provider.of<CourtAppointmentUpdate>(context, listen: false)
+                await Provider.of<CourtAppointmentUpdate>(context,
+                        listen: false)
                     .resetDaywiseDurations();
-                await Provider.of<CourtAppointmentUpdate>(context, listen: false)
+                await Provider.of<CourtAppointmentUpdate>(context,
+                        listen: false)
                     .resetSelectedList();
 
                 await Provider.of<CalendarScreenViewModel>(context,
-                    listen: false)
+                        listen: false)
                     .resetAppointments(); // 캘린더에 있는 appointment 리스트 초기화
 
                 try {
-
                   await Provider.of<MatchingScreenViewModel>(context,
                           listen: false)
                       .initializeListeners()
@@ -450,25 +457,24 @@ class SettingViewModel extends ChangeNotifier {
                     notifyListeners();
                   });
                 } catch (e) {
-                  print(
+                  debugPrint(
                       'CalendarScreenViewModel, MatchingScreenViewModel removeData e: $e');
                 }
               } catch (e) {
-                print('CourtAppointmentUpdate removeData e: $e');
+                debugPrint('CourtAppointmentUpdate removeData e: $e');
               }
             } catch (e) {
-              print('OthersPersonalAppointmentUpdate removeData e: $e');
+              debugPrint('OthersPersonalAppointmentUpdate removeData e: $e');
             }
-
           } catch (e) {
-            print('PersonalAppointmentUpdate removeData e: $e');
+            debugPrint('PersonalAppointmentUpdate removeData e: $e');
           }
         } catch (e) {
-          print('ProfileUpdate removeData e: $e');
+          debugPrint('ProfileUpdate removeData e: $e');
         }
       });
     } catch (e) {
-      print('removeData e: $e');
+      debugPrint('removeData e: $e');
       LaunchUrl().alertFunc(
           context, '오류', '회원탈퇴 중 에러가 발생했습니다\n이용에 불편을 드려 죄송합니다', '확인', () {
         Navigator.pop(context);

@@ -36,7 +36,7 @@ import 'package:provider/provider.dart';
 //           });
 //         },
 //         onMapTapped: (point, latLng) {
-//           print(latLng);
+//           debugPrint(latLng);
 //         },
 //         onSymbolTapped: (symbol) {},
 //         onCameraChange: (position, reason) {},
@@ -67,7 +67,7 @@ class MapWidget extends StatelessWidget {
         Provider.of<MapWidgetUpdate>(context, listen: false).updateNaverController(controller);
       },
       onMapTapped: (point, latLng) {
-        print(latLng);
+        debugPrint("$latLng");
       },
       onSymbolTapped: (symbol) {},
       onCameraChange: (position, reason) {},

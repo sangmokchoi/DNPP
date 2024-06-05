@@ -40,12 +40,12 @@ class RepeatTimes extends StatelessWidget {
                             if (selectedButtons.length != 0) {
                               selectedButtons.remove(selectedButtons.first);
                               selectedButtons.add(n);
-                              print('selectedButtons.length != 0');
-                              print(selectedButtons);
+                              debugPrint('selectedButtons.length != 0');
+                              debugPrint("$selectedButtons");
                             } else {
                               selectedButtons.add(n);
-                              print('selectedButtons.length == 0');
-                              print(selectedButtons);
+                              debugPrint('selectedButtons.length == 0');
+                              debugPrint("$selectedButtons");
                             }
                             await Provider.of<PersonalAppointmentUpdate>(context,
                                     listen: false)

@@ -30,7 +30,7 @@ class LocalDSUserData {
   }
 
   Future<void> fetchUserData(BuildContext context) async {
-    print('func fetchUserData Start');
+    debugPrint('func fetchUserData Start');
 
     try {
 
@@ -38,20 +38,20 @@ class LocalDSUserData {
           context,
           listen: false)
           .clear();
-      print("fetchUserData 에서 Provider.of<PersonalAppointmentUpdate>(context).newMeetings.length: ${Provider.of<PersonalAppointmentUpdate>(context, listen: false).newMeetings.length}");
+      debugPrint("fetchUserData 에서 Provider.of<PersonalAppointmentUpdate>(context).newMeetings.length: ${Provider.of<PersonalAppointmentUpdate>(context, listen: false).newMeetings.length}");
 
       await Provider.of<OthersPersonalAppointmentUpdate>(
           context,
           listen: false)
           .clear();
-      print("fetchUserData 에서 Provider.of<PersonalAppointmentUpdate>(context).newMeetings.length: ${Provider.of<PersonalAppointmentUpdate>(context, listen: false).newMeetings.length}");
+      debugPrint("fetchUserData 에서 Provider.of<PersonalAppointmentUpdate>(context).newMeetings.length: ${Provider.of<PersonalAppointmentUpdate>(context, listen: false).newMeetings.length}");
 
       await Provider.of<CourtAppointmentUpdate>(
           context,
           listen: false)
           .clear();
 
-      print("fetchUserData 에서 Provider.of<PersonalAppointmentUpdate>(context).newMeetings.length: ${Provider.of<PersonalAppointmentUpdate>(context, listen: false).newMeetings.length}");
+      debugPrint("fetchUserData 에서 Provider.of<PersonalAppointmentUpdate>(context).newMeetings.length: ${Provider.of<PersonalAppointmentUpdate>(context, listen: false).newMeetings.length}");
 
       try {
         await LocalDSUserData().refreshData(context);
@@ -60,14 +60,14 @@ class LocalDSUserData {
 
           final User? currentUser = FirebaseAuth.instance.currentUser;
           //Provider.of<LoginStatusUpdate>(context, listen: false).currentUser;
-          print('currentUser?.uid: ${currentUser?.uid}');
+          debugPrint('currentUser?.uid: ${currentUser?.uid}');
 
           final docRef = db.collection("UserData").doc(currentUser?.uid);
 
           await docRef.get().then(
                 (DocumentSnapshot<Map<String, dynamic>> doc) async {
               if (doc.exists) {
-                print('Document exist');
+                debugPrint('Document exist');
                 final data = doc.data() as Map<String, dynamic>;
 
                 final _userProfile = UserProfile(
@@ -101,7 +101,7 @@ class LocalDSUserData {
                   racket: data['racket'] ?? '',
                 );
 
-                print(
+                debugPrint(
                     '_userProfile.pingpongCourt?.length: ${_userProfile.pingpongCourt?.length}');
 
                 await Provider.of<ProfileUpdate>(context, listen: false)
@@ -114,36 +114,36 @@ class LocalDSUserData {
                     .fetchCurrentUserAppointmentData(context, currentUser!).then((value) async {
                   await LocalDSAppointments()
                       .fetchOtherUsersAppointmentData(context, currentUser!).then((value) async {
-                    print('await fetchOtherUsersAppointmentData(); completed');
+                    debugPrint('await fetchOtherUsersAppointmentData(); completed');
                     await LocalDSAppointments()
                         .fetchAppointmentDataForCalculatingByCourt(context);
-                    print('await fetchAppointmentData(); completed');
+                    debugPrint('await fetchAppointmentData(); completed');
                     return;
                   });
 
                 });
-                print('await fetchCurrentUserAppointmentData(); completed');
+                debugPrint('await fetchCurrentUserAppointmentData(); completed');
 
                 //return;
               } else {
-                print('Document does not exist');
+                debugPrint('Document does not exist');
                 await Provider.of<ProfileUpdate>(context, listen: false)
                     .updateUserProfileUpdated(false);
                 return;
               }
             },
-            onError: (e) => print("Error getting document: $e"),
+            onError: (e) => debugPrint("Error getting document: $e"),
           );
         } catch (e) {
-          print('fetchUserData e: $e');
+          debugPrint('fetchUserData e: $e');
         }
 
       } catch (e) {
-        print('refresh fetchUserData e: $e');
+        debugPrint('refresh fetchUserData e: $e');
       }
 
     } catch (e) {
-      print('clear fetchUserData e: $e');
+      debugPrint('clear fetchUserData e: $e');
     }
   }
 
@@ -158,13 +158,13 @@ class LocalDSUserData {
         final documentId = querySnapshot.docs[0].id;
         await db.collection("UserData").doc(documentId).delete();
         // 문서 삭제 성공
-        print("해당 userUid를 가진 문서를 삭제했습니다.");
+        debugPrint("해당 userUid를 가진 문서를 삭제했습니다.");
       } else {
         // 해당 userUid를 가진 문서가 없음
-        print("해당 userUid를 가진 문서가 없습니다.");
+        debugPrint("해당 userUid를 가진 문서가 없습니다.");
       }
     } catch (e) {
-      print('deleteUser e: $e');
+      debugPrint('deleteUser e: $e');
       //LaunchUrl().alertFunc(context, '알림', '유저 정보 삭제 중 에러가 발생했습니다', '확인', () { });
     }
   }
@@ -203,15 +203,15 @@ class LocalDSUserData {
 
   // Stream<QuerySnapshot<Map<String, dynamic>>> constructSimilarUsersCourtStream(
   //     BuildContext context, PingpongList pingpongList) async* {
-  //   print('constructSimilarUsersCourtStream 진입');
-  //   print('pingpongList.title: ${pingpongList.title}');
-  //   print('pingpongList.roadAddress: ${pingpongList.roadAddress}');
+  //   debugPrint('constructSimilarUsersCourtStream 진입');
+  //   debugPrint('pingpongList.title: ${pingpongList.title}');
+  //   debugPrint('pingpongList.roadAddress: ${pingpongList.roadAddress}');
   //
   //   var userUids = await Provider.of<OthersPersonalAppointmentUpdate>(context,
   //           listen: false)
   //       .extractCustomAppointments(
   //           pingpongList.title, pingpongList.roadAddress, true);
-  //   print('userUids: $userUids');
+  //   debugPrint('userUids: $userUids');
   //
   //   // var userUids =
   //   //     Provider.of<OthersPersonalAppointmentUpdate>(context, listen: false)
@@ -219,7 +219,7 @@ class LocalDSUserData {
   //
   //   // Check if userUids is not empty before using whereIn
   //   if (userUids.isNotEmpty) {
-  //     print('if (userUids.isNotEmpty) {');
+  //     debugPrint('if (userUids.isNotEmpty) {');
   //     final snapshots = db
   //         .collection("UserData")
   //         .where("pingpongCourt", arrayContainsAny: [
@@ -230,9 +230,9 @@ class LocalDSUserData {
   //         .snapshots();
   //     yield* snapshots;
   //   } else {
-  //     print('Return an empty stream if userUids is empty');
+  //     debugPrint('Return an empty stream if userUids is empty');
   //     final snapshots = Stream<QuerySnapshot<Map<String, dynamic>>>.empty();
-  //     print('snapshots: $snapshots');
+  //     debugPrint('snapshots: $snapshots');
   //
   //     yield* snapshots;
   //   }
@@ -268,7 +268,7 @@ class LocalDSUserData {
           ])
           .where('uid', isNotEqualTo: auth.currentUser?.uid)
           .snapshots();
-      print('usersCourtStream 진행중');
+      debugPrint('usersCourtStream 진행중');
       return snapshots;
 
     } else {
@@ -295,7 +295,7 @@ class LocalDSUserData {
   //     final currentUser = FirebaseAuth.instance.currentUser;
   //
   //     if (userUids.isNotEmpty) {
-  //       print('similarUsersCourtStream 시작 if (similarUsersUids.isNotEmpty) {');
+  //       debugPrint('similarUsersCourtStream 시작 if (similarUsersUids.isNotEmpty) {');
   //       snapshots = db
   //           .collection("UserData")
   //           .where("pingpongCourt", arrayContainsAny: [
@@ -304,13 +304,13 @@ class LocalDSUserData {
   //           .where("uid", whereIn: userUids)
   //           .where('uid', isNotEqualTo: currentUser?.uid)
   //           .snapshots();
-  //       print('snapshots: ${snapshots}');
+  //       debugPrint('snapshots: ${snapshots}');
   //     } else {
-  //       print('if (similarUsersUids.isEmpty) {');
+  //       debugPrint('if (similarUsersUids.isEmpty) {');
   //       if (currentUser != null) {
   //         // 유저가 로그인은 된 상태인데, 현재 비슷한 시간대의 유저가 없는 상황
-  //         print('if (currentUser != null) {');
-  //         print('유저가 로그인은 된 상태인데, 현재 비슷한 시간대의 유저가 없는 상황');
+  //         debugPrint('if (currentUser != null) {');
+  //         debugPrint('유저가 로그인은 된 상태인데, 현재 비슷한 시간대의 유저가 없는 상황');
   //         // snapshots =
   //         //     db.collection("UserData")
   //         //         //.where("uid", whereNotIn: [currentUser.uid])

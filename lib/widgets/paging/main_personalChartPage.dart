@@ -39,7 +39,7 @@ class MainPersonalChartPageView extends StatelessWidget {
 
               if (newPage != currentPersonal) {
                 currentPersonal = newPage;
-                print('_currentPersonal: $currentPersonal');
+                debugPrint('_currentPersonal: $currentPersonal');
 
                 // 요일 버튼 눌린 것이 초기화 되어야 함
                 Provider.of<PersonalAppointmentUpdate>(context, listen: false).resetSelectedList();
