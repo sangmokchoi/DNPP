@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter/cupertino.dart';
 
 class LocalDSIsNotificationAble {
 
@@ -16,13 +17,13 @@ class LocalDSIsNotificationAble {
       return;
 
     } catch (e) {
-      print('toggleNotification e: $e');
+      debugPrint('toggleNotification e: $e');
       return;
 
     }
   }
 
-  Future<bool> checkUserNotification(String value) async {
+  Stream<bool> checkUserNotification(String value) async* {
 
     try {
 
@@ -31,12 +32,42 @@ class LocalDSIsNotificationAble {
 
       final refOnce = await ref.once();
       final userNotification = refOnce.snapshot.value; //bool
-      print('userNotification: ${userNotification}');
+      debugPrint('userNotification: ${userNotification}');
+
+      if (userNotification == null) {
+        ref.set(true);
+        userNotification == true;
+      }
+
+      yield userNotification as bool;
+
+    } catch (e) {
+      debugPrint('checkUserNotification e: $e');
+      yield false;
+
+    }
+  }
+
+  Future<bool> checkUserNotificationFunction(String value) async {
+
+    try {
+
+      DatabaseReference ref =
+      FirebaseDatabase.instance.ref("users/${value}/isNotificationAble");
+
+      final refOnce = await ref.once();
+      final userNotification = refOnce.snapshot.value; //bool
+      debugPrint('userNotification: ${userNotification}');
+
+      if (userNotification == null) {
+        ref.set(true);
+        userNotification == true;
+      }
 
       return userNotification as bool;
 
     } catch (e) {
-      print('checkUserNotification e: $e');
+      debugPrint('checkUserNotificationFunction e: $e');
       return false;
 
     }

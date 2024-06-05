@@ -1,6 +1,7 @@
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter/cupertino.dart';
 
 class LocalDSDeviceId {
 
@@ -16,19 +17,19 @@ class LocalDSDeviceId {
       final result = await ref.once();
 
       if (result.snapshot.value != null) {
-        print('result.snapshot.value: ${result.snapshot.value}');
+        debugPrint('result.snapshot.value: ${result.snapshot.value}');
         final deviceId = result.snapshot.value as String;
         return deviceId;
 
       } else {
-        print('등록된 deviceId 없음');
+        debugPrint('등록된 deviceId 없음');
 
         return "deviceId";
       }
 
     } catch (e) {
-      print('checkMyDeviceId e: $e');
-      return e.toString();
+      debugPrint('checkMyDeviceId e: $e');
+      return "null";
     }
   }
 
@@ -40,12 +41,12 @@ class LocalDSDeviceId {
       FirebaseDatabase.instance.ref("users/${currentUser?.uid}/deviceId");
 
       await ref.set(deviceId);
-      print('deviceId: $deviceId');
-      print('deviceId 업로드 완료');
+      debugPrint('deviceId: $deviceId');
+      debugPrint('deviceId 업로드 완료');
       return;
 
     } catch (e) {
-      print('uploadMyDeviceId e: $e');
+      debugPrint('uploadMyDeviceId e: $e');
       return;
     }
 

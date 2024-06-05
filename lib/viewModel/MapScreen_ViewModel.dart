@@ -15,18 +15,18 @@ class MapScreenViewModel extends ChangeNotifier {
   NLatLng nLatLng = NLatLng(37.5666, 126.979);
 
   Future<void> updatePPLocation(BuildContext context, Map<String, dynamic> searchResult) async {
-    print('updatePPLocation 시작');
+    debugPrint('updatePPLocation 시작');
 
     try {
       if (searchResult['items'].isEmpty) {
-        print('검색 결과 없음');
+        debugPrint('검색 결과 없음');
         //Navigator.pop(context);
 
         //await showAlert(context);
         //notifyListeners();
 
       } else {
-        print('updatePPLocation 진입');
+        debugPrint('updatePPLocation 진입');
 
         var items = searchResult["items"];
 
@@ -51,9 +51,9 @@ class MapScreenViewModel extends ChangeNotifier {
         await Provider.of<MapWidgetUpdate>(context, listen: false).overlayMake();
         //});
       }
-      print('updatePPLocation 완료');
+      debugPrint('updatePPLocation 완료');
     } catch (e) {
-      print('updatePPLocation e: $e');
+      debugPrint('updatePPLocation e: $e');
     }
 
   }
@@ -63,7 +63,7 @@ class MapScreenViewModel extends ChangeNotifier {
 
       if (isLoading) {
         // 로딩 바를 화면에 표시
-        print('mapscreen 로딩 바를 화면에 표시');
+        debugPrint('mapscreen 로딩 바를 화면에 표시');
         showDialog(
           context: context,
           barrierDismissible: false,
@@ -76,7 +76,7 @@ class MapScreenViewModel extends ChangeNotifier {
         );
 
       } else {
-        print('toggleLoading 로딩 바 제거');
+        debugPrint('toggleLoading 로딩 바 제거');
         //Navigator.of(context, rootNavigator: true).pop();
          Navigator.pop(context);
         //Navigator.of(context).pop();

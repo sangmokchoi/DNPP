@@ -1,14 +1,18 @@
 
 import 'dart:ffi';
 
+import 'package:dnpp/main.dart';
 import 'package:dnpp/models/userProfile.dart';
 import 'package:dnpp/LocalDataSource/firebase_fireStore/DS_Local_userData.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:persistent_bottom_nav_bar/persistent_tab_view.dart';
+import 'package:provider/provider.dart';
 
 import '../constants.dart';
+import '../statusUpdate/CurrentPageProvider.dart';
+import '../statusUpdate/googleAnalytics.dart';
 import '../view/chatList_Screen.dart';
 import '../view/chat_screen.dart';
 
@@ -57,7 +61,6 @@ class MoveToOtherScreen {
       context,
       screen: screen,
       withNavBar: withNavBar,    // OPTIONAL VALUE. True by default.
-
       pageTransitionAnimation: animation,
     );
   }
@@ -65,7 +68,7 @@ class MoveToOtherScreen {
   void bottomProfileUp(BuildContext context, String uid) {
     // data = types.User
 
-    print('bottomProfileUp data: $uid');
+    debugPrint('bottomProfileUp data: $uid');
     //getOneUserData
 
     showModalBottomSheet<void>(
@@ -75,8 +78,8 @@ class MoveToOtherScreen {
         return StreamBuilder(
             stream: LocalDSUserData().oneUserData(uid),//FirebaseFirestore.instance.collection('users').doc(data['id']).snapshots(),
           builder: (context, snapshot) {
-              print('bottomProfileUp snapshot.data?.docs: ${snapshot.data?.docs}');
-              print('bottomProfileUp snapshot.hasData: ${snapshot.hasData}');
+              debugPrint('bottomProfileUp snapshot.data?.docs: ${snapshot.data?.docs}');
+              debugPrint('bottomProfileUp snapshot.hasData: ${snapshot.hasData}');
               var docs = snapshot.data?.docs;
 
             if (snapshot.connectionState == ConnectionState.waiting) {
@@ -88,7 +91,7 @@ class MoveToOtherScreen {
             } else {
 
               final snapshotData = docs?.first.data();
-              print('snapshotData: ${snapshotData}');
+              debugPrint('snapshotData: ${snapshotData}');
 
               return Stack(
                 children: [
@@ -269,6 +272,35 @@ class MoveToOtherScreen {
         );
       },
     );
+  }
+
+  Future<void> initializeGASetting(BuildContext defaultContext, String screenName) async {
+
+    try {
+
+      final previousScreen = Provider.of<CurrentPageProvider>(defaultContext, listen: false).currentPage;
+      debugPrint('previousScreen: $previousScreen');
+      await Provider.of<GoogleAnalyticsNotifier>(defaultContext, listen: false)
+          .startTimer(previousScreen);
+
+      await GoogleAnalytics().trackScreen(defaultContext, screenName);
+      await Provider.of<CurrentPageProvider>(defaultContext, listen: false)
+          .setCurrentPage(screenName);
+
+    } catch (e) {
+      debugPrint('initializeGASetting e: $e');
+      final previousScreen = Provider.of<CurrentPageProvider>(navigatorKey.currentContext!, listen: false).currentPage;
+      debugPrint('previousScreen: $previousScreen');
+      await Provider.of<GoogleAnalyticsNotifier>(navigatorKey.currentContext!, listen: false)
+          .startTimer(previousScreen);
+
+      await GoogleAnalytics().trackScreen(navigatorKey.currentContext!, screenName);
+      await Provider.of<CurrentPageProvider>(navigatorKey.currentContext!, listen: false)
+          .setCurrentPage(screenName);
+    }
+
+
+
   }
 
 }

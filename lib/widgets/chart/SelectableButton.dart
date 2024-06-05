@@ -24,7 +24,7 @@ class SelectableButton extends StatelessWidget {
   @override
   void didUpdateWidget(SelectableButton oldWidget) {
     //super.didUpdateWidget(oldWidget);
-    print('didUpdateWidget 진입');
+    debugPrint('didUpdateWidget 진입');
     if (selected != oldWidget.selected) {
       statesController.update(MaterialState.selected, selected);
     }

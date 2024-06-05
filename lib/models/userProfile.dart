@@ -146,4 +146,20 @@ class UserProfile {
     racket: '미정',
   );
 
+  // 깊은 복사를 위한 복사 생성자
+  UserProfile.copy(UserProfile original)
+      : uid = original.uid,
+        email = original.email,
+        nickName = original.nickName,
+        selfIntroduction = original.selfIntroduction,
+        photoUrl = original.photoUrl,
+        gender = original.gender,
+        ageRange = original.ageRange,
+        playedYears = original.playedYears,
+        address = List<String>.from(original.address),
+        pingpongCourt = original.pingpongCourt?.map((item) => PingpongList.copy(item)).toList(),
+        playStyle = original.playStyle,
+        rubber = original.rubber,
+        racket = original.racket;
+
 }

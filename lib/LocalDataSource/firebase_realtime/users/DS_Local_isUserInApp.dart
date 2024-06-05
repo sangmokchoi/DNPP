@@ -1,6 +1,7 @@
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter/cupertino.dart';
 
 class LocalDSIsUserInApp {
 
@@ -8,9 +9,9 @@ class LocalDSIsUserInApp {
 
   Future<void> setIsCurrentUserInApp() async { // 앱에 현재 유저가 들어와 있음을 알려주는 bool 함수
 
-    // try {//
+    try {
 
-    print('setIsCurrentUserInApp 진입');
+    debugPrint('setIsCurrentUserInApp 진입');
     DatabaseReference ref =
     FirebaseDatabase.instance.ref("users/${currentUser?.uid}/isUserInApp");
 
@@ -19,19 +20,17 @@ class LocalDSIsUserInApp {
     connectedRef.onValue.listen((event) async {
       final connected = event.snapshot.value as bool? ?? false;
       if (connected) {
-
         await ref.set(true);
-
       } else {
         await ref.set(false);
       }
     });
 
-    // } catch (e) {
-    //   print('setIsCurrentUserInChat e: $e');
-    //
-    //
-    // }
+    } catch (e) {
+      debugPrint('setIsCurrentUserInChat e: $e');
+
+
+    }
   }
 
   Future<void> disconnectIsCurrentUserInApp() async { // 앱에서 현재 유저가 나갔음을 표시하는 함수
@@ -47,7 +46,7 @@ class LocalDSIsUserInApp {
 
 
     } catch (e) {
-      print('setIsCurrentUserInChat e: $e');
+      debugPrint('setIsCurrentUserInChat e: $e');
       return;
 
     }
@@ -63,11 +62,11 @@ class LocalDSIsUserInApp {
       final once = await ref.once();
 
       final isOpponentUserInChat = (once.snapshot.value) as bool? ?? false;
-      //print('checkIsOpponentUserInChat isOpponentUserInChat: $isOpponentUserInChat');
+      //debugPrint('checkIsOpponentUserInChat isOpponentUserInChat: $isOpponentUserInChat');
       yield isOpponentUserInChat;
 
     } catch (e) {
-      print('checkIsOpponentUserInChat e: $e');
+      debugPrint('checkIsOpponentUserInChat e: $e');
       yield false;
 
     }
@@ -81,16 +80,16 @@ class LocalDSIsUserInApp {
     //
     //     final connected = event.snapshot.value as bool? ?? false;
     //
-    //     print('connected: $connected');
+    //     debugPrint('connected: $connected');
     //     returnBool = connected;
     //     return returnBool;
     //   });
     //
-    //   //print('returnBool: $returnBool');
+    //   //debugPrint('returnBool: $returnBool');
     //
     //
     // } catch (e) {
-    //   print('setIsCurrentUserInChat e: $e');
+    //   debugPrint('setIsCurrentUserInChat e: $e');
     //
     //   return false;
     // }

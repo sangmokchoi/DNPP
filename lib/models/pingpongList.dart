@@ -74,4 +74,15 @@ class PingpongList {
       if (mapy != null) "mapy": mapy,
     };
   }
+
+  // 복사 생성자
+  PingpongList.copy(PingpongList original)
+      : title = original.title,
+        link = original.link,
+        description = original.description,
+        telephone = original.telephone,
+        address = original.address,
+        roadAddress = original.roadAddress,
+        mapx = original.mapx,
+        mapy = original.mapy;
 }

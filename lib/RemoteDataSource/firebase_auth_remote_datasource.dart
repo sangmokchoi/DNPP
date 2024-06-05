@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart' as http;
 
 class FirebaseAuthRemoteDataSource {
@@ -7,9 +8,9 @@ class FirebaseAuthRemoteDataSource {
   Future<String> createCustomToken(Map<String, dynamic> user) async {
 
     final customTokenResponse = await http.post(Uri.parse(url), body: user);
-    print('customTokenResponse: ${customTokenResponse.headers}');
-    print('customTokenResponse: ${customTokenResponse.statusCode}');
-    print('customTokenResponse: ${customTokenResponse.body}');
+    debugPrint('customTokenResponse: ${customTokenResponse.headers}');
+    debugPrint('customTokenResponse: ${customTokenResponse.statusCode}');
+    debugPrint('customTokenResponse: ${customTokenResponse.body}');
 
     return customTokenResponse.body;
   }

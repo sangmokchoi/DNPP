@@ -52,7 +52,7 @@ class MainCourtChartPageView extends StatelessWidget {
 
                 await Provider.of<CourtAppointmentUpdate>(context, listen: false).daywiseDurationsCalculate(
                         false, false, courtTitle, courtRoadAddress);
-                print(3);
+                debugPrint("3");
                 await Provider.of<CourtAppointmentUpdate>(context, listen: false).courtCountHours(
                         false, false, courtTitle, courtRoadAddress);
               }

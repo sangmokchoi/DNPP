@@ -13,6 +13,9 @@ class RepositoryRealtimeMessages {
     return await _firebaseMessagingRemoteDataSource.sendMessageData(
         senderNickName, messageBody, token, newBadge);
   }
+  Future<void> getSendPrivateReportWarning(String opponentUid, String nickName, int reportCount, int limitedDays) async {
+    return await _firebaseMessagingRemoteDataSource.sendPrivateReportWarning(opponentUid, nickName, reportCount, limitedDays);
+  }
 
   // _localDSChat
   Future<void> getUpdateIsMeInRoom(String currentUserProfileUid, String chatRoomId, int messagesListLength) async {
