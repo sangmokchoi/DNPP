@@ -258,10 +258,10 @@ class MatchingScreenViewModel extends ChangeNotifier {
 
   Future<bool> calculateRemainingDays(int reportedCount, int? limitDays) async{
 
-    final arti = DateTime.now().subtract(Duration(days: 3)).millisecondsSinceEpoch;
-    print('arti: $arti');
-    final artiTargetDate = DateTime.fromMillisecondsSinceEpoch(arti);
-    print('artiTargetDate: $artiTargetDate');
+    // final arti = DateTime.now().subtract(Duration(days: 15)).millisecondsSinceEpoch;
+    // debugPrint('arti: $arti');
+    // final artiTargetDate = DateTime.fromMillisecondsSinceEpoch(arti);
+    // debugPrint('artiTargetDate: $artiTargetDate');
 
     print('calculateRemainingDays limitDays: $limitDays');
     if (limitDays == null) {
