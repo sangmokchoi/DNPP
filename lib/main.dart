@@ -331,232 +331,233 @@ Future<void> main() async {
 
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
-  );
+  ).then((value) async {
 
-  await RepositoryRemoteConfig().getRemoteConfigFetchAndActivate();
+    await RepositoryRemoteConfig().getRemoteConfigFetchAndActivate();
 
-  final kakaoSdk = await RepositoryRemoteConfig().getDownloadKakaoSdk();
-  final naverMapSdk = await RepositoryRemoteConfig().getDownloadNaverMapSdk();
-  debugPrint('kakaoSdk: $kakaoSdk');
-  debugPrint('naverMapSdk: $naverMapSdk');
+    final kakaoSdk = await RepositoryRemoteConfig().getDownloadKakaoSdk();
+    final naverMapSdk = await RepositoryRemoteConfig().getDownloadNaverMapSdk();
+    debugPrint('kakaoSdk: $kakaoSdk');
+    debugPrint('naverMapSdk: $naverMapSdk');
 
-  await NaverMapSdk.instance.initialize(
-      clientId: naverMapSdk, //'7evubnn4j6',
-      onAuthFailed: (error) {
-        debugPrint('Auth failed: $error');
-      });
+    await NaverMapSdk.instance.initialize(
+        clientId: naverMapSdk,
+        onAuthFailed: (error) {
+          debugPrint('Auth failed: $error');
+        });
 
-  try {
-    //kakao.KakaoSdk.init(nativeAppKey: '93a20d717a6ee1439f15045a460ac4cd');
-    kakao.KakaoSdk.init(nativeAppKey: kakaoSdk);
-  } catch (error) {
-    debugPrint('KakaoSdk: $error');
-  }
+    try {
+      kakao.KakaoSdk.init(nativeAppKey: kakaoSdk);
+    } catch (error) {
+      debugPrint('KakaoSdk: $error');
+    }
 
-  final bool isUpdateNeeded = await RepositoryRemoteConfig().getCheckAppVersion();
-  final Map<String, String> checkUrgentNews = await RepositoryRemoteConfig().getCheckUrgentNews();
+    final bool isUpdateNeeded = await RepositoryRemoteConfig().getCheckAppVersion();
+    final Map<String, String> checkUrgentNews = await RepositoryRemoteConfig().getCheckUrgentNews();
 
-  debugPrint('runapp isUpdateNeeded: $isUpdateNeeded');
+    debugPrint('runapp isUpdateNeeded: $isUpdateNeeded');
 
-  if (!kDebugMode) {
-    debugPrint('!kDebugMode');
-    await FirebaseAppCheck.instance.activate(
-      androidProvider: AndroidProvider.playIntegrity,
-      appleProvider: AppleProvider.appAttest,
-      webProvider: ReCaptchaV3Provider('recaptcha-v3-site-key'),
+    if (!kDebugMode) {
+      debugPrint('!kDebugMode');
+      await FirebaseAppCheck.instance.activate(
+        androidProvider: AndroidProvider.playIntegrity,
+        appleProvider: AppleProvider.appAttest,
+        webProvider: ReCaptchaV3Provider('recaptcha-v3-site-key'),
+      );
+    } else {
+      debugPrint('kDebugMode');
+      await FirebaseAppCheck.instance.activate(
+        androidProvider: AndroidProvider.debug,
+        appleProvider: AppleProvider.debug,
+        webProvider: ReCaptchaV3Provider('recaptcha-v3-site-key'),
+      );
+    }
+    //await ChatBackgroundListen().checkFcmToken();
+
+    if (await Permission.notification.isDenied) {
+      await Permission.notification.request();
+    }
+    //await FirebaseMessaging.instance.deleteToken();
+    //await getToken();
+
+    //await ChatBackgroundListen().checkFcmToken();
+
+    //await FirebaseMessaging.instance.deleteToken();
+    // String? _fcmToken = await FirebaseMessaging.instance.getToken();
+    // debugPrint('_fcmToken: $_fcmToken');
+
+    await FirebaseMessaging.instance.setAutoInitEnabled(true);
+
+    //await FirebaseMessaging.instance.deleteToken().then((value) => 'deleToken 완료');
+    //await ChatBackgroundListen().checkFcmToken().then((value) => 'checkFcmToken 완료');
+
+    FirebaseMessaging.instance.onTokenRefresh.listen((String token) async {
+      debugPrint("New token: $token");
+      await RepositoryRealtimeUsers().getUploadFcmToken(token);
+    });
+
+    // foreground 수신처리
+    //FirebaseMessaging.onMessage.listen(showFlutterNotification);
+    // FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+    //   debugPrint('Got a message whilst in the foreground!');
+    //   debugPrint('Message data: ${message.data}');
+    //
+    //   if (message.notification != null) {
+    //     debugPrint('Message also contained a notification: ${message.notification}');
+    //   }
+    //
+    //   return showFlutterNotification(message);
+    // });
+    FirebaseMessaging.onMessage.listen(showFlutterNotification); // 안드로이드는 여기로만 진입
+    FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+
+    // 알림 클릭시
+    // FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message){ // 아이폰에서만 작동
+    //   return debugPrint('onMessageOpenedApp 열림');
+    // });
+
+    RepositoryRealtimeUsers().getSetIsCurrentUserInApp();
+
+    //FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
+    FlutterError.onError = (errorDetails) {
+      FirebaseCrashlytics.instance.recordFlutterFatalError(errorDetails);
+    };
+    // Pass all uncaught asynchronous errors that aren't handled by the Flutter framework to Crashlytics
+    PlatformDispatcher.instance.onError = (error, stack) {
+      FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+      return true;
+    };
+
+    if (FirebaseCrashlytics.instance.isCrashlyticsCollectionEnabled) {
+      debugPrint('crashlytics 사용가능');
+    }
+
+    FlutterLocalNotification.init();
+    FlutterLocalNotification.requestNotificationPermission(); // 여기서 노티 권한 요청
+
+    FirebaseAnalytics analytics = FirebaseAnalytics.instance;
+    FirebaseAnalyticsObserver observer =
+    FirebaseAnalyticsObserver(analytics: analytics);
+
+    FlutterError.onError = (errorDetails) {
+      FirebaseCrashlytics.instance.recordFlutterFatalError(errorDetails);
+    };
+    // Pass all uncaught asynchronous errors that aren't handled by the Flutter framework to Crashlytics
+    PlatformDispatcher.instance.onError = (error, stack) {
+      FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+      return true;
+    };
+
+    runApp(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider(
+            create: (context) => MainScreenViewModel(),
+          ),
+          ChangeNotifierProvider(
+            create: (context) => MapWidgetUpdate(),
+          ),
+          ChangeNotifierProvider(
+            create: (context) => CalendarScreenViewModel(),
+          ),
+          ChangeNotifierProvider(
+            create: (context) => LoadingScreenViewModel(),
+          ),
+          ChangeNotifierProvider(
+            create: (context) => MapScreenViewModel(),
+          ),
+          ChangeNotifierProvider(
+            create: (context) => SettingScreenViewModel(),
+          ),
+          ChangeNotifierProvider(
+            create: (context) => MatchingScreenViewModel(),
+          ),
+          ChangeNotifierProvider(
+            create: (context) => PrivateMailScreenViewModel(),
+          ),
+          ChangeNotifierProvider(
+            create: (context) => PersonalAppointmentUpdate(),
+          ),
+          ChangeNotifierProvider(
+            create: (context) => OthersPersonalAppointmentUpdate(),
+          ),
+          ChangeNotifierProvider(
+            create: (context) => CourtAppointmentUpdate(),
+          ),
+          ChangeNotifierProvider(
+            create: (context) => ProfileUpdate(),
+          ),
+          ChangeNotifierProvider(
+            create: (context) => LoginStatusUpdate(),
+          ),
+          ChangeNotifierProvider(
+            create: (context) => SharedPreference(),
+          ),
+          ChangeNotifierProvider(
+            create: (context) => ReportUpdate(),
+          ),
+          ChangeNotifierProvider(
+            create: (context) => GoogleAnalyticsNotifier(),
+          ),
+          ChangeNotifierProvider(
+            create: (context) => CurrentPageProvider(),
+          ),
+          ChangeNotifierProvider(
+            create: (context) => ChatScreenViewModel(),
+          )
+        ],
+        child: MaterialApp(
+          debugShowCheckedModeBanner: false,
+          navigatorObservers: [observer],
+          navigatorKey: navigatorKey,
+          home: HomePage(isUpdateNeeded, checkUrgentNews),
+          theme: theme,
+          darkTheme: darkTheme,
+          // home: AnimatedSplashScreen(
+          //   backgroundColor: kMainColor, //Theme.of(context).primaryColor,
+          //   splash: Container(
+          //     decoration: BoxDecoration(
+          //       image: DecorationImage(
+          //         image: AssetImage('images/logo.png'),
+          //         //fit: BoxFit.cover,
+          //       ),
+          //     ),
+          //   ),
+          //   nextScreen: LoadingScreen(), //LoadingScreen(),//HomeScreen(),
+          //   splashTransition: SplashTransition.fadeTransition,
+          // ),
+
+          // theme: ThemeData(
+          //   primaryColor: kMainColor,//Colors.blueAccent,
+          //   //primarySwatch: Colors.blue,
+          //   secondaryHeaderColor: Colors.grey,
+          // ),
+          localizationsDelegates: [
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: [
+            Locale('ko', 'KR'),
+            // Locale('es', ''), // Spanish, no country code
+          ],
+          // initialRoute: LoadingScreen.id,
+          // routes: {
+          //   // When navigating to the "/" route, build the FirstScreen widget.
+          //   LoadingScreen.id: (context) => LoadingScreen(),
+          //   HomeScreen.id: (context) => HomeScreen(), // '/'
+          //   SignupScreen.id: (context) => SignupScreen(), // '/SignupScreenID'
+          //   ProfileScreen.id: (context) => ProfileScreen(),// '/ProfileScreenID'
+          //   MainScreen.id: (context) => MainScreen(), //MainScreenID
+          //   MapScreen.id: (context) => MapScreen(), //MapScreenID
+          //   CalendarScreen.id: (context) => CalendarScreen(),
+          //   SettingScreen.id: (context) => SettingScreen(),//StatisticsScreenID
+          // },
+        ),
+      ),
     );
-  } else {
-    debugPrint('kDebugMode');
-    await FirebaseAppCheck.instance.activate(
-      androidProvider: AndroidProvider.debug,
-      appleProvider: AppleProvider.debug,
-      webProvider: ReCaptchaV3Provider('recaptcha-v3-site-key'),
-    );
-  }
-  //await ChatBackgroundListen().checkFcmToken();
-
-  if (await Permission.notification.isDenied) {
-    await Permission.notification.request();
-  }
-  //await FirebaseMessaging.instance.deleteToken();
-  //await getToken();
-
-  //await ChatBackgroundListen().checkFcmToken();
-
-  //await FirebaseMessaging.instance.deleteToken();
-  // String? _fcmToken = await FirebaseMessaging.instance.getToken();
-  // debugPrint('_fcmToken: $_fcmToken');
-
-  await FirebaseMessaging.instance.setAutoInitEnabled(true);
-
-  //await FirebaseMessaging.instance.deleteToken().then((value) => 'deleToken 완료');
-  //await ChatBackgroundListen().checkFcmToken().then((value) => 'checkFcmToken 완료');
-
-  FirebaseMessaging.instance.onTokenRefresh.listen((String token) async {
-    debugPrint("New token: $token");
-    await RepositoryRealtimeUsers().getUploadFcmToken(token);
   });
 
-  // foreground 수신처리
-  //FirebaseMessaging.onMessage.listen(showFlutterNotification);
-  // FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-  //   debugPrint('Got a message whilst in the foreground!');
-  //   debugPrint('Message data: ${message.data}');
-  //
-  //   if (message.notification != null) {
-  //     debugPrint('Message also contained a notification: ${message.notification}');
-  //   }
-  //
-  //   return showFlutterNotification(message);
-  // });
-  FirebaseMessaging.onMessage.listen(showFlutterNotification); // 안드로이드는 여기로만 진입
-  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
-
-  // 알림 클릭시
-  // FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message){ // 아이폰에서만 작동
-  //   return debugPrint('onMessageOpenedApp 열림');
-  // });
-
-  RepositoryRealtimeUsers().getSetIsCurrentUserInApp();
-
-  //FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
-  FlutterError.onError = (errorDetails) {
-    FirebaseCrashlytics.instance.recordFlutterFatalError(errorDetails);
-  };
-  // Pass all uncaught asynchronous errors that aren't handled by the Flutter framework to Crashlytics
-  PlatformDispatcher.instance.onError = (error, stack) {
-    FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
-    return true;
-  };
-
-  if (FirebaseCrashlytics.instance.isCrashlyticsCollectionEnabled) {
-    debugPrint('crashlytics 사용가능');
-  }
-
-  FlutterLocalNotification.init();
-  FlutterLocalNotification.requestNotificationPermission(); // 여기서 노티 권한 요청
-
-  FirebaseAnalytics analytics = FirebaseAnalytics.instance;
-  FirebaseAnalyticsObserver observer =
-      FirebaseAnalyticsObserver(analytics: analytics);
-
-  FlutterError.onError = (errorDetails) {
-    FirebaseCrashlytics.instance.recordFlutterFatalError(errorDetails);
-  };
-  // Pass all uncaught asynchronous errors that aren't handled by the Flutter framework to Crashlytics
-  PlatformDispatcher.instance.onError = (error, stack) {
-    FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
-    return true;
-  };
-
-  runApp(
-    MultiProvider(
-      providers: [
-        ChangeNotifierProvider(
-          create: (context) => MainScreenViewModel(),
-        ),
-        ChangeNotifierProvider(
-          create: (context) => MapWidgetUpdate(),
-        ),
-        ChangeNotifierProvider(
-          create: (context) => CalendarScreenViewModel(),
-        ),
-        ChangeNotifierProvider(
-          create: (context) => LoadingScreenViewModel(),
-        ),
-        ChangeNotifierProvider(
-          create: (context) => MapScreenViewModel(),
-        ),
-        ChangeNotifierProvider(
-          create: (context) => SettingScreenViewModel(),
-        ),
-        ChangeNotifierProvider(
-          create: (context) => MatchingScreenViewModel(),
-        ),
-        ChangeNotifierProvider(
-          create: (context) => PrivateMailScreenViewModel(),
-        ),
-        ChangeNotifierProvider(
-          create: (context) => PersonalAppointmentUpdate(),
-        ),
-        ChangeNotifierProvider(
-          create: (context) => OthersPersonalAppointmentUpdate(),
-        ),
-        ChangeNotifierProvider(
-          create: (context) => CourtAppointmentUpdate(),
-        ),
-        ChangeNotifierProvider(
-          create: (context) => ProfileUpdate(),
-        ),
-        ChangeNotifierProvider(
-          create: (context) => LoginStatusUpdate(),
-        ),
-        ChangeNotifierProvider(
-          create: (context) => SharedPreference(),
-        ),
-        ChangeNotifierProvider(
-          create: (context) => ReportUpdate(),
-        ),
-        ChangeNotifierProvider(
-          create: (context) => GoogleAnalyticsNotifier(),
-        ),
-        ChangeNotifierProvider(
-          create: (context) => CurrentPageProvider(),
-        ),
-        ChangeNotifierProvider(
-          create: (context) => ChatScreenViewModel(),
-        )
-      ],
-      child: MaterialApp(
-        debugShowCheckedModeBanner: false,
-        navigatorObservers: [observer],
-        navigatorKey: navigatorKey,
-        home: HomePage(isUpdateNeeded, checkUrgentNews),
-        theme: theme,
-        darkTheme: darkTheme,
-        // home: AnimatedSplashScreen(
-        //   backgroundColor: kMainColor, //Theme.of(context).primaryColor,
-        //   splash: Container(
-        //     decoration: BoxDecoration(
-        //       image: DecorationImage(
-        //         image: AssetImage('images/logo.png'),
-        //         //fit: BoxFit.cover,
-        //       ),
-        //     ),
-        //   ),
-        //   nextScreen: LoadingScreen(), //LoadingScreen(),//HomeScreen(),
-        //   splashTransition: SplashTransition.fadeTransition,
-        // ),
-
-        // theme: ThemeData(
-        //   primaryColor: kMainColor,//Colors.blueAccent,
-        //   //primarySwatch: Colors.blue,
-        //   secondaryHeaderColor: Colors.grey,
-        // ),
-        localizationsDelegates: [
-          GlobalMaterialLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-        ],
-        supportedLocales: [
-          Locale('ko', 'KR'),
-          // Locale('es', ''), // Spanish, no country code
-        ],
-        // initialRoute: LoadingScreen.id,
-        // routes: {
-        //   // When navigating to the "/" route, build the FirstScreen widget.
-        //   LoadingScreen.id: (context) => LoadingScreen(),
-        //   HomeScreen.id: (context) => HomeScreen(), // '/'
-        //   SignupScreen.id: (context) => SignupScreen(), // '/SignupScreenID'
-        //   ProfileScreen.id: (context) => ProfileScreen(),// '/ProfileScreenID'
-        //   MainScreen.id: (context) => MainScreen(), //MainScreenID
-        //   MapScreen.id: (context) => MapScreen(), //MapScreenID
-        //   CalendarScreen.id: (context) => CalendarScreen(),
-        //   SettingScreen.id: (context) => SettingScreen(),//StatisticsScreenID
-        // },
-      ),
-    ),
-  );
 }
 
 ThemeData theme = ThemeData(

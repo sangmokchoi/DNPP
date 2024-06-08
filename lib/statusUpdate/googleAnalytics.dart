@@ -205,12 +205,12 @@ class GoogleAnalytics {
     await FirebaseAnalytics.instance.logEvent(
       name: 'notification_dismiss',
       parameters: {
-        'message_name': _messageData.message_name,
-        'message_time': _messageData.message_time,
-        'message_device_time': _messageData.message_device_time,
-        'message_id': _messageData.message_id,
-        'topic': _messageData.topic,
-        'label': _messageData.label,
+        'message_name': _messageData.message_name as Object,
+        'message_time': _messageData.message_time as Object,
+        'message_device_time': _messageData.message_device_time as Object,
+        'message_id': _messageData.message_id as Object,
+        'topic': _messageData.topic as Object,
+        'label': _messageData.label as Object,
       },
     );
   }
@@ -228,7 +228,7 @@ class GoogleAnalytics {
         message_device_time: DateTime.now().toString(),
         message_id: message.hashCode.toString(),
         topic: message.from,
-        label: null,
+        label: 'null',
       );
     }
 
@@ -240,19 +240,19 @@ class GoogleAnalytics {
         message_device_time: DateTime.now().toString(),
         message_id: notification.hashCode.toString(),
         topic: message.from,
-        label: null,
+        label: 'null',
       );
     }
 
     await FirebaseAnalytics.instance.logEvent(
       name: 'notification_foreground',
       parameters: {
-        'message_name': _messageData.message_name,
-        'message_time': _messageData.message_time,
-        'message_device_time': _messageData.message_device_time,
-        'message_id': _messageData.message_id,
-        'topic': _messageData.topic,
-        'label': _messageData.label,
+        'message_name': _messageData.message_name as Object,
+        'message_time': _messageData.message_time as Object,
+        'message_device_time': _messageData.message_device_time as Object,
+        'message_id': _messageData.message_id as Object,
+        'topic': _messageData.topic as Object,
+        'label': _messageData.label as Object,
       },
     );
   }

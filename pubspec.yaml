@@ -3,7 +3,7 @@ description: A new Flutter project.
 
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 
-version: 1.0.0+1
+version: 1.0.2+2
 
 environment:
   sdk: '>=3.3.4 <4.0.0'
@@ -32,7 +32,9 @@ dependencies:
   shared_preferences: ^2.2.2
   sn_progress_dialog: ^1.1.4
 
-  syncfusion_flutter_calendar: ^25.2.3
+  syncfusion_flutter_calendar: 25.2.4
+  syncfusion_flutter_datepicker: 25.2.4
+  syncfusion_flutter_core: 25.2.4
   omni_datetime_picker: ^1.0.9
   bottom_picker: ^2.2.1
   fl_chart: ^0.68.0
@@ -44,18 +46,18 @@ dependencies:
   kakao_flutter_sdk: ^1.7.0
 
   # Firebase
-  firebase_auth: ^4.14.0
-  firebase_core: ^2.31.0
-  firebase_storage: ^11.5.1
-  cloud_firestore: ^4.13.2
-  firebase_messaging: ^14.7.16
+  firebase_auth: ^5.0.0
+  firebase_core: ^3.0.0
+  firebase_storage: ^12.0.0
+  cloud_firestore: ^5.0.0
+  firebase_messaging: ^15.0.0
   flutter_local_notifications: ^17.1.2
-  firebase_remote_config: ^4.3.17
-  firebase_crashlytics: ^3.4.18
+  firebase_remote_config: ^5.0.0
+  firebase_crashlytics: ^4.0.0
   # 파이어베이스 realtime_dataBase
-  firebase_database: ^10.4.5
-  firebase_analytics: ^10.10.5
-  firebase_app_check: ^0.2.2+5
+  firebase_database: ^11.0.0
+  firebase_analytics: ^11.0.0
+  firebase_app_check: ^0.3.0
 
   # Chatiing
   flutter_chat_ui: ^1.6.12
