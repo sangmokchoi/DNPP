@@ -23,7 +23,7 @@ class LocalDSRemoteConfig {
       // 데이터 가져오기 시간 간격 : 12시간
       await _firebaseRemoteConfig.setConfigSettings(RemoteConfigSettings(
         fetchTimeout: const Duration(minutes: 1),
-        minimumFetchInterval: const Duration(minutes: 5),
+        minimumFetchInterval: const Duration(hours: 12),
       ));
 
       await _firebaseRemoteConfig.fetchAndActivate();

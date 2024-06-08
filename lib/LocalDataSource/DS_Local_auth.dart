@@ -22,6 +22,7 @@ class LocalDSAuth {
   Future<void> signOut() async {
     try {
       final providerData = currentUser?.providerData;
+      debugPrint('await KakaoSdk.origin: ${await KakaoSdk.origin}');
       debugPrint('providerData: $providerData');
       debugPrint('providerData?.isEmpty: ${providerData?.isEmpty}');
 
