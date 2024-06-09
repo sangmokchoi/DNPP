@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-//const kNaverMapApiKey = '7evubnn4j6';
-
 // const kCustomCircularProgressIndicator = CircularProgressIndicator(
 //   valueColor: AlwaysStoppedAnimation<Color>(kMainColor),
 // );
