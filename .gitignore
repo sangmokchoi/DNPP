@@ -68,7 +68,7 @@ lib/models/map_geocode.dart
 **/ios/ServiceDefinitions.json
 **/ios/Runner/GeneratedPluginRegistrant.*
 **/ios/Runner/GoogleService-Info.plist
-**/ios/Runner/firebase_app_id_file.json
+**/ios/firebase_app_id_file.json
 # Exceptions to above rules.
 !**/ios/**/default.mode1v3
 !**/ios/**/default.mode2v3
