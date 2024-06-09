@@ -1,0 +1,107 @@
+name: dnpp
+description: A new Flutter project.
+
+publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+
+version: 1.0.2+2
+
+environment:
+  sdk: '>=3.3.4 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.2
+  persistent_bottom_nav_bar: ^5.0.2
+  flutter_naver_map: ^1.2.2
+  provider: ^6.0.5
+  geolocator: ^11.0.0
+  http: ^1.1.0
+  flutter_spinkit: ^5.2.0
+  url_launcher: ^6.1.14
+  uni_links: ^0.5.1
+  image_picker: ^1.0.4
+  kpostal: ^0.5.1
+  html_unescape: ^2.0.0
+  html: ^0.15.4
+  custom_refresh_indicator: ^3.0.0
+  animated_splash_screen: ^1.3.0
+  shared_preferences: ^2.2.2
+  sn_progress_dialog: ^1.1.4
+
+  syncfusion_flutter_calendar: 25.2.4
+  syncfusion_flutter_datepicker: 25.2.4
+  syncfusion_flutter_core: 25.2.4
+  omni_datetime_picker: ^1.0.9
+  bottom_picker: ^2.2.1
+  fl_chart: ^0.68.0
+  flutter_svg: ^2.0.9
+
+  # 소셜 로그인
+  google_sign_in: ^6.1.6
+  sign_in_with_apple: ^6.1.0
+  kakao_flutter_sdk: ^1.7.0
+
+  # Firebase
+  firebase_auth: ^5.0.0
+  firebase_core: ^3.0.0
+  firebase_storage: ^12.0.0
+  cloud_firestore: ^5.0.0
+  firebase_messaging: ^15.0.0
+  flutter_local_notifications: ^17.1.2
+  firebase_remote_config: ^5.0.0
+  firebase_crashlytics: ^4.0.0
+  # 파이어베이스 realtime_dataBase
+  firebase_database: ^11.0.0
+  firebase_analytics: ^11.0.0
+  firebase_app_check: ^0.3.0
+
+  # Chatiing
+  flutter_chat_ui: ^1.6.12
+  flutter_chat_types: ^3.6.2
+
+  fluttertoast: ^8.2.5
+
+  flutter_app_badger: ^1.5.0
+  permission_handler: ^11.3.0
+  app_settings: ^5.1.1
+
+  device_info_plus: ^10.1.0
+
+  package_info_plus: ^8.0.0
+
+  app_tracking_transparency: ^2.0.5
+  google_mobile_ads: ^5.1.0
+
+  sizer: ^2.0.15
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^4.0.0
+  flutter_oss_licenses: ^3.0.2
+
+flutter:
+
+  uses-material-design: true
+
+  assets:
+    - images/
+    - fonts/
+
+  fonts:
+    - family: NanumSquare
+      fonts:
+        - asset: fonts/NanumSquare_acB.ttf
+        - asset: fonts/NanumSquare_acEB.ttf
+        - asset: fonts/NanumSquare_acL.ttf
+        - asset: fonts/NanumSquare_acR.ttf
+        - asset: fonts/NanumSquareB.ttf
+        - asset: fonts/NanumSquareEB.ttf
+        - asset: fonts/NanumSquareL.ttf
+        - asset: fonts/NanumSquareR.ttf
+
