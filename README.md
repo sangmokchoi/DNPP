@@ -13,8 +13,7 @@
 
 - **App Store:** [<핑퐁플러스> 다운로드 바로가기](https://apps.apple.com/app/%ED%95%91%ED%90%81%ED%94%8C%EB%9F%AC%EC%8A%A4/id6478840964)
 
-- **Play Store:** 현재 배포 후 검토 중
-
+- **Play Store:** [<핑퐁플러스> 다운로드 바로가기](https://play.google.com/store/apps/details?id=com.simonwork.dnpp.dnpp)
 
 
 - 기술 구조 요약
