@@ -23,9 +23,9 @@
   - **Data Storage**: (Firebase) `Firestore Database`, `Realtime Database`, `Storage`
   - **Library/Framework:**
       - **Firebase**
-      `Authentication`, `App Check`, `Crashlyitics`, `Cloud Functions`, `Messaging`, `Remote Config`, `AdMob`
+      `Authentication`, `App Check`, `Cloud Functions`, `Crashlyitics`, `Messaging`, `Remote Config`
       - **Google**
-      `Analytics`
+      `AdMob`. `Analytics`
       - **Naver**
       `Naver Map`
       - **Flutter**
